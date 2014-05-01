@@ -1,10 +1,26 @@
+--[[ Header
+ColorWars algorithm for LUA
+Authors: Akuukis, Hugo, LatvianModder, TomsG
+Started: May 1, 2014
+First Beta release: -
+First Alpha release: -
+Github address: https://github.com/Akuukis/TurtleColorWars
+--]]
+
+dir=0
+x=0
+y=0
+z=0
+local i=0
+local j=0
+modem = peripheral.wrap("left")
+--[=[
+function CalcMoves(mapmat, px, py, tx, ty)	-- Based on some code of LMelior but made it work and improved way beyond his code, still thx LMelior!
 --[[
 A* algorithm for LUA
 Ported to LUA by Altair
 21 septembre 2006
 --]]
-
-function CalcMoves(mapmat, px, py, tx, ty)	-- Based on some code of LMelior but made it work and improved way beyond his code, still thx LMelior!
 --[[ PRE:
 mapmat is a 2d array
 px is the player's current x
@@ -204,19 +220,12 @@ OR nil if closedlist==nil
 	 closedlist=nil
 	 return path
 end
+--]=]
 
-
-
-dir=0
-x=0
-y=0
-z=0
-local i=0
-local j=0
-modem = peripheral.wrap("left")
 function hugoDebug()
   modem.transmit(3, 1337, x.." "..y)
   end
+  
 function hugoSurfaceMove()
   hugoDebug()
   if turtle.forward() then
@@ -230,11 +239,11 @@ function hugoSurfaceMove()
     else
     while turtle.detect() do
       if turtle.up() then z=z+1 end
+      sleep(0.1)
       end
     end
   end
- 
- 
+
 turtle.refuel()
 for i=0,math.random(3,5) do
   for j=0,math.random(0,3) do
