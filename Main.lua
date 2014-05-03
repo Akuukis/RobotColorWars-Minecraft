@@ -469,10 +469,6 @@ Stats = {
 
 printfs("Starting the program...\n")
 Nav:UpdateMap({x=0,z=0,y=0},"S")
-Nav:UpdateMap({x=0,z=2,y=0},1)
-Nav:UpdateMap({x=1,z=2,y=0},1)
-Nav:UpdateMap({x=2,z=2,y=0},1)
-Nav:UpdateMap({x=3,z=2,y=0},1)
 for x=7,-2,-1 do
   for z=-2,7 do
     if Nav.Map[x]==nil then
