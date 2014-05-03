@@ -13,3 +13,4 @@ Sidenotes & Debug trivia
 ----------------
 nil = UndefinedVariable, but error()=UndefinedVariable.SubValue // Use pcall() if need to check.
 table.insert(table,0,element) = table.insert(table,1,element) //
+num ~= string, if num=tonumber(string) //
