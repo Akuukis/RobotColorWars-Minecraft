@@ -17,6 +17,7 @@ Debug.# Debug - (sub-tactical level)
 Stats.# Statistics - Turtle collents & stores individual statistics for fun purposes only.
 --]]
 
+--[LatvianModder] Testing!
 
 function myformat( fmt, ... )
     local buf = {}
