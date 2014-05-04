@@ -1,6 +1,7 @@
 local Level = { GUI = 5, RUI = 5, HUD = 5 }
 
 function PrintMap(Type)
+	--[[
 	y = 0;
 	for x = Nav.X + 3,Nav.X - 3, -1 do
 		for z = Nav.Z - 19, Nav.Z + 19, 1 do
@@ -23,6 +24,7 @@ function PrintMap(Type)
 	
 	Utils.printf("\n")
 	end
+	--]]
 end
 
 function Check(...)

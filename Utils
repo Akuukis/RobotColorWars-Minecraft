@@ -1,9 +1,9 @@
 function Refuel(self)
 	if turtle.getFuelLevel() < 128 then
 		if turtle.refuel() then 
-			Debug.info("Refueled!")
+			Logger.Info("Refueled!")
 		else 
-			Debug.info("Fuel me!")
+			Logger.Info("Fuel me!")
 		end
 	end
 	return turtle.getFuelLevel()
