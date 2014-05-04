@@ -38,15 +38,32 @@ printfs=function(...)
   end  
 
 printfs("\nInitializing the program...\n")
-  
+
+-- Classes
+Init = {
+  Born = function(self)
+    Nav:UpdateMap({0,0,0},0)
+    end
+  }
+Job = {
+  }
 Supp = {
   Refuel = function(self)
-    if turtle.refuel()then 
-      write("Refueled!\n")
-      else 
-      write("Fuel me!\n")
+    if turtle.getFuelLevel() < 128 then
+      if turtle.refuel()then 
+        write("Refueled!\n")
+        else 
+        write("Fuel me!\n")
+        end
       end
+    return turtle.getFuelLevel()
     end
+  }
+Comm = {
+  }
+PControl = {
+  }
+IO = {
   }
 Nav = {
   X = 0, -- North
@@ -54,72 +71,6 @@ Nav = {
   Y = 0, -- Height
   F = 0, -- Facing direction, modulus of 4 // 0,1,2,3 = North, East, South, West
   Map = {}, -- Id={nil=unexplored,false=air,####=Block}, Updated=server's time, Evade={nil,true if tagged by special events}
-  MoveSurface = function(self)
-    Debug:Hugo(x,y)
-    if turtle.forward() then
-      while turtle.detectDown()~=true do
-        if turtle.down() then z=z-1 end
-        end
-      Stats:Step()
-      if dir%4==0 then x=x+1 end
-      if dir%4==1 then y=y+1 end
-      if dir%4==2 then x=x-1 end
-      if dir%4==3 then y=y-1 end
-      else
-      while turtle.detect() do
-        if turtle.up() then z=z+1 end
-        end
-      end
-    end,
-  GetLost1 = function(self)
-    for i=0,math.random(3,5) do
-      write("GetLost No." .. i .. ": ")
-      for j=0,math.random(0,3) do
-        turtle.turnRight()
-        dir=dir+1
-        end
-      write("Turned to " .. dir%4 .. ", ")  
-      for j=0,math.random(5,10) do
-        Nav:SurfaceMove()
-        end
-      write("Went " .. Stats:GetCountedSteps() .. "sq\n")
-      Stats:ResetCountedSteps()
-      end
-    end,
-  GoToStupid = function(self)
-    write("I am at (" .. x .. "," .. y .. "). Going home!\n")
-    turtle.up()
-    turtle.down()
-    if y<0 then
-      while dir%4~=1 do
-        turtle.turnRight()
-        dir=dir+1
-        end
-      while y<0 do Nav:SurfaceMove() end
-      end
-    if y>0 then
-      while dir%4~=3 do
-        turtle.turnRight()
-        dir=dir+1
-        end
-      while y>0 do Nav:SurfaceMove() end
-      end
-    if x<0 then
-      while dir%4~=0 do
-        turtle.turnRight()
-        dir=dir+1
-        end
-      while x<0 do Nav:SurfaceMove() end
-      end
-    if x>0 then
-      while dir%4~=2 do
-        turtle.turnRight()
-        dir=dir+1
-        end
-      while x>0 do Nav:SurfaceMove() end
-      end
-    write("I am home!\n")
-    end,
   GetPath = function(self,tx,tz,ty)  -- Based on code (Sep 21, 2006) by Altair who ported and upgraded code of LMelior
   --[[ PRE:
   Nav.Map is a 2d array
@@ -155,7 +106,7 @@ Nav = {
   local closedk=0                					-- Closedlist counter
   Nav:ExploreMap(tx,tz,ty)
   printfs("Nav:GetPath() CurbaseXZ: ")
-  while openk>0 do   -- Growing loop
+  while openk>0  and table.maxn(closedlist)<500 do   -- Growing loop
     --Debug:Check("")
     if Nav.Map[tx][tz][ty].Id then if Nav.Map[tx][tz][ty].Id > 0 then return nil end end
     
@@ -291,7 +242,7 @@ Nav = {
 
     table.remove(openlist,basis)
     openk=openk-1
-
+    
     if closedlist[closedk].x==tx and closedlist[closedk].z==tz then
       printf("\n")
       printfs("Nav:GetPath() Found the path! Openlist: %s, Closedlist: %s, Steps: ",table.maxn(openlist),table.maxn(closedlist))
@@ -347,6 +298,7 @@ Nav = {
   Move = function(self,dir) -- dir{0=North|1=East|2=South|3=West|4=up|5=down}, returns true if succeeded
     local success = 0
     printfs("Nav:Move(%s)\n", dir)
+    Supp:Refuel()
     if dir==4 then               -- Up
       success = turtle.up()
       elseif dir==5 then         -- Down
@@ -458,7 +410,7 @@ Nav = {
     end,
   }
 Debug = {
-  Hugo = function(self, x, y)
+  Hugo = function(self, x, y) -- Redundant
     modem.transmit(3, 1337, x.." "..y)
     end,
   PrintMap = function(self,Type)
@@ -507,17 +459,20 @@ Stats = {
 
   
 printfs("Starting the program...\n")
-Nav:UpdateMap({0,0,0},0)
+
+Init:Born()
+
 while 1 do
   Debug:PrintMap()
+  Supp:Refuel()
   printf("A* Pathfinding supports only 2D\n")
   printf("Enter X coordinate: ")
   local x = io.read() -- = io.stdin:read'*l' ??
   printf("Enter Z coordinate: ")
   local z = io.read()
 
-  if x==nil then x=4 end
-  if z==nil then z=4 end
+  if x=="" or x==nil then x=4 end
+  if z=="" or z==nil then z=3 end
   
   if Nav:GoPath(x,z) then printfs("Succeeded!") else printfs("Exceeded 32 tries, failed!\n") end
   printf(" Coords: (%s,%s,%s), F:%s\n",Nav.X,Nav.Z,Nav.Y,Nav.F)
