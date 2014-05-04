@@ -1,0 +1,20 @@
+local GlobalSteps = 0
+local CountedSteps = 0
+
+function Step(x)
+	x = x or 1 -- create object if user does not provide one
+	GlobalSteps = GlobalSteps + 1
+	CountedSteps = CountedSteps + 1
+end
+
+function GetGlobalSteps()
+	return GlobalSteps
+end
+
+function GetCountedSteps()
+	return CountedSteps
+end
+
+function ResetCountedSteps()
+	CountedSteps = 0
+end

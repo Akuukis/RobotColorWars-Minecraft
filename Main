@@ -1,0 +1,42 @@
+--[[
+os.loadAPI("pathLM/Logger")
+os.loadAPI("pathLM/Logic")
+os.loadAPI("pathLM/Nav")
+os.loadAPI("pathLM/Stats")
+os.loadAPI("pathLM/Utils")
+os.loadAPI("pathLM/Rui")
+os.loadAPI("pathLM/Comm")
+os.loadAPI("pathLM/Gui")
+os.loadAPI("pathLM/Hud")
+os.loadAPI("pathLM/Jobs")
+]]--
+
+function init()
+	Nav.UpdateMap(0)
+end
+
+function loop()
+	Debug.PrintMap()
+	Utils.Refuel()
+	Utils.printf("A* Pathfinding supports only 2D\n")
+	Utils.printf("Enter X coordinate: ")
+	local x = read()
+	Utils.printf("Enter Z coordinate: ")
+	local z = read()
+
+	if x == "" or x == nil then x = 4 end
+	if z == "" or z == nil then z = 3 end
+	
+	if Nav.Go(x, z) then
+		Utils.printfs("Succeeded!")
+	else
+		Utils.printfs("Exceeded 32 tries, failed!\n")
+	end
+	
+	Utils.printf(" Coords: (%s,%s,%s), F:%s\n",Nav.X,Nav.Z,Nav.Y,Nav.F)
+end
+
+init()
+while true do
+	loop()
+end

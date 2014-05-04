@@ -107,16 +107,14 @@ PControl = {
 GUI = {
 	}
 Nav = {
-	-- To test if API is alive, use success,version=pcall(Nav:Test()), success=true|false, version=nil|num
-	-- To go, use Nav:Go([x],[z],[y],[tries],[style]), Default: x,z,y = current position, tries = 32, style = 0.
+	-- To go, use Nav:Go([x],[z],[y],[tries],[style]). Default: x,z,y = current position, tries = 32, style = 0.
 	-- To turn, use Nav:TurnRight(), Nav:TurnLeft(), Nav:TurnAround().
 	-- To move forward use Nav:Go(1,0,0,nil,"RelativeDir"), not Nav:Move(dir)
-	-- To update map use UpdateMap({X,Y,Z},[Block_ID][,Update_Time]), XYZ are coords, Block_ID={nil=unexplored,false=air,0=unknown block,1+=known block}
 	X = 0, -- North
 	Z = 0, -- East
 	Y = 0, -- Height
 	F = 0, -- Facing direction, modulus of 4 // 0,1,2,3 = North, East, South, West
-	Map = {}, -- ID={nil=unexplored,false=air,0=unknown block,1+=known block}, Updated=server's time, Tag={nil|String if tagged by special events}
+	Map = {}, -- Id={nil=unexplored,false=air,####=Block}, Updated=server's time, Evade={nil,true if tagged by special events}
 	GetPath = function(self,tx,tz,ty)  
 	--[[ DISCLAIMER:
 	This code (May 04, 2014) is written by Akuukis 
@@ -418,35 +416,7 @@ Nav = {
 			--Debug:Debug("Nav:UpdateCoord(%s)\n",dir)
 			Nav.X,Nav.Z,Nav.Y = Nav:DirToCoord(dir)
 		end,
-	GetMap = function(self,x,y,z,r)
-		if type(x) == "nil" then return nil
-			elseif type(x) == "number" and type(z) == "number" and type(y) == "number" then
-			Nav.ExploreMap(x,z,y)
-			if type(r) == "nil" then return Nav.Map[x][z][y] 
-				elseif type(r) == "string" and (r == "id" or r == "Id" or r == "ID") then return Nav.Map[x][z][y].Id
-				elseif type(r) == "string" and (r == "updated" or r == "Updated" or r == "UPDATED") then return Nav.Map[x][z][y].Updated
-				elseif type(r) == "string" and (r == "tag" or r == "Tag" or r == "TAG") then return Nav.Map[x][z][y].Tag
-				end
-			elseif type(x) == "table" then
-			if x.x ~= nil and x.z ~= nil and x.y ~= nil then 
-				Nav.ExploreMap(x.x,x.z,x.y)
-				if type(y) == "nil" then return Nav.Map[x.x][x.z][x.y] 
-					elseif type(y) == "string" and (r == "id" or r == "Id" or r == "ID") then return Nav.Map[x.x][x.z][x.y].Id
-					elseif type(y) == "string" and (r == "updated" or r == "Updated" or r == "UPDATED") then return Nav.Map[x.x][x.z][x.y].Updated
-					elseif type(y) == "string" and (r == "tag" or r == "Tag" or r == "TAG") then return Nav.Map[x.x][x.z][x.y].Tag
-					end
-				elseif x[1] ~= nil and x[2] ~= nil and x[3] ~= nil then
-				Nav.ExploreMap(x[1],x[2],x[3])
-				if type(y) == "nil" then return Nav.Map[x[1]][x[2]][x[3]] 
-					elseif type(y) == "string" and (r == "id" or r == "Id" or r == "ID") then return Nav.Map[x[1]][x[2]][x[3]].Id
-					elseif type(y) == "string" and (r == "updated" or r == "Updated" or r == "UPDATED") then return Nav.Map[x[1]][x[2]][x[3]].Updated
-					elseif type(y) == "string" and (r == "tag" or r == "Tag" or r == "TAG") then return Nav.Map[x[1]][x[2]][x[3]].Tag
-					end
-				end
-			end
-		return nil
-		end,
-	UpdateMap = function(self,location,value,upd_time) -- location{nil|dir|XZY), value{0=air,1=unknown block,1+=known block}  
+	UpdateMap = function(self,location,value) -- location{nil|dir|XZY), value{0=air,1=unknown block,1+=known block}  
 		--Debug:Debug("Nav:UpdateMap(%s,%s)\n",location,value)
 		local x,z,y
 		if type(location)=="nil" then
@@ -489,8 +459,7 @@ Nav = {
 		if Nav.Map[x][z][y] == nil then Nav.Map[x][z][y]={} end
 		end,
 	Test = function(self)
-		local version = 0.1
-		return 0.1
+		return 1
 		end,
 	}
 Stats = {
@@ -532,7 +501,3 @@ while 1 do
 	if Nav:Go(x,z) then Debug:Info("Succeeded!") else Debug:Error("Exceeded 32 tries, failed!\n") end
 	Debug:Info(" Coords: (%s,%s,%s), F:%s\n",Nav.X,Nav.Z,Nav.Y,Nav.F)
 	end
-
-
-
-

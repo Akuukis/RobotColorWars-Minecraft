@@ -1,0 +1,56 @@
+local Level = { GUI = 5, RUI = 5, HUD = 5 }
+
+function PrintMap(Type)
+	y = 0;
+	for x = Nav.X + 3,Nav.X - 3, -1 do
+		for z = Nav.Z - 19, Nav.Z + 19, 1 do
+		if Nav.Map[x] == nil then
+			Utils.printf(".")
+		elseif Nav.Map[x][z] == nil then
+			Utils.printf(".")
+		else
+			if (Nav.X == x and Nav.Z == z) then
+				Utils.printf("#")
+			else 
+				if Nav.Map[x][z][y].Id == 0 then
+					Utils.printf(" ")
+				else
+					Utils.printf("%s", Nav.Map[x][z][y].Id)
+				end
+			end
+		end
+	end
+	
+	Utils.printf("\n")
+	end
+end
+
+function Check(...)
+    printfs(...)
+    while true do
+		event, param1 = os.pullEvent()
+		if event == "key" then
+			break
+		end
+	end
+end
+
+function Debug(...)
+	if Level.GUI >= 4 then write(Utils.myformat(...)) end
+end
+
+function Info(...)
+	if Level.GUI >= 3 then write(Utils.myformat(...)) end
+end
+
+function Warning(...)
+	if Level.GUI >= 2 then write(Utils.myformat(...)) end
+end
+
+function Error(...)
+	if Level.GUI >= 1 then write(Utils.myformat(...)) end
+end
+
+function Fatal(...)
+	if Level.GUI >= 0 then write(Utils.myformat(...)) end
+end
