@@ -17,30 +17,70 @@ Debug.# Debug - (sub-tactical level)
 Stats.# Statistics - Turtle collents & stores individual statistics for fun purposes only.
 --]]
 
---[LatvianModder] Testing!
-
-function myformat( fmt, ... )
-	local buf = {}
-	for i = 1, select( '#', ... ) do
-		local a = select( i, ... )
-		if type( a ) ~= 'string' and type( a ) ~= 'number' then
-			a = tostring( a )
-			end
-		buf[i] = a
-		end
-	return string.format( fmt, unpack( buf ) )
- end
-printf=function(...)     
-	io.write(myformat(...)) 
-	end
-printfs=function(...)
-	--for w in string.gmatch(debug.traceback(nil,2+1), ".lua:") do printf("  ") end -- ComputerCraft doesn't have debug
-	io.write(myformat(...)) 
-	end  
-
-printfs("\nInitializing the program...\n")
-
 -- Classes
+Debug = {
+	Level = {GUI = 5, RUI = 5, HUD = 5}, -- Display level of information, 0 - Fatal, 1 - Error, 2 - Warning, 3 - Info, 4 - Debug, 5 - All.
+	Hugo = function(self, x, y) -- Redundant
+		modem.transmit(3, 1337, x.." "..y)
+		end,
+	PrintMap = function(self,Type)
+		y=0;
+		for x=Nav.X+3,Nav.X-3,-1 do
+			for z=Nav.Z-19,Nav.Z+19,1 do
+				if Nav.Map[x]==nil then
+					Debug:Info(".")
+					elseif Nav.Map[x][z]==nil then
+					Debug:Info(".")
+					else
+					if (Nav.X==x and Nav.Z==z) then Debug:Info("#") else 
+						if Nav.Map[x][z][y].Id==0 then Debug:Info(" ") else Debug:Info("%s",Nav.Map[x][z][y].Id) end
+						end
+					end
+				end
+			Debug:Info("\n")
+			end
+		end,
+	Check = function(self,...)
+		Debug:Debug(...)
+		while true do
+			event, param1 = os.pullEvent()
+			if event == "key" then break end
+			end
+		end,
+	myformat = function( fmt, ... )
+	-- Disclaimer: code (Sep 7, 2013) by Lorenzo Donati @ http://stackoverflow.com/users/2633423/lorenzo-donati
+		local buf = {}
+		for i = 1, select( '#', ... ) do
+			local a = select( i, ... )
+			if type( a ) ~= 'string' and type( a ) ~= 'number' then
+				a = tostring( a )
+				end
+			buf[i] = a
+			end
+		return string.format( fmt, unpack( buf ) )
+	 end,
+	Debug = function(self, ...)
+		--for w in string.gmatch(debug.traceback(nil,2+1), ".lua:") do Debug:Info("  ") end -- ComputerCraft doesn't have debug
+		if Debug.Level.GUI >= 4 then io.write(Debug.myformat(...)) end
+		end,
+	Info = function(self, ...)
+		--for w in string.gmatch(debug.traceback(nil,2+1), ".lua:") do Debug:Info("  ") end -- ComputerCraft doesn't have debug
+		if Debug.Level.GUI >= 3 then io.write(Debug.myformat(...)) end 
+		end,
+	Warning = function(self, ...)
+		--for w in string.gmatch(debug.traceback(nil,2+1), ".lua:") do Debug:Info("  ") end -- ComputerCraft doesn't have debug
+		if Debug.Level.GUI >= 2 then io.write(Debug.myformat(...)) end 
+		end,
+	Error = function(self, ...)
+		--for w in string.gmatch(debug.traceback(nil,2+1), ".lua:") do Debug:Info("  ") end -- ComputerCraft doesn't have debug
+		if Debug.Level.GUI >= 1 then io.write(Debug.myformat(...)) end 
+		end,
+	Fatal = function(self, ...)
+		--for w in string.gmatch(debug.traceback(nil,2+1), ".lua:") do Debug:Info("  ") end -- ComputerCraft doesn't have debug
+		if Debug.Level.GUI >= 0 then io.write(Debug.myformat(...)) end 
+		end
+	}
+Debug:Info("\nInitializing the program...\n")
 Init = {
 	Born = function(self)
 		Nav:UpdateMap({0,0,0},0)
@@ -67,11 +107,16 @@ PControl = {
 GUI = {
 	}
 Nav = {
+	-- To test if API is alive, use success,version=pcall(Nav:Test()), success=true|false, version=nil|num
+	-- To go, use Nav:Go([x],[z],[y],[tries],[style]), Default: x,z,y = current position, tries = 32, style = 0.
+	-- To turn, use Nav:TurnRight(), Nav:TurnLeft(), Nav:TurnAround().
+	-- To move forward use Nav:Go(1,0,0,nil,"RelativeDir"), not Nav:Move(dir)
+	-- To update map use UpdateMap({X,Y,Z},[Block_ID][,Update_Time]), XYZ are coords, Block_ID={nil=unexplored,false=air,0=unknown block,1+=known block}
 	X = 0, -- North
 	Z = 0, -- East
 	Y = 0, -- Height
 	F = 0, -- Facing direction, modulus of 4 // 0,1,2,3 = North, East, South, West
-	Map = {}, -- Id={nil=unexplored,false=air,####=Block}, Updated=server's time, Evade={nil,true if tagged by special events}
+	Map = {}, -- ID={nil=unexplored,false=air,0=unknown block,1+=known block}, Updated=server's time, Tag={nil|String if tagged by special events}
 	GetPath = function(self,tx,tz,ty)  
 	--[[ DISCLAIMER:
 	This code (May 04, 2014) is written by Akuukis 
@@ -97,7 +142,7 @@ Nav = {
 	OR nil if closedlist==nil
 	--]]
 	if ty == nil then ty = 0 end
-	printfs("Nav:GetPath(%s, %s)\n",tx,tz,ty)
+	Debug:Debug("Nav:GetPath(%s, %s)\n",tx,tz,ty)
 	local tempG=0
 	local tempH=math.abs(Nav.X-tx)+math.abs(Nav.Y-tz)						-- Manhattan's method
 	local closedlist={}																					-- Initialize table to store checked gridsquares
@@ -108,7 +153,7 @@ Nav = {
 	local openk=1																								-- Openlist counter
 	local closedk=0																							-- Closedlist counter
 	Nav:ExploreMap(tx,tz,ty)
-	printfs("Nav:GetPath() CurbaseXZ: ")
+	Debug:Debug("Nav:GetPath() CurbaseXZ: ")
 	while openk>0  and table.maxn(closedlist)<500 do   -- Growing loop
 		--Debug:Check("")
 		if Nav.Map[tx][tz][ty].Id then if Nav.Map[tx][tz][ty].Id > 0 then return nil end end
@@ -128,7 +173,7 @@ Nav = {
 
 		curbase=closedlist[closedk]				 -- define current base from which to grow list
 		curbase.y=0
-		printf("(%s,%s@%s/%s) ",curbase.x, curbase.z,closedk,openk)
+		Debug:Debug("(%s,%s@%s/%s) ",curbase.x, curbase.z,closedk,openk)
 		
 		local NorthOK=true
 		local SouthOK=true           				 -- Booleans defining if they're OK to add
@@ -140,13 +185,13 @@ Nav = {
 		local suc=true
 		local id=0
 		suc,id = pcall(function() if Nav.Map[curbase.x+1][curbase.z][curbase.y].Id>0 then return 1 else return 0 end end)
-		if suc~=true then NorthOK = true elseif id == 0 then NorthOK = true else NorthOK = false; printf("North obstacle") end
+		if suc~=true then NorthOK = true elseif id == 0 then NorthOK = true else NorthOK = false; Debug:Debug("North obstacle") end
 		suc,id = pcall(function() if Nav.Map[curbase.x][curbase.z+1][curbase.y].Id>0 then return 1 else return 0 end end)
-		if suc~=true then EastOK = true elseif id == 0 then EastOK = true else EastOK = false; printf("East obstacle") end
+		if suc~=true then EastOK = true elseif id == 0 then EastOK = true else EastOK = false; Debug:Debug("East obstacle") end
 		suc,id = pcall(function() if Nav.Map[curbase.x-1][curbase.z][curbase.y].Id>0 then return 1 else return 0 end end)
-		if suc~=true then SouthOK = true elseif id == 0 then SouthOK = true else SouthOK = false; printf("South obstacle") end
+		if suc~=true then SouthOK = true elseif id == 0 then SouthOK = true else SouthOK = false; Debug:Debug("South obstacle") end
 		suc,id = pcall(function() if Nav.Map[curbase.x][curbase.z-1][curbase.y].Id>0 then return 1 else return 0 end end)    
-		if suc~=true then WestOK = true elseif id == 0 then WestOK = true else WestOK = false; printf("West obstacle") end    
+		if suc~=true then WestOK = true elseif id == 0 then WestOK = true else WestOK = false; Debug:Debug("West obstacle") end    
 				
 		-- Look through closedlist
 		if closedk>0 then
@@ -247,8 +292,8 @@ Nav = {
 		openk=openk-1
 		
 		if closedlist[closedk].x==tx and closedlist[closedk].z==tz then
-			printf("\n")
-			printfs("Nav:GetPath() Found the path! Openlist: %s, Closedlist: %s, Steps: ",table.maxn(openlist),table.maxn(closedlist))
+			Debug:Debug("\n")
+			Debug:Debug("Nav:GetPath() Found the path! Openlist: %s, Closedlist: %s, Steps: ",table.maxn(openlist),table.maxn(closedlist))
 			-- Change Closed list into a list of XZ coordinates starting with player
 			local path={} 
 			local pathIndex={}
@@ -256,59 +301,58 @@ Nav = {
 			table.insert(pathIndex,1,last) 
 			local i=1 -- we will include starting position into a table, otherwise 1
 			while pathIndex[i]>1 do i=i+1; table.insert(pathIndex,i,closedlist[pathIndex[i-1]].par); end
-			printf("%s\n", i)
-			printfs("Nav:GetPath() Path: ")
-			for i=table.maxn(pathIndex),1,-1 do table.insert(path,{x=closedlist[pathIndex[i]].x, z=closedlist[pathIndex[i]].z}); printf("%s(%s,%s)", last, path[table.maxn(pathIndex)-i+1].x, path[table.maxn(pathIndex)-i+1].z) end
+			Debug:Debug("%s\n", i)
+			Debug:Debug("Nav:GetPath() Path: ")
+			for i=table.maxn(pathIndex),1,-1 do table.insert(path,{x=closedlist[pathIndex[i]].x, z=closedlist[pathIndex[i]].z}); Debug:Debug("%s(%s,%s)", last, path[table.maxn(pathIndex)-i+1].x, path[table.maxn(pathIndex)-i+1].z) end
 			closedlist=nil
 			
 			-- Change list of XZ coordinates into a list of directions
-			printf("\n")      
-			printfs("Nav:GetPath() FPath: ")
+			Debug:Debug("\n")      
+			Debug:Debug("Nav:GetPath() FPath: ")
 			local fpath={}
 			for i=1,table.maxn(path)-1,1 do 
 				if path[i+1].x > path[i].x then fpath[i]=0 end -- North
 				if path[i+1].z > path[i].z then fpath[i]=1 end -- East
 				if path[i+1].x < path[i].x then fpath[i]=2 end -- South
 				if path[i+1].z < path[i].z then fpath[i]=3 end -- West
-				printf("%s, ", fpath[i])
+				Debug:Debug("%s, ", fpath[i])
 				end
-			printf("\n")
+			Debug:Debug("\n")
 			return fpath
 			end
 		end
 
 	return nil
 	end,
-	GoPath = function(self,tx,tz,tries)
-		tx=tonumber(tx)
-		tz=tonumber(tz)
-		printfs("Nav:GoPath(%s,%s,%s)\n", tx, tz, tries)
+	Go = function(self,tx,tz,tries,style)
+		if tx == nil then tx = Nav.X else tx=tonumber(tx) end
+		if tz == nil then tz = Nav.Z else tz=tonumber(tz) end
+		if ty == nil then ty = Nav.Y else ty=tonumber(ty) end
+		Debug:Debug("Nav:GoPath(%s,%s,%s)\n", tx, tz, tries)
 		if tries == nil then tries = 32 end
 		local j=1
 		repeat
 			if (Nav.X==tx and Nav.Z==tz) then return true else tries=tries-1 end
-			printfs("Nav.GoPath() @(%s,%s,%s) /%s\n",Nav.X,Nav.Z,Nav.Y,tries)
+			Debug:Debug("Nav.GoPath() @(%s,%s,%s) /%s\n",Nav.X,Nav.Z,Nav.Y,tries)
 			local fpath = Nav:GetPath(tx,tz)
 			if fpath == nil then 
-				printfs("Nav.GoPath() FPath=nil!")
+				Debug:Debug("Nav.GoPath() FPath=nil!")
 				Nav:UpdateMap()
-				Nav:TurnRight()
-				Nav:TurnRight()
 				Nav:TurnRight()
 				else 
 				j=0
 				repeat
 					j=j+1 
-					printfs("Nav:GoPath() @(%s,%s,%s), Moving %s/%s ...\n", Nav.X,Nav.Z,Nav.Y,j,table.maxn(fpath))
+					Debug:Debug("Nav:GoPath() @(%s,%s,%s), Moving %s/%s ...\n", Nav.X,Nav.Z,Nav.Y,j,table.maxn(fpath))
 					until not (Nav:Move(fpath[j]) and j<table.maxn(fpath))
 				end
 			until tries<0
-		printfs("Nav.GoPath() Out-of-UNTIL! /%s",tries)
+		Debug:Debug("Nav.GoPath() Out-of-UNTIL! /%s",tries)
 		return false
 		end,
 	Move = function(self,dir) -- dir{0=North|1=East|2=South|3=West|4=up|5=down}, returns true if succeeded
 		local success = 0
-		printfs("Nav:Move(%s)\n", dir)
+		Debug:Debug("Nav:Move(%s)\n", dir)
 		Supp:Refuel()
 		if dir==4 then               -- Up
 			success = turtle.up()
@@ -329,26 +373,26 @@ Nav = {
 		if success then
 			Nav:UpdateCoord(dir)
 			Nav:UpdateMap(dir)
-			--printfs("Nav:Move() Return true\n")
+			--Debug:Debug("Nav:Move() Return true\n")
 			return true
 			else
 			Nav:UpdateMap()
-			printfs("Nav:Move() Return false\n")
+			Debug:Debug("Nav:Move() Return false\n")
 			return false
 			end
 		end,
 	TurnRight = function(self)
 		turtle.turnRight()
-		printfs("Nav:TurnRight() Nav.F: %s => ",Nav.F)
+		Debug:Debug("Nav:TurnRight() Nav.F: %s => ",Nav.F)
 		Nav.F=(Nav.F+1)%4
-		printf("%s\n",Nav.F)
+		Debug:Debug("%s\n",Nav.F)
 		Nav:UpdateMap()
 		end,
 	TurnLeft = function(self)
 		turtle.turnLeft()
-		printfs("Nav:TurnLeft() Nav.F: %s => ",Nav.F)
+		Debug:Debug("Nav:TurnLeft() Nav.F: %s => ",Nav.F)
 		Nav.F=(Nav.F+3)%4
-		printf("%s\n",Nav.F)
+		Debug:Debug("%s\n",Nav.F)
 		Nav:UpdateMap()    
 		end,
 	TurnAround = function(self)
@@ -361,31 +405,59 @@ Nav = {
 			end
 		end,
 	DirToCoord = function(self,dir) -- returns x,z,y
-		--printfs("Nav:DirToCoord(%s)\n", dir)
+		--Debug:Debug("Nav:DirToCoord(%s)\n", dir)
 		if dir==0 then return Nav.X+1, Nav.Z, Nav.Y end
 		if dir==1 then return Nav.X, Nav.Z+1, Nav.Y end
 		if dir==2 then return Nav.X-1, Nav.Z, Nav.Y end
 		if dir==3 then return Nav.X, Nav.Z-1, Nav.Y end
 		if dir==4 then return Nav.X, Nav.Z, Nav.Y+1 end
 		if dir==5 then return Nav.X, Nav.Z, Nav.Y-1 end
-		printfs("Nav:DirToCoord: ERROR\n")
+		Debug:Debug("Nav:DirToCoord: ERROR\n")
 		end,    
 	UpdateCoord = function(self,dir)
-			--printfs("Nav:UpdateCoord(%s)\n",dir)
+			--Debug:Debug("Nav:UpdateCoord(%s)\n",dir)
 			Nav.X,Nav.Z,Nav.Y = Nav:DirToCoord(dir)
 		end,
-	UpdateMap = function(self,location,value) -- location{nil|dir|XZY), value{0=air,1=unknown block,1+=known block}  
-		--printfs("Nav:UpdateMap(%s,%s)\n",location,value)
+	GetMap = function(self,x,y,z,r)
+		if type(x) == "nil" then return nil
+			elseif type(x) == "number" and type(z) == "number" and type(y) == "number" then
+			Nav.ExploreMap(x,z,y)
+			if type(r) == "nil" then return Nav.Map[x][z][y] 
+				elseif type(r) == "string" and (r == "id" or r == "Id" or r == "ID") then return Nav.Map[x][z][y].Id
+				elseif type(r) == "string" and (r == "updated" or r == "Updated" or r == "UPDATED") then return Nav.Map[x][z][y].Updated
+				elseif type(r) == "string" and (r == "tag" or r == "Tag" or r == "TAG") then return Nav.Map[x][z][y].Tag
+				end
+			elseif type(x) == "table" then
+			if x.x ~= nil and x.z ~= nil and x.y ~= nil then 
+				Nav.ExploreMap(x.x,x.z,x.y)
+				if type(y) == "nil" then return Nav.Map[x.x][x.z][x.y] 
+					elseif type(y) == "string" and (r == "id" or r == "Id" or r == "ID") then return Nav.Map[x.x][x.z][x.y].Id
+					elseif type(y) == "string" and (r == "updated" or r == "Updated" or r == "UPDATED") then return Nav.Map[x.x][x.z][x.y].Updated
+					elseif type(y) == "string" and (r == "tag" or r == "Tag" or r == "TAG") then return Nav.Map[x.x][x.z][x.y].Tag
+					end
+				elseif x[1] ~= nil and x[2] ~= nil and x[3] ~= nil then
+				Nav.ExploreMap(x[1],x[2],x[3])
+				if type(y) == "nil" then return Nav.Map[x[1]][x[2]][x[3]] 
+					elseif type(y) == "string" and (r == "id" or r == "Id" or r == "ID") then return Nav.Map[x[1]][x[2]][x[3]].Id
+					elseif type(y) == "string" and (r == "updated" or r == "Updated" or r == "UPDATED") then return Nav.Map[x[1]][x[2]][x[3]].Updated
+					elseif type(y) == "string" and (r == "tag" or r == "Tag" or r == "TAG") then return Nav.Map[x[1]][x[2]][x[3]].Tag
+					end
+				end
+			end
+		return nil
+		end,
+	UpdateMap = function(self,location,value,upd_time) -- location{nil|dir|XZY), value{0=air,1=unknown block,1+=known block}  
+		--Debug:Debug("Nav:UpdateMap(%s,%s)\n",location,value)
 		local x,z,y
 		if type(location)=="nil" then
 			x,z,y = Nav:DirToCoord(Nav.F)
-			--printfs("Nav:UpdateMap: (nil) %s, %s, %s\n",x,z,y)
+			--Debug:Debug("Nav:UpdateMap: (nil) %s, %s, %s\n",x,z,y)
 			Nav:ExploreMap(x,z,y)      
 			Nav.Map[x][z][y].Updated = os.time()
 			if turtle.detect() then Nav.Map[x][z][y].Id = 1 else Nav.Map[x][z][y].Id = 0 end
 			elseif type(location)=="number" then
 			x,z,y = Nav:DirToCoord(Nav.F)
-			--printfs("Nav:UpdateMap: (number) %s, %s, %s\n",x,z,y)
+			--Debug:Debug("Nav:UpdateMap: (number) %s, %s, %s\n",x,z,y)
 			Nav:ExploreMap(x,z,y)
 			Nav.Map[x][z][y].Updated = os.time()
 			if turtle.detect() then Nav.Map[x][z][y].Id = 1 else Nav.Map[x][z][y].Id = 0 end
@@ -402,7 +474,7 @@ Nav = {
 				if turtle.detectDown() then Nav.Map[x][z][y].Id = 1 else Nav.Map[x][z][y].Id = 0 end
 				end      
 			elseif type(location)=="table" then
-			--printfs("Nav:UpdateMap: (table) %s, %s, %s\n",x,z,y)
+			--Debug:Debug("Nav:UpdateMap: (table) %s, %s, %s\n",x,z,y)
 			x,z,y = location[1] or location.x, location[2] or location.z, location[3] or location.y
 			if value == nil then value = 1 end
 			Nav:ExploreMap(x,z,y)
@@ -411,43 +483,15 @@ Nav = {
 			end
 		end,
 	ExploreMap = function(self,x,z,y)
-		--printfs("Nav:ExploreMap(%s,%s,%s)\n", x,z,y)
+		--Debug:Debug("Nav:ExploreMap(%s,%s,%s)\n", x,z,y)
 		if Nav.Map[x] == nil then Nav.Map[x]={} end
 		if Nav.Map[x][z] == nil then Nav.Map[x][z]={} end
 		if Nav.Map[x][z][y] == nil then Nav.Map[x][z][y]={} end
 		end,
-	Last = function(self)
-		return 1
+	Test = function(self)
+		local version = 0.1
+		return 0.1
 		end,
-	}
-Debug = {
-	Hugo = function(self, x, y) -- Redundant
-		modem.transmit(3, 1337, x.." "..y)
-		end,
-	PrintMap = function(self,Type)
-		y=0;
-		for x=Nav.X+3,Nav.X-3,-1 do
-			for z=Nav.Z-19,Nav.Z+19,1 do
-				if Nav.Map[x]==nil then
-					printf(".")
-					elseif Nav.Map[x][z]==nil then
-					printf(".")
-					else
-					if (Nav.X==x and Nav.Z==z) then printf("#") else 
-						if Nav.Map[x][z][y].Id==0 then printf(" ") else printf("%s",Nav.Map[x][z][y].Id) end
-						end
-					end
-				end
-			printf("\n")
-			end
-		end,
-	Check = function(self,...)
-		printfs(...)
-		while true do
-			event, param1 = os.pullEvent()
-			if event == "key" then break end
-			end
-		end
 	}
 Stats = {
 	GlobalSteps = 0,
@@ -469,24 +513,24 @@ Stats = {
 	}
 
 
-printfs("Starting the program...\n")
+Debug:Info("Starting the program...\n")
 
 Init:Born()
 
 while 1 do
 	Debug:PrintMap()
 	Supp:Refuel()
-	printf("A* Pathfinding supports only 2D\n")
-	printf("Enter X coordinate: ")
+	Debug:Debug("A* Pathfinding supports only 2D\n")
+	Debug:Debug("Enter X coordinate: ")
 	local x = io.read() -- = io.stdin:read'*l' ??
-	printf("Enter Z coordinate: ")
+	Debug:Debug("Enter Z coordinate: ")
 	local z = io.read()
 
 	if x=="" or x==nil then x=4 end
 	if z=="" or z==nil then z=3 end
 	
-	if Nav:GoPath(x,z) then printfs("Succeeded!") else printfs("Exceeded 32 tries, failed!\n") end
-	printf(" Coords: (%s,%s,%s), F:%s\n",Nav.X,Nav.Z,Nav.Y,Nav.F)
+	if Nav:Go(x,z) then Debug:Info("Succeeded!") else Debug:Error("Exceeded 32 tries, failed!\n") end
+	Debug:Info(" Coords: (%s,%s,%s), F:%s\n",Nav.X,Nav.Z,Nav.Y,Nav.F)
 	end
 
 
