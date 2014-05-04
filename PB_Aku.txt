@@ -1,0 +1,17 @@
+-- Code (May 04, 2014) by LatvianModder
+
+shell.run("delete PB_Aku")
+
+shell.run("pastebin get m1Tnt0wv PB_Aku/Main")
+shell.run("pastebin get 3AKpWFvr PB_Aku/Nav")
+shell.run("pastebin get Yxhz7Gju PB_Aku/Logger")
+shell.run("pastebin get AigXBa8F PB_Aku/Jobs")
+shell.run("pastebin get VtBzt7BU PB_Aku/Utils")
+shell.run("pastebin get FMsxxBSe PB_Aku/Logic")
+shell.run("pastebin get EiNQu1tr PB_Aku/Gui")
+shell.run("pastebin get Vf4iEtwA PB_Aku/Rui")
+shell.run("pastebin get y9b6Vm0P PB_Aku/Hud")
+shell.run("pastebin get ZymhHaWU PB_Aku/Stats")
+shell.run("pastebin get 5kqCkMdY PB_Aku/Comm")
+
+shell.run("PB_Aku/Main")
