@@ -31,7 +31,8 @@ function loop()
 		Utils.printfs("Exceeded 32 tries, failed!\n")
 	end
 	
-	Utils.printf(" Coords: (%s,%s,%s), F:%s\n",Nav.X,Nav.Z,Nav.Y,Nav.F)
+	pos = Nav.GetPos()
+	Utils.printf(" Coords: (%s,%s,%s), F:%s\n",pos.x,pos.z,pos.y,pos.f)
 end
 
 init()
