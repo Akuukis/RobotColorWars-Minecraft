@@ -1,3 +1,10 @@
+--[[ API:
+Useful Stuff:
+for n in pairs(list) do Logger.Debug("%s: %s\n",n,list[n]) end -- lists all members and their values the list
+
+--]]
+
+
 local Level = { GUI = 5, RUI = 5, HUD = 5 }
 
 function PrintMap(Type)
@@ -28,7 +35,7 @@ function PrintMap(Type)
 end
 
 function Check(...)
-    printfs(...)
+    write(Utils.myformat(...))
     while true do
 		event, param1 = os.pullEvent()
 		if event == "key" then

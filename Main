@@ -10,29 +10,28 @@ os.loadAPI("PB_Aku/Hud")
 os.loadAPI("PB_Aku/Jobs")
 
 function init()
-	Nav.UpdateMap({0,0,0},0)
+	Nav.UpdateMap({0,0,0},false)
 end
 
 function loop()
 	Logger.PrintMap()
 	Utils.Refuel()
-	Utils.printf("A* Pathfinding supports only 2D\n")
-	Utils.printf("Enter X coordinate: ")
-	local x = read()
-	Utils.printf("Enter Z coordinate: ")
-	local z = read()
-
-	if x == "" or x == nil then x = 4 end
-	if z == "" or z == nil then z = 3 end
+	Utils.printf("\n>")
+	str = loadstring(io.read())
 	
-	if Nav.Go(x, z) then
-		Utils.printfs("Succeeded!")
+	--[[
+	Logger.Check("\nNeighbors:")	
+	for f=0,5 do Logger.Debug("(F%s,%s,%s,%s)",f, Nav.GetPos(pos,f,"x"), Nav.GetPos(pos,f,"z"), Nav.GetPos(pos,f,"y")) end
+	Logger.Check("\n") --]]
+	
+	if str() then
+		Utils.printfs("Failed or exceeded tries!\n")
 	else
-		Utils.printfs("Exceeded 32 tries, failed!\n")
+		Utils.printfs("Succeeded!\n")
 	end
 	
 	pos = Nav.GetPos()
-	Utils.printf(" Coords: (%s,%s,%s), F:%s\n",pos.x,pos.z,pos.y,pos.f)
+	Utils.printf(" Coords: (%s,%s,%s), F:%s\n",Nav.GetPos("x"),Nav.GetPos("z"),Nav.GetPos("y"),Nav.GetPos("f"))
 end
 
 init()
