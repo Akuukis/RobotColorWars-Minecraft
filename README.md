@@ -1,32 +1,26 @@
 TurtleColorWars
 ===============
 
-Lua code for ComputerCraft to make ColorWars where coloured turtles explore, build bases, reproduce and fight other colours. 
+Lua code for ComputerCraft to make ColorWars where coloured turtles explore, build bases, reproduce, grow into colonies and fight other coloured colonies.
 
-To check it out:
+How to check it out?
 ----------------
-There's a Lua code around the web to download&run script straight from github!
+1. Start Minecraft with ComnputerCraft mod enabled
+2. Run inside the turtle "pastebin run ip6nUQ2k"
+3. Press 1 (or 2 or 3, usually not everyone works but at least someone works)
+4. Fuel the turtle & have fun! ... execute Nav.Go({3,2,1},false,"Normal")
 
-To contribute:
+How to tinker with it?
 ----------------
-First, set up for easy testing. For that I highly suggest to make a Pastebin account and make a paste for each file. Then make the program (see below) in turtle to pull & run it! Play around, show&share to friends, then improve something and branch it on github.
+1. Set up yourself. I highly suggest to copy files to your own pastebin and take a look at "Loader" file how to execute them.
+2. Edit your pastebin, execute it and test it. Have fun!
 
--- Start of code
--- Code (May 04, 2014) by LatvianModder
-shell.run("delete PB_Test")
-shell.run("pastebin get xxxxxxxx PB_Test/Main")
-shell.run("pastebin get xxxxxxxx PB_Test/Nav")
-shell.run("pastebin get xxxxxxxx PB_Test/Logger")
-shell.run("pastebin get xxxxxxxx PB_Test/Jobs")
-shell.run("pastebin get xxxxxxxx PB_Test/Utils")
-shell.run("pastebin get xxxxxxxx PB_Test/Logic")
-shell.run("pastebin get xxxxxxxx PB_Test/Gui")
-shell.run("pastebin get xxxxxxxx PB_Test/Rui")
-shell.run("pastebin get xxxxxxxx PB_Test/Hud")
-shell.run("pastebin get xxxxxxxx PB_Test/Stats")
-shell.run("pastebin get xxxxxxxx PB_Test/Comm")
-shell.run("PB_Test/Main")
--- End of code
+How to contribute?
+----------------
+1. Ask for documentation. We haven't wrote any because there are only few friends involved at the moment.
+2. Branch the master.
+3. Contact others and ask questions. 
+
 
 Versions:
 ----------------
