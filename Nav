@@ -138,18 +138,25 @@ function GetPos ( ... ) -- Input Position (table), FacingDirection (num) and ret
 	end
 	return nil
 	end
-function Go (target,isRelative,style)
-	target.x = target.x or target[1] or GetPos("x")
-	target.z = target.z or target[2] or GetPos("z")
-	target.y = target.y or target[3] or GetPos("y")
+function Go ( ... ) -- table position, num isRelative, text options[]
+	
+	local target = {}
+	local options = {}
+	
+	for i=1,select('#',...) do
+		local temp = select(i,...)
+		if type(temp) == "table" then target = temp end
+		if type(temp) == "boolean" then if temp == true then isRelative = 1 else isRelative = 0 end end
+		if type(temp) == "num" then isRelative = temp end
+		if type(temp) == "text" then options[table.maxn(options)+1] = temp end
+	end
+	
+	target.x = target.x or target[1] or 0
+	target.z = target.z or target[2] or 0
+	target.y = target.y or target[3] or 0
 	target.f = target.f or target[4] or GetPos("f")
-
-	if target.x == nil then target.x = GetPos("x") else target.x=tonumber(target.x) end
-	if target.z == nil then target.z = GetPos("z") else target.z=tonumber(target.z) end
-	if target.y == nil then target.y = GetPos("y") else target.y=tonumber(target.y) end
-	if target.f ~= nil then target.f = tonumber(target.f) else target.f = 0 end -- TODO
+	
 	if isRelative and isRelative > 0 then
-		isRelative = tonumber(isRelative)
 		if isRelative > 1 then
 			if target.f == 0 then target.x = GetPos("x") + target.x; target.z = GetPos("z") + target.z end
 			if target.f == 1 then target.x = GetPos("x") - target.z; target.z = GetPos("z") + target.x end
@@ -161,23 +168,26 @@ function Go (target,isRelative,style)
 		end	
 	end
 	
-	if style == "Normal" or style == "normal" then style = "Normal" 
-	elseif style == "Careful" or style == "careful" then style = "Careful" 
-	elseif style == "Dig" or style == "dig" then return "Error: Style " .. style .. " not implemented yet."
-	elseif style == "DigCareful" or style == "Digcareful" or style == "digcareful" then return "Error: Style " .. style .. " not implemented yet."
-	elseif style == "Explore" or style == "explore" then return "Error: Style " .. style .. " not implemented yet."
-	elseif style == "SurfaceExplore" or style == "Surfaceexplore" or style == "surfaceexplore" then return "Error: Style " .. style .. " not implemented yet."
-	else style = "Normal"
+	for i=1,table.maxn(options) do
+		if options[i] == "Normal" or options[i] == "normal" then options[i] = "Normal" 
+		elseif options[i] == "Careful" or options[i] == "careful" then options[i] = "Careful" 
+		elseif options[i] == "Dig" or options[i] == "dig" then return "Error: Style " .. options[i] .. " not implemented yet."
+		elseif options[i] == "DigCareful" or options[i] == "Digcareful" or options[i] == "digcareful" then return "Error: Style " .. options[i] .. " not implemented yet."
+		elseif options[i] == "Explore" or options[i] == "explore" then return "Error: Style " .. options[i] .. " not implemented yet."
+		elseif options[i] == "SurfaceExplore" or options[i] == "Surfaceexplore" or options[i] == "surfaceexplore" then return "Error: Style " .. options[i] .. " not implemented yet."
+		else options[i] = "Normal"
+		end
 	end
 	
+	
 	local tries=32 -- TODO
-	Logger.Debug("Nav.GoPath(%s,%s,%s) Style: %s\n", target.x, target.z, target.y, style)
+	Logger.Debug("Nav.Go(%s,%s,%s) Style: %s\n", target.x, target.z, target.y, options[1])
 	repeat
 		if ComparePos(GetPos(),target) then return true else tries = tries - 1 end
-		Logger.Debug("Nav.GoPath() @ (%s,%s,%s,F%s)/%s\n",GetPos("x"),GetPos("z"),GetPos("y"),GetPos("f"),tries)
-		local fpath = GetPath(target,style)
+		Logger.Debug("Nav.Go() @ (%s,%s,%s,F%s)/%s\n",GetPos("x"),GetPos("z"),GetPos("y"),GetPos("f"),tries)
+		local fpath = GetPath(target,options)
 		if fpath == nil then 
-			Logger.Debug("Nav.GoPath() FPath=nil!")
+			Logger.Debug("Nav.Go() FPath=nil!")
 			UpdateMap()
 			TurnRight()
 		else
@@ -186,12 +196,12 @@ function Go (target,isRelative,style)
 			while i <= table.maxn(fpath) and not success do 
 				Logger.Debug("%s",i)
 				Logger.Debug("@(%s,%s,%s),(%s,%s) Moving %s/%s ...\n", GetPos("x"),GetPos("z"),GetPos("y"),not fpath[i].Id,not GetMap(GetPos(fpath[i].f),"Id"),i,table.maxn(fpath))
-				success = not Move(fpath[i], style)
+				success = not Move(fpath[i], options)
 				i = i + 1
 			end
 		end
 	until tries < 0
-	Logger.Debug("Nav.GoPath() Out-of-UNTIL! /%s",tries)
+	Logger.Debug("Nav.Go() Out-of-UNTIL! /%s",tries)
 	return false
 end
 function TurnRight (self)
@@ -233,7 +243,7 @@ function UpdateMap (location,value) -- location{nil|dir|XZY), value{false=air,0=
 end
 
 -- Private API's
-function GetPath (target,style)  -- TODO: multiple targets!
+function GetPath (target,options)  -- TODO: multiple targets!
 --[[ DISCLAIMER.
 This code (May 04, 2014) is written by Akuukis 
 	who based on code (Sep 21, 2006) by Altair
@@ -247,7 +257,7 @@ Pos.y is the player's current y or Height (not yet implemented)
 target.x is the target x
 target.z is the target z
 target.y is the target y (not yet implemented)
-style is the preference (not yet implemented)
+options is the preference (not yet implemented)
 
 Note. all the x and z are the x and z to be used in the table.
 By this I mean, if the table is 3 by 2, the x can be 1,2,3 and the z can be 1 or 2.
@@ -260,20 +270,26 @@ OR nil if closedlist==nil
 --]]
 if target.y == nil then target.y = GetPos("y") end
 
-CalcHeuristic = function (pos1, pos2, style)
+CalcHeuristic = function (pos1, pos2, options)
 	-- Useful - http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
 	AverageCost = 1
-	if style == "Manhattan" or style == 1 then
-		dx = math.abs(GetPos(pos1,"x")-GetPos(pos2,"x"))
-		dz = math.abs(GetPos(pos1,"z")-GetPos(pos2,"z"))
-		dy = math.abs(GetPos(pos1,"y")-GetPos(pos2,"y"))
-		return AverageCost * (dx + dz + dy)
-	elseif style == "ManhattanTieBreaker" or style == 2 then
-		dx = math.abs(GetPos(pos1,"x")-GetPos(pos2,"x"))
-		dz = math.abs(GetPos(pos1,"z")-GetPos(pos2,"z"))
-		dy = math.abs(GetPos(pos1,"y")-GetPos(pos2,"y"))
-		return AverageCost * (dx + dz + dy) * (1 + 1/1000)
+	for i=1,table.maxn(options) do
+		if options[i] == "Manhattan" or options[i] == 1 then
+			dx = math.abs(GetPos(pos1,"x")-GetPos(pos2,"x"))
+			dz = math.abs(GetPos(pos1,"z")-GetPos(pos2,"z"))
+			dy = math.abs(GetPos(pos1,"y")-GetPos(pos2,"y"))
+			return AverageCost * (dx + dz + dy)
+		elseif options[i] == "ManhattanTieBreaker" or options[i] == 2 then
+			dx = math.abs(GetPos(pos1,"x")-GetPos(pos2,"x"))
+			dz = math.abs(GetPos(pos1,"z")-GetPos(pos2,"z"))
+			dy = math.abs(GetPos(pos1,"y")-GetPos(pos2,"y"))
+			return AverageCost * (dx + dz + dy) * (1 + 1/1000)
+		end
 	end
+	dx = math.abs(GetPos(pos1,"x")-GetPos(pos2,"x")) --Default
+	dz = math.abs(GetPos(pos1,"z")-GetPos(pos2,"z"))
+	dy = math.abs(GetPos(pos1,"y")-GetPos(pos2,"y"))
+	return AverageCost * (dx + dz + dy) * (1 + 1/1000)
 end
 	
 Logger.Debug("Nav.GetPath(%s,%s,%s)\n",target.x,target.z,target.y)
@@ -285,18 +301,20 @@ openlist[1].x = GetPos("x")
 openlist[1].z = GetPos("z")
 openlist[1].y = GetPos("y")
 openlist[1].DistExactStart = 0
-openlist[1].DistHeuristicTarget = CalcHeuristic(GetPos(),target,2)
+openlist[1].DistHeuristicTarget = CalcHeuristic(GetPos(),target,options)
 openlist[1].DistSum = openlist[1].DistExactStart + openlist[1].DistHeuristicTarget
 openlist[1].parent = 1
 local openk = 1					-- Openlist counter
 local closedk = 0				-- Closedlist counter
 local DefaultWeight = 3 -- TODO!
 -- Logger.Check("Openlist.x|y|z=%s,%s,%s\n",openlist[1].x,openlist[1].z,openlist[1].y)
-Logger.Debug("Nav.GetPath() CurbaseXZ. %s",style)
+Logger.Debug("Nav.GetPath() CurbaseXZ. %s",options[1])
 
 while openk > 0  and table.maxn(closedlist)<256 do   -- Growing loop
 
-	if style == "Careful" and GetMap(target,"Id") and GetMap(target,"Id") > 0 then return nil end		-- return nil if target is not accessable
+	for i=1,table.maxn(options) do
+		if options[i] == "Careful" and GetMap(target,"Id") and GetMap(target,"Id") > 0 then return nil end		-- return nil if target is not accessable
+	end
 	
 	local lowestDS = openlist[openk].DistSum		-- Get the lowest f of the openlist
 	local basis = openk
@@ -317,13 +335,16 @@ while openk > 0  and table.maxn(closedlist)<256 do   -- Growing loop
 	local OK = {}
 	for face=0,5 do OK[face] = 1 end  
 
-	if style == "Normal" then		-- If it IS on the map, check map for obstacles
-		for face=0,5 do 
-			--Logger.Debug("%s",GetMap(GetPos(curbase,face),"Id"))
-			if GetMap(GetPos(curbase,face),"Id") then OK[face] = DefaultWeight end end
-	elseif style == "Careful" then
-		for face=0,5 do if GetMap(GetPos(curbase,face),"Id") then OK[face] = false end end
+	for i=1,table.maxn(options) do
+		if options[i] == "Normal" then		-- If it IS on the map, check map for obstacles
+			for face=0,5 do 
+				--Logger.Debug("%s",GetMap(GetPos(curbase,face),"Id"))
+				if GetMap(GetPos(curbase,face),"Id") then OK[face] = DefaultWeight end end
+		elseif options[i] == "Careful" then
+			for face=0,5 do if GetMap(GetPos(curbase,face),"Id") then OK[face] = false end end
+		end
 	end
+	
 	for face=0,5 do if GetMap(GetPos(curbase,face),"Tag") == true then OK[face] = false end end	-- Look through Tagged
 	
 	if closedk>0 then		-- Look through closedlist
@@ -356,7 +377,7 @@ while openk > 0  and table.maxn(closedlist)<256 do   -- Growing loop
 			openlist[openk].z = GetPos(curbase,face,"z")
 			openlist[openk].y = GetPos(curbase,face,"y")
 			openlist[openk].DistExactStart = curbase.DistExactStart + OK[face]
-			openlist[openk].DistHeuristicTarget =  CalcHeuristic(GetPos(curbase,face),target,2)
+			openlist[openk].DistHeuristicTarget =  CalcHeuristic(GetPos(curbase,face),target,options)
 			openlist[openk].DistSum = openlist[openk].DistExactStart + openlist[openk].DistHeuristicTarget
 			openlist[openk].parent = closedk
 			--Logger.Debug("F:%s:",face)
@@ -417,11 +438,11 @@ while openk > 0  and table.maxn(closedlist)<256 do   -- Growing loop
 	end
 	return nil
 end
-function Move (target, style) -- dir{0=North|1=East|2=South|3=West|4=up|5=down}, returns true if succeeded
-	style = style or "Normal" -- Usually "Normal" because Nav.Go will default on "Normal".
+function Move (target, options) -- dir{0=North|1=East|2=South|3=West|4=up|5=down}, returns true if succeeded
+	options[1] = options[1] or "Normal" -- Usually "Normal" because Nav.Go will default on "Normal".
 	local success = false
 	local temp = GetMap(GetPos(target.f),"Id")
-	--Logger.Debug("Nav.Move(%s,%s,%s)\n", target.f, target.id, style)
+	--Logger.Debug("Nav.Move(%s,%s,%s)\n", target.f, target.id, options)
 	Utils.Refuel()
 	if target.f==4 then               -- Up
 		success = turtle.up()
@@ -449,22 +470,24 @@ function Move (target, style) -- dir{0=North|1=East|2=South|3=West|4=up|5=down},
 		Recalc = true
 		if not target.id and not GetMap(GetPos(target.f),"Id") then Recalc = false end
 		if target.id and GetMap(GetPos(target.f),"Id") and target.id == GetMap(GetPos(target.f),"Id") then Recalc = false end 
-		Logger.Debug("%s,%s",not GetMap(GetPos(target.f),"Tag"),Recalc)		
-		if not Recalc and not GetMap(GetPos(target.f),"Tag") and style == "Normal" then
-			--Logger.Check("TRUE")
-			if target.f == 4 then turtle.digUp(); success = turtle.up()
-			elseif target.f == 5 then success = turtle.digDown(); turtle.down()
-			else turtle.dig(); success = turtle.forward()
+		Logger.Debug("%s,%s",not GetMap(GetPos(target.f),"Tag"),Recalc)
+		for i=1,table.maxn(options) do
+			if not Recalc and not GetMap(GetPos(target.f),"Tag") and style == "Normal" then
+				--Logger.Check("TRUE")
+				if target.f == 4 then turtle.digUp(); success = turtle.up()
+				elseif target.f == 5 then success = turtle.digDown(); turtle.down()
+				else turtle.dig(); success = turtle.forward()
+				end
+				if success then
+					UpdatePos(target.f)
+					UpdateMap(target.f)
+					return true
+				end
+			else
+				UpdateMap()
+				--Logger.Debug("Nav.Move() Return false\n")
+				return false
 			end
-			if success then
-				UpdatePos(target.f)
-				UpdateMap(target.f)
-				return true
-			end
-		else
-			UpdateMap()
-			--Logger.Debug("Nav.Move() Return false\n")
-			return false
 		end
 	end
 end
