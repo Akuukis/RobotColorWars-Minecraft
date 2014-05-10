@@ -12,7 +12,7 @@ How to check it out?
 
 How to tinker with it?
 ----------------
-1. Set up yourself. I highly suggest to copy files to your own pastebin and take a look at "Loader" file how to execute them.
+1. I highly suggest to copy files to your own pastebin and take a look at "Loader" file how to execute them.
 2. Edit your pastebin, execute it and test it. Have fun!
 
 How to contribute?
