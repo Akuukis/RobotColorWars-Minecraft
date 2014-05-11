@@ -1,20 +1,19 @@
 path = select(1,...)
 if path == nil then path = "" end
 
-os.loadAPI(path .. "Logger")
-os.loadAPI(path .. "Logic")
-os.loadAPI(path .. "Nav")
-os.loadAPI(path .. "Stats")
-os.loadAPI(path .. "Utils")
-os.loadAPI(path .. "Rui")
-os.loadAPI(path .. "Comm")
-os.loadAPI(path .. "Gui")
-os.loadAPI(path .. "Hud")
-os.loadAPI(path .. "Jobs")
-
-function init()
-	Nav.UpdateMap({0,0,0},false)
-end
+--                 "Main" -- (in WIP - mainly debugging) Provides ongoing process, handles errors and updates APIs on the fly
+os.loadAPI(path .. "Init") -- Provides set-up for turtle that has just been turned on
+os.loadAPI(path .. "Comm") -- Provides sending & listening to info between turtles
+os.loadAPI(path .. "Utils") -- Provides Self-monitoring, reacting & a collection of random tasks
+os.loadAPI(path .. "Resm") -- Provides resource management. Counts and prices resources in Suppy and Demand
+os.loadAPI(path .. "Logic") -- Provides decision making, weights alternatives and picks a Job to do
+os.loadAPI(path .. "Nav") -- Provides pathfinding, moving & mapping
+os.loadAPI(path .. "Jobs") -- Provides a collection of instructions
+os.loadAPI(path .. "Logger") -- Filters info and parses it to Stats, Rui, Gui, Hud (not vital but very neccessary)
+os.loadAPI(path .. "Stats") -- Gathers and aggregates data for analysis, improvement and fun
+os.loadAPI(path .. "Rui") -- Remote (or Rednet) user interface (Player interface, not vital)
+os.loadAPI(path .. "Gui") -- Graphical user interface (Player interface, not vital)
+os.loadAPI(path .. "Hud") -- Heads-Up display (Player interface, not vital)
 
 function loop()
 	Logger.PrintMap()
