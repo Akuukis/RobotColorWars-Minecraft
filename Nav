@@ -138,7 +138,7 @@ function GetPos ( ... ) -- Input Position (table), FacingDirection (num) and ret
 	end
 	return nil
 	end
-function Go ( ... ) -- table position, num isRelative, text options[]
+function Go ( ... ) -- table position, num isRelative, text option1 [, text option2 ...]
 	
 	local target = {}
 	local options = {}
@@ -241,7 +241,14 @@ function UpdateMap (location,value) -- location{nil|dir|XZY), value{false=air,0=
 		PutMap({location.x, location.x, location.y},"Id",value)
 	end
 end
-
+function GetDistance (target, ...) -- Gets distance between your position and a target with given options
+	local options = {}
+	for i=1,select('#',...) do
+		local temp = select(i,...)
+		if type(temp) == "text" then options[table.maxn(options)+1] = temp end
+	end
+	return table.maxn( GetPath(target,options) )
+end
 -- Private API's
 function GetPath (target,options)  -- TODO: multiple targets!
 --[[ DISCLAIMER.

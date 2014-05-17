@@ -22,13 +22,23 @@ function myformat(fmt, ... )
 	return string.format( fmt, unpack( buf ) )
 end
 
-function printf(...)	 
-  write(myformat(...))
+local GlobalSteps = 0
+local CountedSteps = 0
+
+function Step(x)
+	x = x or 1 -- create object if user does not provide one
+	GlobalSteps = GlobalSteps + 1
+	CountedSteps = CountedSteps + 1
 end
 
--- Deprecated?
-function printfs(...)
-  --for w in string.gmatch(debug.traceback(nil,2+1), ".lua:") do printf("  ") end -- ComputerCraft doesn't have debug
-  --write(myformat(...))
-  printf(...)
+function GetGlobalSteps()
+	return GlobalSteps
+end
+
+function GetCountedSteps()
+	return CountedSteps
+end
+
+function ResetCountedSteps()
+	CountedSteps = 0
 end

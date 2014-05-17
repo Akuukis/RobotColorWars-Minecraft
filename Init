@@ -1,1 +1,7 @@
-Nav.UpdateMap({0,0,0},false)
+function Start ()
+	Nav.UpdateMap({0,0,0},false)
+	coroutine.yield(true,Logger.Info,"In")
+	coroutine.yield(false,Logger.Info,"ed!\n")
+	coroutine.yield(false,Gui.PlayerRun)
+	write("itializ")
+end
