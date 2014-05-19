@@ -202,6 +202,22 @@ shell.run("pastebin get 5kqCkMdY Downloads/Pastebin/mox/Comm")
 shell.run("Downloads/Pastebin/mox/Main", "Downloads/Pastebin/mox/")
 end
 
+function StartDownloaderPastebinHekaya()
+shell.run("delete Downloads/Pastebin/Hekaya")
+shell.run("pastebin get K5VEpGk6 Downloads/Pastebin/Hekaya/Main")
+shell.run("pastebin get 4TLXbEAr Downloads/Pastebin/Hekaya/Nav")
+shell.run("pastebin get vfykx5yU Downloads/Pastebin/Hekaya/Logger")
+shell.run("pastebin get ED6JUvXF Downloads/Pastebin/Hekaya/Jobs")
+shell.run("pastebin get m684sRqW Downloads/Pastebin/Hekaya/Utils")
+shell.run("pastebin get BVivED7g Downloads/Pastebin/Hekaya/Logic")
+shell.run("pastebin get smpuk04E Downloads/Pastebin/Hekaya/Gui")
+shell.run("pastebin get LHNWPcXr Downloads/Pastebin/Hekaya/Rui")
+shell.run("pastebin get 5frXRLYb Downloads/Pastebin/Hekaya/Hud")
+shell.run("pastebin get vkqKAC75 Downloads/Pastebin/Hekaya/Stats")
+shell.run("pastebin get HYzrtMtW Downloads/Pastebin/Hekaya/Comm")
+shell.run("Downloads/Pastebin/Hekaya/Main", "Downloads/Pastebin/Hekaya/")
+end
+
 function StartDownloaderPastebinAlkers()
 shell.run("delete Downloads/Pastebin/Alk")
 shell.run("pastebin get xHUKx2xN Downloads/Pastebin/Alk/Main")
@@ -226,11 +242,13 @@ print("1 - GitHub")
 print("2 - Pastebin of Akuukis")
 print("3 - Pastebin of Alkerss")
 print("4 - Pastebin of moxxcrue")
+print("5 - Pastebin of Hekaya")
 while true do
 	event, param1 = os.pullEvent("char")
 	if event == "char" and param1 == "1" then StartDownloaderGitHub() end
 	if event == "char" and param1 == "2" then StartDownloaderPastebinAkuukis() end
 	if event == "char" and param1 == "3" then StartDownloaderPastebinAlkers() end
 	if event == "char" and param1 == "4" then StartDownloaderPastebinmoxxcrue() end
+	if event == "char" and param1 == "5" then StartDownloaderPastebinHekaya() end
 end
 
