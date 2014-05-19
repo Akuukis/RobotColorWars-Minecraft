@@ -166,7 +166,7 @@ else
 		if tArgs[i] == "." then tArgs[i] = nil end
 	end	
 	parseInput( "Akuukis", "TurtleColorWars", tArgs[1], tArgs[2], tArgs[3])
-	shell.run("Downloads/GitHub/TurtleColorWars/Main")
+ shell.run("Downloads/GitHub/TurtleColorWars/Main", "Downloads/GitHub/TurtleColorWars/")
 end
 end
 
