@@ -13,7 +13,243 @@ local usage = [[
  downloaded to downloads/hello-world/.
   ]]
 local blackList = [[
+@blacklistedfilelocal tArgs, gUser, gRepo, gPath, gBranch = {...}, nil, nil, "", "master"
+
+local usage = [[
+ github [path] [remote path] [branch]
+ user is hardcoded to "Akuukis"
+ repo is hardcoded to "TurtleColorWars"
+ Remote path defaults to the root of the repo.
+ Path defaults to the download folder.
+ Branch defaults to master.
+ If you want to leave an option empty use a dot.
+ Example: github johnsmith hello-world . foo
+ Everything inside the directory foo will be 
+ downloaded to downloads/hello-world/.
+  ]]
+local blackList = [[
 @blacklistedfile
+]]
+
+local title = "Github Repo Downloader"
+local fileList = {dirs={},files={}}
+local x , y = term.getSize()
+
+-- GUI
+function printTitle()
+	local line = 2
+	term.setCursorPos(1,line)
+	for i = 2, x, 1 do write("-") end
+	term.setCursorPos((x-title:len())/2,line+1)
+	print(title)
+	for i = 2, x, 1 do write("-") end
+end
+
+function writeCenter( str )
+	term.clear()
+	printTitle()
+	term.setCursorPos((x-str:len())/2-1,y/2-1)
+	for i = -1, str:len(), 1 do write("-") end
+	term.setCursorPos((x-str:len())/2-1,y/2)
+	print("|"..str.."|")
+	term.setCursorPos((x-str:len())/2-1,y/2+1)
+	for i = -1, str:len(), 1 do write("-") end
+end
+ 
+function printUsage()
+	local str = "Press space key to continue"
+	term.clear()
+	printTitle()
+	term.setCursorPos(1,y/2-4)
+	print(usage)
+	term.setCursorPos((x-str:len())/2,y/2+7)
+	print(str)
+	while true do
+		local event, param1 = os.pullEvent("key")
+		if param1 == 57 then
+			sleep(0)
+			break
+		end
+	end
+	term.clear()
+	term.setCursorPos(1,1)
+end
+
+-- Download File
+function downloadFile( path, url, name )
+	writeCenter("Downloading File: "..name)
+	dirPath = path:gmatch('([%w%_%.% %-%+%,%;%:%*%#%=%/]+)/'..name..'$')()
+	if dirPath ~= nil and not fs.isDir(dirPath) then fs.makeDir(dirPath) end
+	local content = http.get(url)
+	local file = fs.open(path,"w")
+	file.write(content.readAll())
+	file.close()
+end
+
+-- Get Directory Contents
+function getGithubContents( path )
+	local pType, pPath, pName, checkPath = {}, {}, {}, {}
+	local response = http.get("https://api.github.com/repos/"..gUser.."/"..gRepo.."/contents/"..path.."/?ref="..gBranch)
+	if response then
+		response = response.readAll()
+		if response ~= nil then
+			for str in response:gmatch('"type":"(%w+)"') do table.insert(pType, str) end
+			for str in response:gmatch('"path":"([^\"]+)"') do table.insert(pPath, str) end
+			for str in response:gmatch('"name":"([^\"]+)"') do table.insert(pName, str) end
+		end
+	else
+		writeCenter( "Error: Can't resolve URL" )
+		sleep(2)
+		term.clear()
+		term.setCursorPos(1,1)
+		error()
+	end
+	return pType, pPath, pName
+end
+
+-- Blacklist Function
+function isBlackListed( path )
+	if blackList:gmatch("@"..path)() ~= nil then
+		return true
+	end
+end
+
+-- Download Manager
+function downloadManager( path )
+	local fType, fPath, fName = getGithubContents( path )
+	for i,data in pairs(fType) do
+		if data == "file" then
+			checkPath = http.get("https://raw.github.com/"..gUser.."/"..gRepo.."/"..gBranch.."/"..fPath[i])
+			if checkPath == nil then
+
+				fPath[i] = fPath[i].."/"..fName[i]
+			end
+			local path = "Downloads/GitHub/"..gRepo.."/"..fPath[i]
+			if gPath ~= "" then path = gPath.."/"..gRepo.."/"..fPath[i] end
+			if not fileList.files[path] and not isBlackListed(fPath[i]) then
+				fileList.files[path] = {"https://raw.github.com/"..gUser.."/"..gRepo.."/"..gBranch.."/"..fPath[i],fName[i]}
+			end
+		end
+	end
+	for i, data in pairs(fType) do
+		if data == "dir" then
+			local path = "Downloads/GitHub/"..gRepo.."/"..fPath[i]
+			if gPath ~= "" then path = gPath.."/"..gRepo.."/"..fPath[i] end
+			if not fileList.dirs[path] then 
+				writeCenter("Listing directory: "..fName[i])
+				fileList.dirs[path] = {"https://raw.github.com/"..gUser.."/"..gRepo.."/"..gBranch.."/"..fPath[i],fName[i]}
+				downloadManager( fPath[i] )
+			end
+		end
+	end
+end
+
+-- Main Function
+function main( path )
+	writeCenter("Connecting to Github")
+	downloadManager(path)
+	for i, data in pairs(fileList.files) do
+		downloadFile( i, data[1], data[2] )
+	end
+	writeCenter("Download completed")
+	sleep(2,5)
+	term.clear()
+	term.setCursorPos(1,1)
+end
+
+-- Parse User Input
+function parseInput( user, repo , dldir, path, branch )
+	if path == nil then path = "" end
+	if branch ~= nil then gBranch = branch end
+	if repo == nil then printUsage()
+	else
+		gUser = user
+		gRepo = repo
+		if dldir ~= nil then gPath = dldir end
+		main( path ) 
+	end
+end
+
+function StartDownloaderGitHub()
+if not http then
+	writeCenter("You need to enable the HTTP API!")
+	sleep(3)
+	term.clear()
+	term.setCursorPos(1,1)
+else
+	for i=1, 5, 1 do
+		if tArgs[i] == "." then tArgs[i] = nil end
+	end	
+	parseInput( "Akuukis", "TurtleColorWars", tArgs[1], tArgs[2], tArgs[3])
+ shell.run("Downloads/GitHub/TurtleColorWars/Main", "Downloads/GitHub/TurtleColorWars/")
+end
+end
+
+function StartDownloaderPastebinAkuukis()
+shell.run("delete Downloads/Pastebin/Aku")
+shell.run("pastebin get m1Tnt0wv Downloads/Pastebin/Aku/Main")
+shell.run("pastebin get 3AKpWFvr Downloads/Pastebin/Aku/Nav")
+shell.run("pastebin get Yxhz7Gju Downloads/Pastebin/Aku/Logger")
+shell.run("pastebin get AigXBa8F Downloads/Pastebin/Aku/Jobs")
+shell.run("pastebin get VtBzt7BU Downloads/Pastebin/Aku/Utils")
+shell.run("pastebin get FMsxxBSe Downloads/Pastebin/Aku/Logic")
+shell.run("pastebin get EiNQu1tr Downloads/Pastebin/Aku/Gui")
+shell.run("pastebin get Vf4iEtwA Downloads/Pastebin/Aku/Rui")
+shell.run("pastebin get y9b6Vm0P Downloads/Pastebin/Aku/Hud")
+shell.run("pastebin get VeVb4816 Downloads/Pastebin/Aku/Stats")
+shell.run("pastebin get 5kqCkMdY Downloads/Pastebin/Aku/Comm")
+shell.run("Downloads/Pastebin/Aku/Main", "Downloads/Pastebin/Aku/")
+end
+
+function StartDownloaderPastebinmoxxcrue()
+shell.run("delete Downloads/Pastebin/mox")
+shell.run("pastebin get m1Tnt0wv Downloads/Pastebin/mox/Main")
+shell.run("pastebin get 3AKpWFvr Downloads/Pastebin/mox/Nav")
+shell.run("pastebin get Yxhz7Gju Downloads/Pastebin/mox/Logger")
+shell.run("pastebin get AigXBa8F Downloads/Pastebin/mox/Jobs")
+shell.run("pastebin get VtBzt7BU Downloads/Pastebin/mox/Utils")
+shell.run("pastebin get FMsxxBSe Downloads/Pastebin/mox/Logic")
+shell.run("pastebin get EiNQu1tr Downloads/Pastebin/mox/Gui")
+shell.run("pastebin get Vf4iEtwA Downloads/Pastebin/mox/Rui")
+shell.run("pastebin get y9b6Vm0P Downloads/Pastebin/mox/Hud")
+shell.run("pastebin get VeVb4816 Downloads/Pastebin/mox/Stats")
+shell.run("pastebin get 5kqCkMdY Downloads/Pastebin/mox/Comm")
+shell.run("Downloads/Pastebin/mox/Main", "Downloads/Pastebin/mox/")
+end
+
+function StartDownloaderPastebinAlkers()
+shell.run("delete Downloads/Pastebin/Alk")
+shell.run("pastebin get xHUKx2xN Downloads/Pastebin/Alk/Main")
+shell.run("pastebin get HNAWHYUC Downloads/Pastebin/Alk/Nav")
+shell.run("pastebin get yJ2TDrAC Downloads/Pastebin/Alk/Logger")
+shell.run("pastebin get g75ryBk7 Downloads/Pastebin/Alk/Jobs")
+shell.run("pastebin get cf9SZvTb Downloads/Pastebin/Alk/Utils")
+shell.run("pastebin get URjcXVqp Downloads/Pastebin/Alk/Logic")
+shell.run("pastebin get 4j3xkFqi Downloads/Pastebin/Alk/Gui")
+shell.run("pastebin get Nhde3VzW Downloads/Pastebin/Alk/Rui")
+shell.run("pastebin get zeJ6qg7L Downloads/Pastebin/Alk/Hud")
+shell.run("pastebin get W2x8HN2Z Downloads/Pastebin/Alk/Stats")
+shell.run("pastebin get de84SYF8 Downloads/Pastebin/Alk/Comm")
+shell.run("Downloads/Pastebin/Alk/Main", "Downloads/Pastebin/Alk/")
+end
+
+term.clear()
+print("Turtle Color Wars Downloader v1.0")
+print("Choose the source (press the key):")
+print()
+print("1 - GitHub")
+print("2 - Pastebin of Akuukis")
+print("3 - Pastebin of Alkerss")
+print("4 - Pastebin of moxxcrue")
+while true do
+	event, param1 = os.pullEvent("char")
+	if event == "char" and param1 == "1" then StartDownloaderGitHub() end
+	if event == "char" and param1 == "2" then StartDownloaderPastebinAkuukis() end
+	if event == "char" and param1 == "3" then StartDownloaderPastebinAlkers() end
+	if event == "char" and param1 == "4" then StartDownloaderPastebinmoxxcrue() end
+end
+
+
 ]]
 
 local title = "Github Repo Downloader"
