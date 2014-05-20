@@ -1,7 +1,6 @@
 function Start ()
 	Nav.UpdateMap({0,0,0},false)
-	coroutine.yield(true,Logger.Info,"In")
-	coroutine.yield(false,Logger.Info,"ed!\n")
-	coroutine.yield(false,Gui.PlayerRun)
-	write("itializ")
+	coroutine.yield("_Call",Logger.Info,{"In"})
+	coroutine.yield("_Call",Gui.PlayerRun)
+	write("itialized!\n")
 end

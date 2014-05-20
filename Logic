@@ -45,8 +45,8 @@ function UpdateAlternatives()
 		for j in pairs(Output) do SumOutput = SumOutput + Resm.GetPriceDemand(Output[j].Id) * Output[j].Average * OutputStd(Output[j].std) end
 		for j in pairs(Collect) do SumCollect = SumCollect + Resm.GetPriceDemand(Collect[j].Id) * Collect[j].Average * CollectStd(Collect[j].std) end
 		Alt[i] = {}
-		Alt[i].Income = SumOutput + math.max(0,SumCollect / CollectTk(Tk)) * WorkTime
-		Alt[i].Cost = SumInput + WorkTime * ( SumPrepare / PrepareTk(Tk) + math.min(0,SumCollect / CollectTk(Tk)) + SumCapital * Interest(Tk, Job.GetRisk[i]) )
+		Alt[i].Income = SumOutput + WorkTime * math.max(0, SumCollect / CollectTk(Tk))
+		Alt[i].Cost = SumInput + WorkTime * ( SumPrepare / PrepareTk(Tk) + math.min(0, SumCollect / CollectTk(Tk)) + SumCapital * Interest(Tk, Job.GetRisk[i]) )
 		Alt[i].Roi = (Alt[i].Income - Alt[i].Cost) / SumCapital
 		Alt[i].MaxRot = (Alt[i].Income - Alt[i].Cost) / WorkTime
 		Alt[i].MinRot = (Alt[i].Income - Alt[i].Cost) / (WorkTime + FreeTime)

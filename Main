@@ -15,102 +15,83 @@ os.loadAPI(path .. "Rui") -- Remote (or Rednet) user interface (Player interface
 os.loadAPI(path .. "Gui") -- Graphical user interface (Player interface, not vital)
 os.loadAPI(path .. "Hud") -- Heads-Up display (Player interface, not vital)
 
-local n = 1
-local Threads = {}
-local Filter = {}
-local CoData = {}
 
 --[[ coroutine.resume Returns:
 	1. boolean Ok: true if its ok, false if coroutine error()
 	2. string Filter/ErrorMsg/: if Ok=true Filter is event name (may be nil=no filter), if Ok=false then ErrorMsg is error message.
-	[3. function Call: if coroutine wants to start another coroutine it will return Call
+	[3. function Call: if coroutine wants to start another coroutine it will return _Call
 	 4. boolean noYield: true if coroutine wants to continue without waiting to other coroutines
 	 [5. table Args: Args to be passed to Call ] ]
 --]]
 
-local n = #Threads
+local n = 1
+local Threads = {}
 local tFilters = {}
 local Args = {}
+local Names = {}
 local eventData = {}
 
 -- The First coroutine
 Threads[n] = coroutine.create(Init.Start)
+tFilters[Threads[n]] = nil
 
 -- Run until no coroutines left (won't happen normally)
 while n > 0 do 
-
-	-- Cycle through active coroutines. Repeat twice if coroutine returned NoYield (see "if noYield then i = i - 1 end")
+	--Logger.Check("inside While, n=%s\n",n)
+	-- Cycle through active coroutines. Repeat twice if coroutine kills or calls other coroutine (see "i = i - 1")
 	for i=1,n do 
-	
+		--Logger.Check("inside for, i=%s\n",i)
+		--Logger.Check("inside for, Threads[i]=%s\n",Threads[i])
 		-- Clean up the table of coroutines - if there's a gap, shift others up.
 		if Threads[i] == nil or coroutine.status( Threads[i] ) == "dead" then
 			for j=i,n-1 do Threads[j] = Threads[j+1] end
+			for j=i,n-1 do Names[j] = Names[j+1] end
 			n = n - 1
 			i = i - 1
 			
 		-- Resume one coroutine
 		else
-			local Ok, Call, noYield, Arguments
+			--Logger.Check("inside else, Args[Threads[i]]=%s, tFilters=%s\n",Args[Threads[i]],tFilters[Threads[i]])
+			local Ok, Call, Target, Arguments, ArgsNew
 			Arguments = eventData
 			if Args[Threads[i]] then -- If the coroutine is a new one, call it with original arguments if it has any, otherwise call with eventData
+				--Logger.Check("inside Args, %s\n",Args[Threads[i]])
 				Arguments = Args[Threads[i]]
 				Args[Threads[i]] = nil
 			end
-			if Args[Threads[i]] or tFilters[Threads[i]] == nil or tFilters[Threads[i]] == Arguments[1] then -- Check for filters
-				Ok, tFilters[Threads[i]], Call, noYield, Args[Threads[i]] = coroutine.resume( Threads[i], unpack(Arguments) ) -- Call a coroutine
-				if not Ok then Logger.Error("Coroutine failed! %s", tFilters[Threads[i]] ) end -- Inform if coroutine failed
-				elseif Call then -- prepare a new coroutine
+			if Arguments[1] ~= nil or tFilters[Threads[i]] == nil then -- Check for filters
+				Ok, tFilters[Threads[i]], Target, ArgsNew = coroutine.resume( Threads[i], unpack(Arguments) ) -- Call a coroutine
+				--Logger.Check("inside resume, Ok=%s, tFilters[Threads[i]]=%s, Target=%s, Args[Threads[i]]=%s\n",Ok, tFilters[Threads[i]], Target, Args[Threads[i]])
+				if not Ok then Logger.Error("Coroutine failed! %s", tFilters[Threads[i]] ) -- Inform if coroutine failed
+				elseif tFilters[Threads[i]] == "_Call" then -- prepare a new coroutine
+					--Logger.Check("inside _Call")
 					n = n + 1
-					Threads[n] = coroutine.create(Call)
-					Logger.Check("NewThr: %s\n",Threads[n])
-					if noYield then i = i - 1 end
+					Threads[n] = coroutine.create(Target)
+					Args[Threads[n]] = ArgsNew
+					Names[n] = Utils.GenUniqString(16)
+					--Logger.Check("NewThr: %s\n",Threads[n])
+					i = i - 1
+					eventData = Names[n]
+				elseif tFilters[Threads[i]] == "_Stop" or tFilters[Threads[i]] == "_Kill" then
+					--Logger.Check("inside _Stop/Kill")
+					local TargetID = nil
+					for j=1,n do if Names[j] == Target then TargetID = j end end
+					if TargetID == nil then
+						--Logger.Check("StopThread: No such! %s\n",Target)
+					else
+						Ok = coroutine.resume(Threads[TargetID], tFilters[Threads[i]])
+						--Logger.Check("StopThread: %s\n",Threads[Target])
+						Threads[Target] = nil
+						Args[Threads[Target]] = nil
+						n = n - 1
+						i = i - 1
+					end
 				end
-		end
-	end
-	eventData = { os.pullEventRaw() } -- after a cycle call eventData
-end
+			end -- if Args[Threads[i]] or tFilters[Threads[i]] == nil or tFilters[Threads[i]] == Arguments[1] then
+		end -- if Threads[i] == nil or coroutine.status( Threads[i] ) == "dead" then
+	end -- for i=1,n do 
+	--Logger.Check("eventData:\n")
+	eventData = { os.pullEventRaw() } -- after a cycle call pullEventRaw ( = coroutine.yield )
+end -- while n > 0 do 
 Logger.Check("Out-of-coroutines!")
 os.shutdown()
-
-
-
---[[ Redundant
--- The First coroutine
-Threads[n] = coroutine.create(Init.Start)
-
--- Run until no coroutines left (won't happen normally)
-while n > 0 do
-
-	-- Cycle through active coroutines. Repeat twice if coroutine returned NoYield (see "if CoData[4] then i = i - 1 end")
-	for i=1,n do
-	
-		-- Clean up the table of coroutines - if there's a gap, shift others up.
-		if Threads[i] == nil then
-			Logger.Check("Del %s/%s\n",i,n)
-			for j=i,n-1 do Threads[j] = Threads[j+1]; args[j] = args[j+1] end
-			n = n - 1
-			i = i - 1
-			
-		else
-			Logger.Check("Run %s/%s\n",i,n)
-			Logger.Check("Thr %s\n",Threads[i])
-			CoData = { coroutine.resume(Threads[i], args[i]) }
-			if type(CoData[1]) == "string" then coroutine.se end
-			Logger.Check("CoData: %s,%s,%s,%s\n",unpack(CoData))
-			if not CoData[0] then Logger.Error("Coroutine failed! %s", CoData[1]) end
-			if coroutine.status(Threads[i]) == "dead" then Threads[i] = nil	end
-			if CoData[2] ~= nil then
-				n = n + 1
-				Threads[n] = coroutine.create(CoData[2])
-			Logger.Check("NewThr: %s\n",Threads[n])
-			end
-			if CoData[4] then i = i - 1 end
-		end
-	end
-	args = os.pullEvent()
-	
-	
-end
-Logger.Check("Out-of-coroutines!")
-os.shutdown()
---]]
