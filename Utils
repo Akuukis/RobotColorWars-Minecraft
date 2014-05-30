@@ -22,13 +22,56 @@ function myformat(fmt, ... )
 	return string.format( fmt, unpack( buf ) )
 end
 
-function printf(...)	 
-  write(myformat(...))
+local GlobalSteps = 0
+local CountedSteps = 0
+
+function Step(x)
+	x = x or 1 -- create object if user does not provide one
+	GlobalSteps = GlobalSteps + 1
+	CountedSteps = CountedSteps + 1
 end
 
--- Deprecated?
-function printfs(...)
-  --for w in string.gmatch(debug.traceback(nil,2+1), ".lua:") do printf("  ") end -- ComputerCraft doesn't have debug
-  --write(myformat(...))
-  printf(...)
+function GetGlobalSteps()
+	return GlobalSteps
 end
+
+function GetCountedSteps()
+	return CountedSteps
+end
+
+function ResetCountedSteps()
+	CountedSteps = 0
+end
+
+function GenUniqString(lenght)
+	-- char(67) -- TODO need unique ... 65-90 capitals, 97-122 lowercase, 48-57 numbers (26+26+10=62)
+	local Str = ""
+	for i=0,lenght do
+		local Char = math.random(0,61)
+		if Char < 26 then Char = Char + 65
+		elseif Char < 52 then Char = Char + 97 - 26
+		elseif Char < 62 then Char = Char + 48 - 26 - 26
+		end
+		Str = Str .. string.char(Char)
+	end
+	return Str
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

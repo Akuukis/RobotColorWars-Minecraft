@@ -7,34 +7,7 @@ for n in pairs(list) do Logger.Debug("%s: %s\n",n,list[n]) end -- lists all memb
 
 local Level = { GUI = 5, RUI = 5, HUD = 5 }
 
-function PrintMap(Type)
-	--[[
-	y = 0;
-	for x = Nav.X + 3,Nav.X - 3, -1 do
-		for z = Nav.Z - 19, Nav.Z + 19, 1 do
-		if Nav.Map[x] == nil then
-			Utils.printf(".")
-		elseif Nav.Map[x][z] == nil then
-			Utils.printf(".")
-		else
-			if (Nav.X == x and Nav.Z == z) then
-				Utils.printf("#")
-			else 
-				if Nav.Map[x][z][y].Id == 0 then
-					Utils.printf(" ")
-				else
-					Utils.printf("%s", Nav.Map[x][z][y].Id)
-				end
-			end
-		end
-	end
-	
-	Utils.printf("\n")
-	end
-	--]]
-end
-
-function Check(...)
+function Check(...) -- throw inside the code to stop it and check variables
     write(Utils.myformat(...))
     while true do
 		event, param1 = os.pullEvent()
