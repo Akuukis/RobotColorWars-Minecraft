@@ -37,14 +37,14 @@ function PlayerRun()
 	write(Utils.myformat("\n# "))
 	str = io.read()
 	ch = loadstring(str)
-	suc = pcall(ch)
-	
-	if suc then
-		Logger.Info("Succeeded!\n")
-	else
-		Logger.Info("Failed or exceeded tries!\n")
-	end
+	print(pcall(ch))
 	
 	pos = Nav.GetPos()
 	Logger.Info(" Coords: (%s,%s,%s), F:%s\n",Nav.GetPos("x"),Nav.GetPos("z"),Nav.GetPos("y"),Nav.GetPos("f"))
+	coroutine.yield("_Call",Gui.PlayerRun)
+end
+
+function Test()
+	print("Kuku!")
+	return true
 end

@@ -6,7 +6,27 @@ TODO:""
 function ChopChopMadafaka()
 end
 
-function Mine()
+function MineH( lenght )
+	for i=1,lenght do
+		while turtle.detect() do turtle.dig() end
+		Nav.Step()
+		while turtle.detectUp() do turtle.digUp() end
+		while turtle.detectDown() do turtle.digDown() end
+	end
+	Nav.TurnRight()
+	while turtle.detect() do turtle.dig() end
+	Nav.Step()
+	while turtle.detectUp() do turtle.digUp() end
+	while turtle.detectDown() do turtle.digDown() end
+	Nav.TurnRight()
+	while turtle.detect() do turtle.dig() end
+	for i=1,lenght-1 do
+		while turtle.detect() do turtle.dig() end
+		Nav.Step()
+		while turtle.detectUp() do turtle.digUp() end
+		while turtle.detectDown() do turtle.digDown() end
+	end
+	Nav.Step()	
 end
 
 function Farm()

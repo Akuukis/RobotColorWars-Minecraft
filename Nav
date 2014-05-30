@@ -57,6 +57,9 @@ Map.InitTime = os.time()
 Map.UpdatedTime = os.time()
 
 -- Public API's
+function Step(...)
+	return Move({f=GetPos("f")},{...})
+end
 function GetPos ( ... ) -- Input Position (table), FacingDirection (num) and returnSwitch (string) in any order
 	local Face = nil
 	local Switch = nil
@@ -142,12 +145,13 @@ function Go ( ... ) -- table position, num isRelative, text option1 [, text opti
 	
 	local target = {}
 	local options = {}
+	local isRelative = false
 	
 	for i=1,select('#',...) do
 		local temp = select(i,...)
 		if type(temp) == "table" then target = temp end
 		if type(temp) == "boolean" then if temp == true then isRelative = 1 else isRelative = 0 end end
-		if type(temp) == "num" then isRelative = temp end
+		if type(temp) == "number" then isRelative = temp end
 		if type(temp) == "text" then options[table.maxn(options)+1] = temp end
 	end
 	
@@ -158,10 +162,10 @@ function Go ( ... ) -- table position, num isRelative, text option1 [, text opti
 	
 	if isRelative and isRelative > 0 then
 		if isRelative > 1 then
-			if target.f == 0 then target.x = GetPos("x") + target.x; target.z = GetPos("z") + target.z end
-			if target.f == 1 then target.x = GetPos("x") - target.z; target.z = GetPos("z") + target.x end
-			if target.f == 2 then target.x = GetPos("x") - target.x; target.z = GetPos("z") - target.z end
-			if target.f == 3 then target.x = GetPos("x") + target.z; target.z = GetPos("z") - target.x end
+			if GetPos("f") == 0 then target.x = GetPos("x") + target.x; target.z = GetPos("z") + target.z end
+			if GetPos("f") == 1 then target.x = GetPos("x") - target.z; target.z = GetPos("z") + target.x end
+			if GetPos("f") == 2 then target.x = GetPos("x") - target.x; target.z = GetPos("z") - target.z end
+			if GetPos("f") == 3 then target.x = GetPos("x") + target.z; target.z = GetPos("z") - target.x end
 		else
 			target.x = target.x + GetPos("x")
 			target.z = target.z + GetPos("z")
@@ -204,21 +208,21 @@ function Go ( ... ) -- table position, num isRelative, text option1 [, text opti
 	Logger.Debug("Nav.Go() Out-of-UNTIL! /%s",tries)
 	return false
 end
-function TurnRight (self)
+function TurnRight ()
 	turtle.turnRight()
 	Logger.Debug("Nav.TurnRight() Nav.Pos.f. %s => ",GetPos("f"))
 	Pos.f = (GetPos("f")+1)%4
 	Logger.Debug("%s\n",GetPos("f"))
 	UpdateMap()
 end
-function TurnLeft (self)
+function TurnLeft ()
 	turtle.turnLeft()
 	Logger.Debug("Nav.TurnLeft() Nav.Pos.f. %s => ",GetPos("f"))
 	Pos.f = (GetPos("f")+3)%4
 	Logger.Debug("%s\n",GetPos("f"))
 	UpdateMap()    
 end
-function TurnAround (self)
+function TurnAround ()
 	if 1==math.random(0,1) then
 		TurnRight()
 		TurnRight()
@@ -473,13 +477,12 @@ function Move (target, options) -- dir{0=North|1=East|2=South|3=West|4=up|5=down
 		--Logger.Debug("Nav.Move() Return true\n")
 		return true
 	else
-
 		Recalc = true
 		if not target.id and not GetMap(GetPos(target.f),"Id") then Recalc = false end
 		if target.id and GetMap(GetPos(target.f),"Id") and target.id == GetMap(GetPos(target.f),"Id") then Recalc = false end 
 		Logger.Debug("%s,%s",not GetMap(GetPos(target.f),"Tag"),Recalc)
 		for i=1,table.maxn(options) do
-			if not Recalc and not GetMap(GetPos(target.f),"Tag") and style == "Normal" then
+			if not Recalc and not GetMap(GetPos(target.f),"Tag") and options[i] == "Normal" then
 				--Logger.Check("TRUE")
 				if target.f == 4 then turtle.digUp(); success = turtle.up()
 				elseif target.f == 5 then success = turtle.digDown(); turtle.down()
@@ -522,7 +525,7 @@ function PutMap (pos,name,value)
 	Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")][name] = value
 	return shout
 end
-function Test (self)
+function Test ()
 	return 1
 	end
 function ComparePos (position1,position2)
