@@ -2,11 +2,41 @@
 TODO:""
 --]]
 
+--[[ List.Id =
+function Execute
+table Prepare = [id = [avg, stdev], id = [avg, stdev], ....]
+table Capital = [id = [avg, stdev], id = [avg, stdev], ....]
+table Collect = [id = [avg, stdev], id = [avg, stdev], ....]
+table Input = [id = [avg, stdev], id = [avg, stdev], ....]
+table Output = [id = [avg, stdev], id = [avg, stdev], ....]
+table WorkTime = [avg, stdev]
+table IdleTime = [avg, stdev]
+table Location = [x, z, y, f]
+table NewJobs = table List.Id
+table Upgrades = ?#?#? 
+--]]
+local List = {}
 
-function ChopChopMadafaka()
+
+local function GetCapital( Name )
+end
+local function GetPrepare( Name )
+end
+local function GetInput( Name ) -- per worktime in min
+end
+local function GetOutput( Name ) -- per worktime in min
+end
+local function GetCollect( Name )
+end
+local function GetWorkTime( Name )
+end
+local function GetFreeTime( Name )
+end
+local function GetLocation( Name )
 end
 
 function MineH( lenght )
+
 	for i=1,lenght do
 		while turtle.detect() do turtle.dig() end
 		Nav.Step()
@@ -27,7 +57,4 @@ function MineH( lenght )
 		while turtle.detectDown() do turtle.digDown() end
 	end
 	Nav.Step()	
-end
-
-function Farm()
 end

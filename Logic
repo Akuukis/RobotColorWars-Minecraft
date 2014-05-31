@@ -7,10 +7,10 @@ Work in Progress, nothing works! // Akuukis
 --Defaults
 local function CollectTk(x) return x end
 local function PrepareTk(x) return x end
-local function PrepareStd(x) return -2x end
-local function InputStd(x) return -2x end
-local function OutputStd(x) return -2x end
-local function CollectStd(x) return -2x end
+local function PrepareStd(x) return -2*x end
+local function InputStd(x) return -2*x end
+local function OutputStd(x) return -2*x end
+local function CollectStd(x) return -2*x end
 local function Interest(x,y) return (1-y)/x end -- TODO
 
 

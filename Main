@@ -252,11 +252,11 @@ end
 end
 
 PastebinList = {}
---stebinList[Nam] = {"Init....","Nav.....","Comm....","Utils...","Jobs....", "Resm....","Logic...","Logger..","Stats...","Gui.....", "Rui.....","Hud....."}
-PastebinList["Aku"] = {"YqXAK4gf","3AKpWFvr","5kqCkMdY","VtBzt7BU","AigXBa8F", "TsMtkpDU","FMsxxBSe","Yxhz7Gju","VeVb4816","EiNQu1tr","Vf4iEtwA","y9b6Vm0P"}
-PastebinList["Alk"] = {"--------","HNAWHYUC","de84SYF8","cf9SZvTb","g75ryBk7", "--------","URjcXVqp","yJ2TDrAC","W2x8HN2Z","4j3xkFqi","Nhde3VzW","zeJ6qg7L"}
-PastebinList["Mox"] = {"--------","TbXnTHVs","bpyKQrn4","Y9RjARM5","sKRJw3YD", "--------","jQizTuJd","0jqNejLc","brF1SQX7","LCzvnrgm","yaz8QfNQ","EaH1rTcN"}
-PastebinList["Hek"] = {"--------","4TLXbEAr","HYzrtMtW","m684sRqW","ED6JUvXF", "--------","BVivED7g","vfykx5yU","vkqKAC75","smpuk04E","LHNWPcXr","5frXRLYb"}
+--PastebinList[Nam] = {"Init....", "Nav.....", "Comm....", "Utils...", "Jobs....", "Resm....", "Logic...", "Logger..", "Stats...", "Gui.....", "Rui.....", "Hud....."}
+PastebinList["Aku"] = {"YqXAK4gf", "3AKpWFvr", "5kqCkMdY", "VtBzt7BU", "AigXBa8F",  "TsMtkpDU", "FMsxxBSe", "Yxhz7Gju", "VeVb4816", "EiNQu1tr", "Vf4iEtwA", "y9b6Vm0P"}
+PastebinList["Alk"] = {"--------", "HNAWHYUC", "de84SYF8", "cf9SZvTb", "g75ryBk7",  "--------", "URjcXVqp", "yJ2TDrAC", "W2x8HN2Z", "4j3xkFqi", "Nhde3VzW", "zeJ6qg7L"}
+PastebinList["Mox"] = {"--------", "TbXnTHVs", "bpyKQrn4", "Y9RjARM5", "sKRJw3YD",  "--------", "jQizTuJd", "0jqNejLc", "brF1SQX7", "LCzvnrgm", "yaz8QfNQ", "EaH1rTcN"}
+PastebinList["Hek"] = {"--------", "4TLXbEAr", "HYzrtMtW", "m684sRqW", "ED6JUvXF",  "--------", "BVivED7g", "vfykx5yU", "vkqKAC75", "smpuk04E", "LHNWPcXr", "5frXRLYb"}
 
 function Start()
 	term.clear()
