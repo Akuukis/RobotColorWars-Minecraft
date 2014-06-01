@@ -364,7 +364,7 @@ while n > 0 do
 					os.queueEvent("dummy")
 				elseif tFilters[Threads[i]] == "_UpdateAPI" then -- updates API. Other APIs cannot call functions of Main directly,
 					Target = Target or ArgsNew
-					UpdateAPI(unpack(Target))
+					UpdateAPI(nick, unpack(Target))
 					i = i - 1
 					os.queueEvent("dummy")					
 				end
