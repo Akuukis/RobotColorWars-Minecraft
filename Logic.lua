@@ -1,6 +1,7 @@
 --[[ How it Works?
 
 Work in Progress, nothing works! // Akuukis
+based on Longterm/Shortterm coefficient and Risk factor. 
 
 --]]
 
