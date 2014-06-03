@@ -10,9 +10,9 @@ Process: Exchange -- Add value by exchange.
 Goal: Build a lot Turtles! -- The only demand is a new turtle.
 Optimization: Growth -- Decisions are made by maximizing Added value per period.
 
-There are Valuables (Resources, Space, Points, Containers), 
-there are entities (Turtles, Bases) that can own Valuables by holding them (mostly in Containers), 
-there are entities (Turtles, Farms) that can make ("make"="exchange"="add value") Valuables.
+There are Valuables (Resources, Space, Points, Containers, Time) that can be used (otherwise they Depreciate)
+there are Entities (Turtles, Bases) that can own Valuables by holding them (mostly in Containers), 
+there are Entities (Turtles, Farms) that can make ("make"="exchange"="add value") Valuables and Entities.
 
 --[=[ Value & Amount
 
@@ -34,35 +34,82 @@ Amount is measured in items/mB/1RFs for Resources, in blocks for Space and in "g
 
 --]=]
 --[=[ (WiP!) Owning. Interest & depreciation rate 
-...
+
+Interest rate is valuation of opportunity cost for other Entities for not being able to use the Valuable. Any Entity that has reserved a Valuable exchanges it's future Added Value for value of Interest rate for a given time period in future.
+ 
+Depreciation is valuation of rent for Container or Space for its holder. Valuables that lays in Containers or Space for a long time will depreciate a lot of value away, thus will be cheaper until a point where someone will be ready to buy it (or discard if value manages to go into negative). 
+
+	Example: Lets say that we have a base with some infrastructure (computer, wires, defence, etc.) with a chest that holds bucklet that holds water. The base has a lot of Valuables reserved (all of its infrastructure) therefore it has to pay interest of, lets say, 100c per period (100c/p). It collects exchangable value from renting out Space to its 0 farms and 4 chests (1 chest is double sized), and each chest relative to its space occupied has to transfer 100c/p together, or 20c/p each (or 40c/p for double-sized one). Our chest has to transfer value for rent of 20c/p, therefore it collects it from its contents relative to its space occupied (stack of 1 transfers the same amount as stack of 64 together). Lets say that chest holds our water bucklet, 2 full stacks of cobblestone and 1 sole cobblestone. The sole cobblestone has to transfer 5c/p, therefore it depreciates by 5c/p until it reaches 0, but the full stack of cobblestone depreciates by 5c/p altogether or by 0.078c/p each cobblestone. The bucklet of water also has to transfer 5c/p, but it has content, therefore it doesn't depreciate but collects it from it's contents first. The only content is water so the water will depreciate 5c/p. If water reacher value 0, then bucklet cannot collect transferable value anymore so it will start to depreciate itself.
+
+Owning chains can be like this: TheEverything - [{Base | Base - Farm}] - [{Turtle - Inventory | Inventory}] - [Container] - Resource. TheEverything has all the placeable blocks in the world. Base, Farm and Turtle is a bunch of blocks, Turtle always is exactly 1 block and that is a Inventory. Container is something like bucklet, energy cell or compressed cobblestone. Resource is the resource within Container, Inventory or placed as a single block. Resources may stack within Containers and Inventories. If Resource are dropped in TheEverything, its considered deleted and don't register in the Resm, but individual Jobs may take drops into account (like collection saplings in tree farms).
+	
 --]=]
 --[=[ (WiP!) Making. Jobs
 --]=]
-
-
 --[=[ Classes
 
 Turtle = { Universal, Worker, Major, Computer, President }
 Base = { Central, Proximity }
 Farm = { Surface, Underground }
-Valuables = { Resource, Space, Point, Container }
+Valuables = { Resource, Space, Point, Container, Time }
 
 --]=]
 --]]
 
--- Defaults
+----------------------------------------------------------------
+--------------- Defaults ---------------------------------------
+
 local Period = 600 -- in secs ( 600=10min, 3'600=1h, 86'400=1d, 604'800=1w, 1'814'400=3w=tournament lenght ) (tournament period = 3024 Periods)
 
--- Classes
-local Pricelist = {}
-do -- Pricelist.Supply[ResId][UniqId] = { Origin, Amount, Value, Date, Location }
+----------------------------------------------------------------
+--------------- Classes ----------------------------------------
+
+local TheEverything = TheEverything or {}
+do	-- TheEverything = { Profile, BaseList, TurtleList, ResourceList, MilitaryStuff_WiP }
 end
-do -- Pricelist.Demand[ResId][UniqId] = { Origin, Parent, Amount, SurplusValue, SurplusShareList, ChildrenList, Location }
+
+local Baselist = Baselist or {}
+do	-- New bases are being built (virtually generated, or tagged) around a Base that runs out of digging fields.
+		-- Bases are central or proximity. Central bases are never next to each other. Proximity bases will have no serious infrastructure.
+		-- Farm "DigField" is generated together with a base, having a ResList of x random blocks. It has no Flows and can be only Destroyed.
+		-- Baselist = { Profile, UpgradeList, FarmList, InfrastructureList, InvList, Position, Size, PointList }
 end
-do -- Pricelist.Exchange[ResId] = { [ModulusOfPeriod] = { AvgValue, AvgAmount }, AvgValue, AvgAmount } 
+
+local Farmlist = Farmlist or {}
+do	-- Farmlist.{Demand|Built}.{Surface|Underground}...
+	-- ...[FarmId][UniqId] = { Origin, Parent, MinLevelList, ResList, ShareList, ChildrenList, Position }
+	-- ...[FarmId][UniqId] = { Base, UpgradeList, ResList, Date, Position, InvList[], Flows[] = { InputList, OutputList, Cycle, Flags } }
+	-- Farms don't have Jobs. Jobs have a specific Farm with specific UpgradeList as requirement for capital or a result.
+	local temp = { "Surface" = {}, "Underground" = {} }
+	Farmlist.Demand = Farmlist.Demand or temp 
+	Farmlist.Built = Farmlist.Built or temp 
+end
+
+local InvList = InvList or {}
+do
+end
+
+local ConList = ConList or {}
+do
+end
+
+local Reslist = Reslist or {} 
+do	-- Reslist.{Demand|Supply|Exchange}.{Items|Fuels|Liquids|Energy}.[ResId]...
+	local temp = { "Items" = {}, "Fuels" = {}, "Liquids" = {}, "Energy" = {}	}
+	Reslist.Demand = Reslist.Demand or temp -- ...[UniqId] = { Origin, Amount, Value, Position, Parent, ShareList, ChildrenList }
+	Reslist.Supply = Reslist.Supply or temp -- ...[UniqId] = { Origin, Amount, Value, Position, Date }
+	Reslist.Exchange = Reslist.Exchange or temp -- ... = { [ModulusOfPeriod] = { AvgValue, AvgAmount }, AvgValue, AvgAmount } 
 end
 
 
+
+
+--[[ Important Classes from Jobs
+local Joblist = Joblist or {}
+--]]
+	
+----------------------------------------------------------------
+--------------- Local Functions --------------------------------
 
 function GetPriceSupply() end
 function AddSupply() end
