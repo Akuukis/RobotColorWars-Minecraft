@@ -41,7 +41,10 @@ Depreciation is valuation of rent for Container or Space for its holder. Valuabl
 
 	Example: Lets say that we have a base with some infrastructure (computer, wires, defence, etc.) with a chest that holds bucklet that holds water. The base has a lot of Valuables reserved (all of its infrastructure) therefore it has to pay interest of, lets say, 100c per period (100c/p). It collects exchangable value from renting out Space to its 0 farms and 4 chests (1 chest is double sized), and each chest relative to its space occupied has to transfer 100c/p together, or 20c/p each (or 40c/p for double-sized one). Our chest has to transfer value for rent of 20c/p, therefore it collects it from its contents relative to its space occupied (stack of 1 transfers the same amount as stack of 64 together). Lets say that chest holds our water bucklet, 2 full stacks of cobblestone and 1 sole cobblestone. The sole cobblestone has to transfer 5c/p, therefore it depreciates by 5c/p until it reaches 0, but the full stack of cobblestone depreciates by 5c/p altogether or by 0.078c/p each cobblestone. The bucklet of water also has to transfer 5c/p, but it has content, therefore it doesn't depreciate but collects it from it's contents first. The only content is water so the water will depreciate 5c/p. If water reacher value 0, then bucklet cannot collect transferable value anymore so it will start to depreciate itself.
 
-Owning chains can be like this: TheEverything - [{Base | Base - Farm}] - [{Turtle - Inventory | Inventory}] - [Container] - Resource. TheEverything has all the placeable blocks in the world. Base, Farm and Turtle is a bunch of blocks, Turtle always is exactly 1 block and that is a Inventory. Container is something like bucklet, energy cell or compressed cobblestone. Resource is the resource within Container, Inventory or placed as a single block. Resources may stack within Containers and Inventories. If Resource are dropped in TheEverything, its considered deleted and don't register in the Resm, but individual Jobs may take drops into account (like collection saplings in tree farms).
+Owning chains can be like this, everything optional except TheEverything and Resource: 
+TheEverything, Base, Farm, Inventory, Bag, Bag, Bag, ..., Container, Resource.
+
+	TheEverything has all the placeable blocks in the world. Base, Farm and Turtle is a bunch of blocks, Turtle always is exactly 1 block and that is a Inventory. Bag is like "Bag of Holding", that is a inventory within inventory. Container is something like bucklet, energy cell or compressed cobblestone. Resource is the resource within Container, Inventory or placed as a single block. Resources may stack within Containers and Inventories. If Resource are dropped in TheEverything, its considered deleted and don't register in the Resm, but individual Jobs may take drops into account (like collection saplings in tree farms).
 	
 --]=]
 --[=[ (WiP!) Making. Jobs
@@ -64,6 +67,44 @@ local Period = 600 -- in secs ( 600=10min, 3'600=1h, 86'400=1d, 604'800=1w, 1'81
 ----------------------------------------------------------------
 --------------- Classes ----------------------------------------
 
+local UniClass = {
+	Type = "", -- TheWorld | Base | Farm | Turtle | Inventory | Bag | Container | Resource
+	Profile = {}, -- set of randomized defaults.
+	Meta = {}, -- Military for TheWorld, Upgrades for Bases and Farms, Hierarchy for Turtles, Item|Fluid|Energy for Containers and Resources + usual meta.
+	Position = {} -- X,Z,Y,F for the back buttom left corner relative to its parent or SlotId.
+	Size = {} or 0 -- X,Z,Y size in blocks or amount in stack if inside.
+	TimeofBirth = 0 -- mostly used for registering future objects.
+	
+	Parent = "", -- TheWorld object is the only one that has Parent = nil
+	Children = {} -- Table of children UniClass objects, things within this object. For Inventory|Bag|Container index = SlotId.
+	
+	PartList = {} -- For Bases & Farms & Turles & Inventories its the resources collected if destroyed including inside Containers for Flows.
+	Value = 0 -- For Inventory|Bags|Containers|Resources its the supply value, for TheWorld|Base|Farm|Turtle its cached sum of PartList supply value
+	Flows = {	-- For objects that generate something on their own (like Turtle generates WorkSeconds)
+		InputList = {
+			ResourceId = 0 -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0
+			StDev = 0
+			Position = "" -- UniqId from PartList pointing to valid a Inventory | Bag | Container
+			} 
+		OutputList = {
+			ResourceId = 0 -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0
+			StDev = 0
+			Position = "" -- UniqId from PartList pointing to valid a Inventory | Bag | Container
+			} 
+		Cycle = 0 -- Lenght of one cycle to transform InputList into OutputList
+		FlagRun = true -- True: flows until input is valid. False: flows until Inventory is full. Nil: flows only if output inventory is empty
+		FlagInput = true -- True: Input is taken at start. False: Input is taken at the end. Nil: Input is taken somewhere in middle.
+		FlagOutput = true	-- True: Output is made at start. False: Output is made at the end. Nil: Output is made somewhere in middle.
+		Type = 0 -- Different types of flows can run in parralel, but only one flow per each type. 
+		Priority = 0 -- 1 is higher priority over 2, and only 0 will stop any non-0 priority flow.
+		}
+
+	TimeUpdated = 0 -- Time of last change
+	}
+
+--[[ Delete this!
 local TheEverything = TheEverything or {}
 do	-- TheEverything = { Profile, BaseList, TurtleList, ResourceList, MilitaryStuff_WiP }
 end
@@ -101,13 +142,13 @@ do	-- Reslist.{Demand|Supply|Exchange}.{Items|Fuels|Liquids|Energy}.[ResId]...
 	Reslist.Exchange = Reslist.Exchange or temp -- ... = { [ModulusOfPeriod] = { AvgValue, AvgAmount }, AvgValue, AvgAmount } 
 end
 
-
-
-
---[[ Important Classes from Jobs
+--[=[ Important Classes from Jobs
 local Joblist = Joblist or {}
+--]=]
+
 --]]
-	
+
+
 ----------------------------------------------------------------
 --------------- Local Functions --------------------------------
 
