@@ -1,7 +1,7 @@
 --[[ API:
 Useful Stuff:
 for n in pairs(list) do Logger.Debug("%s: %s\n",n,list[n]) end -- lists all members and their values the list
-
+for n in pairs(list) do print(n,": ", list[n]) end
 --]]
 
 

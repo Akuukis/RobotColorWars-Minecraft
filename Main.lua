@@ -296,6 +296,8 @@ end
 	 [5. table Args: Args to be passed to Call ] ]
 --]]
 
+-- Warning: functions like: read(), sleep() etc. empty the event stack and you will not be able to pull the event after that
+
 local n = 1
 local Threads = {}
 local tFilters = {}
