@@ -1,4 +1,52 @@
---Gui
+--------------------------------------------------------------------------------------------------------------------------------
+--[[------------ Descriptions of function calls --------------------------------------------------------------------------------
+WiP
+--]]
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Dependencies --------------------------------------------------------------------------------------------------
+-- Name Section: 
+-- Declare the name library will use. Leave it alone and
+local Lib = {}
+Gui = Lib
+
+-- Import Section:
+-- declare everything this library needs from outside
+-- FYI You can change or shorten names if you wish so.
+
+---- Luaj unmodified libraries. Import only needed sub-functions.
+-- Full list (functions): assert, collectgarbage, error, _G, getfenv, getmetatable, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
+-- Full list (tables): coroutine, package, table, math
+-- local 
+local os = os
+
+---- CC libraries. Import only needed sub-functions.
+-- Full list (modified Luaj functions): loadfile, dofile, print, type, string.sub, string.find
+-- Full list (modified Luaj tables): string, os, io
+-- Full list (new tables): os, colors, disk, gps, help, keys, paintutils, parallel, peripheral, rednet, term, textutils, turtle, vector, window
+-- local 
+-- local
+-- local
+
+---- TuCoWa libraries. Import only needed sub-functions.
+-- Full list: Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic, Init
+local Gui, Rui = Gui, Rui
+
+-- no more external access after this point
+setfenv(1, Lib)
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Library wide variables ----------------------------------------------------------------------------------------
+
+-- none
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Classes -------------------------------------------------------------------------------------------------------
+
+-- none
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Public functions ----------------------------------------------------------------------------------------------
+
 function PrintMap()
 	--[[
 	y = 0;
@@ -26,12 +74,6 @@ function PrintMap()
 	--]]
 end
 
---[[ Info
-Term API http://computercraft.info/wiki/Term_%28API%29
-Turtle screen size (in chars) = 39 x 13
-Computer screen size (in chars) = 51 x 19
---]]
-
 function PlayerRun()
 	Utils.Refuel()
 	write(Utils.myformat("\n# "))
@@ -48,3 +90,16 @@ function Test()
 	print("Kuku!")
 	return true
 end
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Private functions ---------------------------------------------------------------------------------------------
+
+-- none
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Details & Notes -----------------------------------------------------------------------------------------------
+--[[ Info
+Term API http://computercraft.info/wiki/Term_%28API%29
+Turtle screen size (in chars) = 39 x 13
+Computer screen size (in chars) = 51 x 19
+--]]

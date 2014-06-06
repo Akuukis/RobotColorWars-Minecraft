@@ -1,3 +1,17 @@
 pastebin run m1Tnt0wv Start
 for i=1,4 do Jobs.MineH(8);	Nav.TurnLeft(); Nav.Step("Normal"); Nav.TurnLeft() end
-coroutine.yield("_UpdateAPI",{Nav})
+coroutine.yield("_UpdateAPI",{"Jobs"})
+for i=1,list.getInventorySize() do list.pushItem("west",i) end
+for i=1,16 do list.pullItem("west",i) end
+Jobs.MineH(8,8,true)
+
+
+constDirNames = {"north","east","south","west","up","down"}; Slot = 2; Chest = peripheral.wrap("front"); for i = 1,6 do print(Chest.pullItem(constDirNames[i],Slot,64,1)) end
+
+
+Chest = peripheral.wrap("front"); for i = 1,Chest.getInventorySize() do if (Chest.getStackInSlot(i) or 0) == 0 then ChestSlot = i end end; print(ChestSlot)
+
+
+Nav.Go(); Nav.TurnAround(); coroutine.yield("_UpdateAPI",{"Jobs"}); Jobs.MineH(8,8,true)
+
+print(Chest.pushItem("east",1,64,1))

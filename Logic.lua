@@ -1,23 +1,54 @@
---[[ How it Works?
-
-Work in Progress, nothing works! // Akuukis
-based on Longterm/Shortterm coefficient and Risk factor. 
-
+--------------------------------------------------------------------------------------------------------------------------------
+--[[------------ Descriptions of function calls --------------------------------------------------------------------------------
+WiP
 --]]
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Dependencies --------------------------------------------------------------------------------------------------
+-- Name Section: 
+-- Declare the name library will use. Leave it alone and
+local Lib = {}
+Logic = Lib
 
---Defaults
-local function CollectTk(x) return x end
-local function PrepareTk(x) return x end
-local function PrepareStd(x) return -2*x end
-local function InputStd(x) return -2*x end
-local function OutputStd(x) return -2*x end
-local function CollectStd(x) return -2*x end
-local function Interest(x,y) return (1-y)/x end -- TODO
+-- Import Section:
+-- declare everything this library needs from outside
+-- FYI You can change or shorten names if you wish so.
 
+---- Luaj unmodified libraries. Import only needed sub-functions.
+-- Full list (functions): assert, collectgarbage, error, _G, getfenv, getmetatable, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
+-- Full list (tables): coroutine, package, table, math
+-- local 
+-- local
+
+---- CC libraries. Import only needed sub-functions.
+-- Full list (modified Luaj functions): loadfile, dofile, print, type, string.sub, string.find
+-- Full list (modified Luaj tables): string, os, io
+-- Full list (new tables): os, colors, disk, gps, help, keys, paintutils, parallel, peripheral, rednet, term, textutils, turtle, vector, window
+-- local 
+-- local
+-- local
+
+---- TuCoWa libraries. Import only needed sub-functions.
+-- Full list: Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic, Init
+local Gui, Rui = Gui, Rui
+
+-- no more external access after this point
+setfenv(1, Lib)
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Library wide variables ----------------------------------------------------------------------------------------
 
 -- Variables
 local Tk = 1 -- Short-term / Long-term coefficient
 local Alt = {} -- table of alternatives
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Classes -------------------------------------------------------------------------------------------------------
+
+-- none
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Public functions ----------------------------------------------------------------------------------------------
+
 
 function UpdateTk()
 	Tk = (turtle.getFuelLevel()/1000) ^ 2
@@ -79,6 +110,34 @@ function Think()
 		if Resm.CloseDeal(Demand) then Job.Execute(Top[i].Job) end
 	end
 end
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Private functions ---------------------------------------------------------------------------------------------
+
+--Defaults
+local function CollectTk(x) return x end
+local function PrepareTk(x) return x end
+local function PrepareStd(x) return -2*x end
+local function InputStd(x) return -2*x end
+local function OutputStd(x) return -2*x end
+local function CollectStd(x) return -2*x end
+local function Interest(x,y) return (1-y)/x end -- TODO
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Details & Notes -----------------------------------------------------------------------------------------------
+
+--[[ How it Works?
+
+Work in Progress, nothing works! // Akuukis
+based on Longterm/Shortterm coefficient and Risk factor. 
+
+--]]
+
+
+
+
+
 
 
 

@@ -1,4 +1,5 @@
---[[ API calls:
+--------------------------------------------------------------------------------------------------------------------------------
+--[[------------ Descriptions of function calls --------------------------------------------------------------------------------
 	Go( [ { x, z, y [,f] } ], [isRelative], [,style]).
 		EXAMPLE: Lets say we are at coordinates X=2, Z=-3, Y=4 and if we want to go to X=0,Z=0,Y=0 then all the following will do.
 			Nav.Go()
@@ -45,8 +46,41 @@
 			Default: table {x, z, y, f}, where XZY is absolute coordinates and f is facing direction (0 to 3)
 			if switchXZYF: num returnXZYF, a numeric value depending on input string
 --]]
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Dependencies --------------------------------------------------------------------------------------------------
+-- Name Section: 
+-- Declare the name library will use. Leave it alone and
+local Lib = {}
+Nav = Lib
 
--- Private Variables
+-- Import Section:
+-- declare everything this library needs from outside
+-- FYI You can change or shorten names if you wish so.
+
+---- Luaj unmodified libraries. Import only needed sub-functions.
+-- Full list (functions): assert, collectgarbage, error, _G, getfenv, getmetatable, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
+-- Full list (tables): coroutine, package, table, math
+-- local 
+local os, table, math = os, table, math 
+
+---- CC libraries. Import only needed sub-functions.
+-- Full list (modified Luaj functions): loadfile, dofile, print, type, string.sub, string.find
+-- Full list (modified Luaj tables): string, os, io
+-- Full list (new tables): os, colors, disk, gps, help, keys, paintutils, parallel, peripheral, rednet, term, textutils, turtle, vector, window
+-- local 
+-- local
+-- local
+
+---- TuCoWa libraries. Import only needed sub-functions.
+-- Full list: Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic, Init
+local Gui, Rui, Hud, Logger, Stats, Comm, Utils = Gui, Rui, Hud, Logger, Stats, Comm, Utils 
+
+-- no more external access after this point
+setfenv(1, Lib)
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Library wide variables ----------------------------------------------------------------------------------------
+
 local Pos = {} --
 Pos.x = 0 -- North
 Pos.z = 0 -- East
@@ -56,9 +90,22 @@ local Map = {} -- Id={nil=unexplored,false=air,0=RandomBlock,####=Block}, Update
 Map.InitTime = os.time()
 Map.UpdatedTime = os.time()
 
--- Public API's
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Classes -------------------------------------------------------------------------------------------------------
+
+-- none
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Public functions ----------------------------------------------------------------------------------------------
+
 function Step(...)
 	return Move(GetPos("f"),{...})
+end
+function StepUp(...)
+	return Move(4,{...})
+end
+function StepDown(...)
+	return Move(5,{...})
 end
 function GetPos ( ... ) -- Input Position (table), FacingDirection (num) and returnSwitch (string) in any order
 	local Face = nil
@@ -77,10 +124,10 @@ function GetPos ( ... ) -- Input Position (table), FacingDirection (num) and ret
 	for i=1,3,1 do
 		if type(Arg[i]) == "number" then Face = Arg[i]
 		elseif type(Arg[i]) == "table" then 
-			P.x = Arg[i].x or Arg[i][1] or Pos.x
-			P.z = Arg[i].z or Arg[i][2] or Pos.z
-			P.y = Arg[i].y or Arg[i][3] or Pos.y
-			P.f = Arg[i].f or Arg[i][4] or Pos.f
+			P.x = Arg[i].x or Arg[i][1] or Pos.x or 0
+			P.z = Arg[i].z or Arg[i][2] or Pos.z or 0
+			P.y = Arg[i].y or Arg[i][3] or Pos.y or 0
+			P.f = Arg[i].f or Arg[i][4] or Pos.f or 0
 		elseif Arg[i] == "x" or Arg[i] == "X" then Switch = Arg[i]
 		elseif Arg[i] == "z" or Arg[i] == "Z" then Switch = Arg[i]
 		elseif Arg[i] == "y" or Arg[i] == "Y" then Switch = Arg[i]
@@ -188,24 +235,24 @@ function Go ( ... ) -- table position, num isRelative, text option1 [, text opti
 	Logger.Debug("Nav.Go(%s,%s,%s) Style: %s\n", target.x, target.z, target.y, options[1])
 	repeat
 		if ComparePos(GetPos(),target) then return true else tries = tries - 1 end
-		Logger.Debug("Nav.Go() @ (%s,%s,%s,F%s)/%s\n",GetPos("x"),GetPos("z"),GetPos("y"),GetPos("f"),tries)
+		-- Logger.Debug("Nav.Go() @ (%s,%s,%s,F%s)/%s\n",GetPos("x"),GetPos("z"),GetPos("y"),GetPos("f"),tries)
 		local fpath = GetPath(target,options)
 		if fpath == nil then 
-			Logger.Debug("Nav.Go() FPath=nil!")
+			-- Logger.Debug("Nav.Go() FPath=nil!")
 			UpdateMap()
 			TurnRight()
 		else
 			i = 1
 			success = false
 			while i <= table.maxn(fpath) and not success do 
-				Logger.Debug("%s",i)
-				Logger.Debug("@(%s,%s,%s),(%s,%s) Moving %s/%s ...\n", GetPos("x"),GetPos("z"),GetPos("y"),not fpath[i],not GetMap(GetPos(fpath[i]),"Id"),i,table.maxn(fpath))
+				-- Logger.Debug("%s",i)
+				-- Logger.Debug("@(%s,%s,%s),(%s,%s) Moving %s/%s ...\n", GetPos("x"),GetPos("z"),GetPos("y"),not fpath[i],not GetMap(GetPos(fpath[i]),"Id"),i,table.maxn(fpath))
 				success = not Move(fpath[i], options)
 				i = i + 1
 			end
 		end
 	until tries < 0
-	Logger.Debug("Nav.Go() Out-of-UNTIL! /%s",tries)
+	-- Logger.Debug("Nav.Go() Out-of-UNTIL! /%s",tries)
 	return false
 end
 function TurnRight ()
@@ -253,7 +300,10 @@ function GetDistance (target, ...) -- Gets distance between your position and a 
 	end
 	return table.maxn( GetPath(target,options) )
 end
--- Private API's
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Private functions ---------------------------------------------------------------------------------------------
+
 function GetPath (target,options)  -- TODO: multiple targets!
 --[[ DISCLAIMER.
 This code (May 04, 2014) is written by Akuukis 
@@ -303,7 +353,7 @@ CalcHeuristic = function (pos1, pos2, options)
 	return AverageCost * (dx + dz + dy) * (1 + 1/1000)
 end
 	
-Logger.Debug("Nav.GetPath(%s,%s,%s)\n",target.x,target.z,target.y)
+-- Logger.Debug("Nav.GetPath(%s,%s,%s)\n",target.x,target.z,target.y)
 
 local closedlist = {}		-- Initialize table to store checked gridsquares
 local openlist = {}			-- Initialize table to store possible moves
@@ -319,7 +369,7 @@ local openk = 1					-- Openlist counter
 local closedk = 0				-- Closedlist counter
 local DefaultWeight = 3 -- TODO!
 -- Logger.Check("Openlist.x|y|z=%s,%s,%s\n",openlist[1].x,openlist[1].z,openlist[1].y)
-Logger.Debug("Nav.GetPath() CurbaseXZ. %s",options[1])
+-- Logger.Debug("Nav.GetPath() CurbaseXZ. %s",options[1])
 
 while openk > 0  and table.maxn(closedlist)<256 do   -- Growing loop
 
@@ -339,7 +389,7 @@ while openk > 0  and table.maxn(closedlist)<256 do   -- Growing loop
 	closedlist[closedk] = openlist[basis]
 	local curbase = closedlist[closedk]				 -- define current base from which to grow list
 	-- Logger.Check("Openlist.x|y|z=%s,%s,%s\n",openlist[1].x,openlist[1].z,openlist[1].y)
-	Logger.Debug("\n%s/%s:(%s,%s,%s)(%s,%s,%s|%s)F:", closedk, openk, curbase.x, curbase.z, curbase.y, math.floor(curbase.DistExactStart), math.floor(curbase.DistHeuristicTarget), math.floor(curbase.DistSum), curbase.parent)
+	-- Logger.Debug("\n%s/%s:(%s,%s,%s)(%s,%s,%s|%s)F:", closedk, openk, curbase.x, curbase.z, curbase.y, math.floor(curbase.DistExactStart), math.floor(curbase.DistHeuristicTarget), math.floor(curbase.DistSum), curbase.parent)
 	table.remove(openlist,basis) -- This function deletes an element of a numerical table and moves up the remaining indices if necessary.
 	openk = openk - 1
 	
@@ -378,7 +428,7 @@ while openk > 0  and table.maxn(closedlist)<256 do   -- Growing loop
 		end
 	end
 
-	for face=0,5 do Logger.Debug("%s",OK[face]) end
+	-- for face=0,5 do Logger.Debug("%s",OK[face]) end
 
 	for face=0,5 do		-- Add points to openlist
 		if OK[face] then
@@ -478,7 +528,7 @@ function Move (face, options) -- face={0=North|1=East|2=South|3=West|4=up|5=down
 		Recalc = true
 		if not Id and not GetMap(GetPos(face),"Id") then Recalc = false end
 		if Id and GetMap(GetPos(face),"Id") and Id == GetMap(GetPos(face),"Id") then Recalc = false end 
-		Logger.Debug("%s,%s",not GetMap(GetPos(face),"Tag"),Recalc)
+		-- Logger.Debug("%s,%s",not GetMap(GetPos(face),"Tag"),Recalc)
 		for i=1,table.maxn(options) do
 			if not Recalc and not GetMap(GetPos(face),"Tag") and options[i] == "Normal" then
 				--Logger.Check("TRUE")
@@ -551,6 +601,10 @@ function UpdatePos (face)
 	Pos.z = GetPos(face,"z")
 	Pos.y = GetPos(face,"y")
 end
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Details & Notes -----------------------------------------------------------------------------------------------
+
 --[[ Tutorials
 General: http://www.lua.org/pil/contents.html
 Varargs: http://lua-users.org/wiki/VarargTheSecondClassCitizen
