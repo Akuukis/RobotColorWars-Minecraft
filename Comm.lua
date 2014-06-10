@@ -14,13 +14,13 @@ Comm = Lib
 -- FYI You can change or shorten names if you wish so.
 
 ---- Luaj unmodified libraries. Import only needed sub-functions.
--- Full list (functions): assert, collectgarbage, error, _G, getfenv, getmetatable, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
+-- Full list (functions): assert, collectgarbage, error, _G, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
 -- Full list (tables): coroutine, package, table, math
 -- local 
 -- local
 
 ---- CC libraries. Import only needed sub-functions.
--- Full list (modified Luaj functions): loadfile, dofile, print, type, string.sub, string.find
+-- Full list (modified Luaj functions): getfenv, getmetatable, loadfile, dofile, print, type, string.sub, string.find, write
 -- Full list (modified Luaj tables): string, os, io
 -- Full list (new tables): os, colors, disk, gps, help, keys, paintutils, parallel, peripheral, rednet, term, textutils, turtle, vector, window
 -- local 

@@ -15,13 +15,13 @@ Resm = Lib
 -- FYI You can change or shorten names if you wish so.
 
 ---- Luaj unmodified libraries. Import only needed sub-functions.
--- Full list (functions): assert, collectgarbage, error, _G, getfenv, getmetatable, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
+-- Full list (functions): assert, collectgarbage, error, _G, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
 -- Full list (tables): coroutine, package, table, math
 -- local 
 -- local
 
 ---- CC libraries. Import only needed sub-functions.
--- Full list (modified Luaj functions): loadfile, dofile, print, type, string.sub, string.find
+-- Full list (modified Luaj functions): getfenv, getmetatable, loadfile, dofile, print, type, string.sub, string.find, write
 -- Full list (modified Luaj tables): string, os, io
 -- Full list (new tables): os, colors, disk, gps, help, keys, paintutils, parallel, peripheral, rednet, term, textutils, turtle, vector, window
 -- local 
@@ -47,37 +47,37 @@ local UniClass = { -- WiP!!!
 	Type = "", -- TheWorld | Base | Farm | Turtle | Inventory | Bag | Container | Resource
 	Profile = {}, -- set of randomized defaults.
 	Meta = {}, -- Military for TheWorld, Upgrades for Bases and Farms, Hierarchy for Turtles, Item|Fluid|Energy for Containers and Resources + usual meta.
-	Position = {} -- X,Z,Y,F for the back buttom left corner relative to its parent or SlotId.
-	Size = {} or 0 -- X,Z,Y size in blocks or amount in stack if inside.
-	TimeofBirth = 0 -- mostly used for registering future objects.
+	Position = {}, -- X,Z,Y,F for the back buttom left corner relative to its parent or SlotId.
+	Size = {} or 0, -- X,Z,Y size in blocks or amount in stack if inside.
+	TimeofBirth = 0,-- mostly used for registering future objects.
 	
 	Parent = "", -- TheWorld object is the only one that has Parent = nil
-	Children = {} -- Table of children UniClass objects, things within this object. For Inventory|Bag|Container index = SlotId.
+	Children = {}, -- Table of children UniClass objects, things within this object. For Inventory|Bag|Container index = SlotId.
 	
-	PartList = {} -- For Bases & Farms & Turles & Inventories its the resources collected if destroyed including inside Containers for Flows.
-	Value = 0 -- For Inventory|Bags|Containers|Resources its the supply value, for TheWorld|Base|Farm|Turtle its cached sum of PartList supply value
+	PartList = {}, -- For Bases & Farms & Turles & Inventories its the resources collected if destroyed including inside Containers for Flows.
+	Value = 0, -- For Inventory|Bags|Containers|Resources its the supply value, for TheWorld|Base|Farm|Turtle its cached sum of PartList supply value
 	Flows = {	-- For objects that generate something on their own (like Turtle generates WorkSeconds)
 		InputList = {
-			ResourceId = 0 -- May be also a Container with a specific content or a virtual Point
-			AvgAmount = 0
-			StDev = 0
-			Position = "" -- UniqId from PartList pointing to valid a Inventory | Bag | Container
-			} 
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to valid a Inventory | Bag | Container
+			}, 
 		OutputList = {
-			ResourceId = 0 -- May be also a Container with a specific content or a virtual Point
-			AvgAmount = 0
-			StDev = 0
-			Position = "" -- UniqId from PartList pointing to valid a Inventory | Bag | Container
-			} 
-		Cycle = 0 -- Lenght of one cycle to transform InputList into OutputList
-		FlagRun = true -- True: flows until input is valid. False: flows until Inventory is full. Nil: flows only if output inventory is empty
-		FlagInput = true -- True: Input is taken at start. False: Input is taken at the end. Nil: Input is taken somewhere in middle.
-		FlagOutput = true	-- True: Output is made at start. False: Output is made at the end. Nil: Output is made somewhere in middle.
-		Type = 0 -- Different types of flows can run in parralel, but only one flow per each type. 
-		Priority = 0 -- 1 is higher priority over 2, and only 0 will stop any non-0 priority flow.
-		}
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to valid a Inventory | Bag | Container
+			},
+		Cycle = 0, -- Lenght of one cycle to transform InputList into OutputList
+		FlagRun = true, -- True: flows until input is valid. False: flows until Inventory is full. Nil: flows only if output inventory is empty
+		FlagInput = true, -- True: Input is taken at start. False: Input is taken at the end. Nil: Input is taken somewhere in middle.
+		FlagOutput = true,	-- True: Output is made at start. False: Output is made at the end. Nil: Output is made somewhere in middle.
+		Type = 0, -- Different types of flows can run in parralel, but only one flow per each type. 
+		Priority = 0, -- 1 is higher priority over 2, and only 0 will stop any non-0 priority flow.
+		},
 
-	TimeUpdated = 0 -- Time of last change
+	TimeUpdated = 0, -- Time of last change
 	}
 
 

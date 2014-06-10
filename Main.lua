@@ -224,43 +224,6 @@ local function PastebinGet( ... )
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
---[[
-function StartDownloaderPastebin( ... )
-for i=1,select('#',...) do
-	local tmp = select(i,...)
-	if tmp == "start" then shell.run("delete Downloads/Pastebin") end
-	if tmp == "start" or tmp == "all" or tmp == "Init"   then PastebinGet( PastebinList[nick][01], "Downloads/Pastebin/" .. nick .. "/Init") end
-	if tmp == "start" or tmp == "all" or tmp == "Nav"    then PastebinGet( PastebinList[nick][02], "Downloads/Pastebin/" .. nick .. "/Nav") end
-	if tmp == "start" or tmp == "all" or tmp == "Comm"   then PastebinGet( PastebinList[nick][03], "Downloads/Pastebin/" .. nick .. "/Comm") end
-	if tmp == "start" or tmp == "all" or tmp == "Utils"  then	PastebinGet( PastebinList[nick][04], "Downloads/Pastebin/" .. nick .. "/Utils") end
-	if tmp == "start" or tmp == "all" or tmp == "Jobs"   then PastebinGet( PastebinList[nick][05], "Downloads/Pastebin/" .. nick .. "/Jobs") end
-	if tmp == "start" or tmp == "all" or tmp == "Resm"   then PastebinGet( PastebinList[nick][06], "Downloads/Pastebin/" .. nick .. "/Resm") end
-	if tmp == "start" or tmp == "all" or tmp == "Logic"  then PastebinGet( PastebinList[nick][07], "Downloads/Pastebin/" .. nick .. "/Logic") end
-	if tmp == "start" or tmp == "all" or tmp == "Logger" then PastebinGet( PastebinList[nick][08], "Downloads/Pastebin/" .. nick .. "/Logger") end
-	if tmp == "start" or tmp == "all" or tmp == "Stats"  then PastebinGet( PastebinList[nick][09], "Downloads/Pastebin/" .. nick .. "/Stats") end
-	if tmp == "start" or tmp == "all" or tmp == "Gui"    then PastebinGet( PastebinList[nick][10], "Downloads/Pastebin/" .. nick .. "/Gui") end
-	if tmp == "start" or tmp == "all" or tmp == "Rui"    then PastebinGet( PastebinList[nick][11], "Downloads/Pastebin/" .. nick .. "/Rui") end
-	if tmp == "start" or tmp == "all" or tmp == "Hud"    then PastebinGet( PastebinList[nick][12], "Downloads/Pastebin/" .. nick .. "/Hud") end
-	if tmp == "start" or tmp == "all" or tmp == "Init"   then print("Init: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Init"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Nav"    then print("Nav: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Nav"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Comm"   then print("Comm: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Comm"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Utils"  then print("Utils: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Utils"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Jobs"   then print("Jobs: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Jobs"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Resm"   then print("Resm: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Resm"), ", ") end
-	if tmp == "start" or tmp == "all" or tmp == "Logic"  then print("Logic: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Logic"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Logger" then print("Logger: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Logger"), ", ") end 
-	Logger.Check("")
-	if tmp == "start" or tmp == "all" or tmp == "Stats"  then print("Stats: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Stats"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Gui"    then print("Gui: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Gui"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Rui"    then print("Rui: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Rui"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Hud"    then print("Hud: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Hud"), ", ") end
-	Logger.Check("")
-	print()
-	return 1
-end
-end
---]]
-
 
 function StartDownloaderPastebin( ... )
 	for i=1,select('#',...) do
@@ -361,7 +324,6 @@ end
 
 -- Warning: functions like: read(), sleep() etc. empty the event stack and you will not be able to pull the event after that
 
-local n = 1
 local Threads = {}
 local tFilters = {}
 local Args = {}
@@ -369,12 +331,10 @@ local Names = {}
 local eventData = {}
 
 print("Initialized Main!")
-
-
 Start()
 
-
 -- The First coroutine
+local n = 1
 Threads[n] = coroutine.create(Init.Start)
 tFilters[Threads[n]] = nil
 -- Run until no coroutines left (won't happen normally)

@@ -14,16 +14,16 @@ Gui = Lib
 -- FYI You can change or shorten names if you wish so.
 
 ---- Luaj unmodified libraries. Import only needed sub-functions.
--- Full list (functions): assert, collectgarbage, error, _G, getfenv, getmetatable, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
+-- Full list (functions): assert, collectgarbage, error, _G, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
 -- Full list (tables): coroutine, package, table, math
--- local 
+local loadstring = loadstring
 local os = os
 
 ---- CC libraries. Import only needed sub-functions.
--- Full list (modified Luaj functions): loadfile, dofile, print, type, string.sub, string.find
+-- Full list (modified Luaj functions): getfenv, getmetatable, loadfile, dofile, write, print, type, string.sub, string.find, write
 -- Full list (modified Luaj tables): string, os, io
 -- Full list (new tables): os, colors, disk, gps, help, keys, paintutils, parallel, peripheral, rednet, term, textutils, turtle, vector, window
--- local 
+local print, write = print, write 
 -- local
 -- local
 
@@ -72,18 +72,6 @@ function PrintMap()
 	Utils.printf("\n")
 	end
 	--]]
-end
-
-function PlayerRun()
-	Utils.Refuel()
-	write(Utils.myformat("\n# "))
-	str = io.read()
-	ch = loadstring(str)
-	print(pcall(ch))
-	
-	pos = Nav.GetPos()
-	Logger.Info(" Coords: (%s,%s,%s), F:%s\n",Nav.GetPos("x"),Nav.GetPos("z"),Nav.GetPos("y"),Nav.GetPos("f"))
-	coroutine.yield("_Call",Gui.PlayerRun)
 end
 
 function Test()
