@@ -32,7 +32,10 @@ local write = write
 -- Full list: Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic, Init
 local Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic = Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic
 
--- no more external access after this point
+-- DEBUG only. Sets access to all functions.
+setmetatable(Lib, { __index = _G } )
+
+-- no more external access after this point.
 setfenv(1, Lib)
 
 --------------------------------------------------------------------------------------------------------------------------------
