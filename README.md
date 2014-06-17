@@ -6,7 +6,7 @@ Lua code for ComputerCraft to make ColorWars where coloured turtles explore, bui
 How to check it out?
 ----------------
 1. Start Minecraft with ComnputerCraft mod enabled
-2. Run inside the turtle "pastebin run ip6nUQ2k"
+2. Run inside the turtle "pastebin run m1Tnt0wv"
 3. Press 1 (or 2 or 3, usually not everyone works but at least someone works)
 4. Fuel the turtle & have fun! ... execute Nav.Go({3,2,1},false,"Normal")
 
