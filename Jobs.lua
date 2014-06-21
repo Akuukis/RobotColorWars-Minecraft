@@ -23,9 +23,9 @@ Jobs = Lib
 -- Full list (modified Luaj functions): getfenv, getmetatable, loadfile, dofile, print, type, string.sub, string.find, write
 -- Full list (modified Luaj tables): string, os, io
 -- Full list (new tables): os, colors, disk, gps, help, keys, paintutils, parallel, peripheral, rednet, term, textutils, turtle, vector, window
--- local 
+local type = type
 -- local
--- local
+local os, peripheral, turtle, term = os, peripheral, turtle, term
 
 ---- TuCoWa libraries. Import only needed sub-functions.
 -- Full list: Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic, Init
@@ -74,8 +74,8 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 		Logger.Info("* Turtle will place floor\n")
 		Logger.Info("* Slot[15] must have resource\n")
 		Logger.Info("* Slot[16] must have torches\n")
-		Logger.Check("")
-		return 1
+		--Logger.Check("")
+		return true
 	end
 
 	if Length == 0 or Length == nil then Length = 48 end
@@ -90,7 +90,7 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 	local StartPos = {x=0, z=0, y=0} -- TODO Repair
 	-- local StartPos = Nav.GetPos()
 	local RelPos = {}
-	Logger.Check("StartPos: %s, %s, %s",StartPos.x,StartPos.z,StartPos.y)
+	Logger.Info("StartPos: %s, %s, %s",StartPos.x,StartPos.z,StartPos.y)
 	
 	if isBaseLevel then
 		local f = Nav.GetPos("f")
@@ -103,26 +103,28 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 		RelPos = nil
 	end
 	
-	local function DigStep(Position)
+	local function DigStep(Position,i)
 		local function DigStepNormal(Position)
 			while turtle.detect() do turtle.dig() end
 			Nav.Go(Position)
 			while turtle.detectUp() do turtle.digUp() end
 			while turtle.detectDown() do turtle.digDown() end
-			while turtle.detectUp() do turtle.digUp(); os.sleep(0.1) end
+			while turtle.detectUp() do turtle.digUp(); os.sleep(0.5) end
 			return true
 		end
 		local function DigStepTorch(Position)
-			while turtle.detectUp() do turtle.digUp(); os.sleep(0.1) end
-			Nav.StepUp()
 			while turtle.detect() do turtle.dig() end
-			Position.y = Position.y + 1
 			Nav.Go(Position)
 			while turtle.detectUp() do turtle.digUp() end
 			while turtle.detectDown() do turtle.digDown() end
-			while turtle.detectUp() do turtle.digUp(); os.sleep(0.1) end
+			while turtle.detectUp() do turtle.digUp(); os.sleep(0.5) end
 			Nav.StepDown()
 			while turtle.detectDown() do turtle.digDown() end
+			turtle.select(15)
+			turtle.placeDown()
+			Nav.StepUp()
+			turtle.select(16)
+			turtle.placeDown()
 			return true
 		end
 		
@@ -138,7 +140,21 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 			Logger.Info("%s, %s, %s\n",TempPos.x,TempPos.z,f)
 			if (RelPos.z - TempPos.z) % 12 < 6 then TorchLine = 5 else TorchLine = 11 end
 			if (RelPos.x - TempPos.x) % 12 == TorchLine then -- we are on torch line
-				Nav.TurnLeft()
+				if i%2 == 0 then -- TODO: i is out of range ...
+					Nav.TurnRight()
+					while turtle.detect() do turtle.dig() end
+					turtle.select(16)
+					turtle.place()
+					Nav.TurnLeft()
+				else
+					Nav.TurnLeft()
+					while turtle.detect() do turtle.dig() end
+					turtle.select(16)
+					turtle.place()
+					Nav.TurnRight()
+				end
+				while turtle.detect() do turtle.dig() end
+				
 				if (RelPos.z - TempPos.z) % 6 == 5 then -- we should leave a torch in our place
 					return DigStepTorch(Position)
 				else
@@ -204,11 +220,11 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 	
 	local TempPos = {}
 	for i=0,Width-1 do
-		if type(TempPos) == "table" then Nav.Go(TempPos) end
+		--if type(TempPos) == "table" then Nav.Go(TempPos) end
 		local Start, Finish, Step
 		if i%2 == 0 then Start = 0; Finish = Length-1; Step = 1 else Start = Length-1; Finish = 0; Step = -1 end
 		Logger.Debug("i=%s, Remainder=%s, Start=%s, Finish=%s, Step=%s\n",i,i%2,Start,Finish,Step)
-		Logger.Check("")
+		--Logger.Check("")
 		for j=Start,Finish,Step do			
 			term.clear()
 			term.setCursorPos(1,1)
@@ -217,8 +233,9 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 			if i == 0 and j == 0 then	-- Init
 				while turtle.detectUp() do turtle.digUp() end
 				while turtle.detectDown() do turtle.digDown() end
-				while turtle.detectUp() do turtle.digUp(); os.sleep(0.1) end
-				DigStep({1,0,0},"Dig")
+				while turtle.detectUp() do turtle.digUp(); os.sleep(0.5) end
+				DigStep({1,0,0},i)
+				--[[
 				Nav.TurnAround()
 				turtle.select(1)
 				turtle.place()
@@ -226,20 +243,21 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 				if isBaseLevel then	Limit[15] = 1; Limit[16] = 64 end
 				if not UnloadToChest(Limit) then Logger.Error("Not a chest!"); error() end -- TODO: Automatic problem solving
 				Nav.TurnAround()
+				--]]
 			else -- Usual
-				DigStep({j,i,0},"Dig")
+				DigStep({j,i,0},i)
 			end
 		end
 		
 		if i%2 == 1 then -- TODO: Check if needed to go to chest
-			Logger.Check("Need to unload...\n")
+			Logger.Info("Need to unload...\n")
 			TempPos = Nav.GetPos()
 			TempPos.f = Nav.GetPos("f")
-			Logger.Check("StartPos: %s, %s, %s",StartPos.x,StartPos.z,StartPos.y)
+			Logger.Info("StartPos: %s, %s, %s",StartPos.x,StartPos.z,StartPos.y)
 			Nav.Go(StartPos,"Careful") -- will fail last step cos cannot enter chest square. TODO improve
 			local Limit = {}
-			if isBaseLevel then	Limit[15] = 1; Limit[16] = 64 end
-			if not UnloadToChest(Limit) then Logger.Error("Not a chest!"); error() end -- TODO: Automatic problem solving
+			-- if isBaseLevel then	Limit[15] = 1; Limit[16] = 64 end
+			-- if not UnloadToChest(Limit) then Logger.Error("Not a chest!"); error() end -- TODO: Automatic problem solving
 		else
 			TempPos = nil
 		end
@@ -248,6 +266,18 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 	
 end
 
+function MineTest( Length )
+	x = read()
+	for i=1,tonumber(x) do
+	  while GetMap(GetPos(GetPos("f")),"Id") do turtle.dig() end
+	  turtle.forward()
+	  while GetMap(GetPos(4),"Id") do
+		turtle.digUp()
+		sleep(0.2)
+	  end
+	  while turtle.detectDown() do turtle.digDown() end
+	end
+end
 --------------------------------------------------------------------------------------------------------------------------------
 ---------------- Private functions ---------------------------------------------------------------------------------------------
 

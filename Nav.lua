@@ -69,7 +69,7 @@ local os, select, table, math = os, select, table, math
 -- Full list (new tables): os, colors, disk, gps, help, keys, paintutils, parallel, peripheral, rednet, term, textutils, turtle, vector, window
 local type = type
 -- local
--- local
+local turtle = turtle
 
 ---- TuCoWa libraries. Import only needed sub-functions.
 -- Full list: Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic, Init
@@ -86,7 +86,7 @@ Pos.x = 0 -- North
 Pos.z = 0 -- East
 Pos.y = 0 -- Height
 Pos.f = 0 -- Facing direction, modulus of 4 // 0,1,2,3 = North, East, South, West
-local Map = {} -- Id={nil=unexplored,false=air,0=RandomBlock,####=Block}, Updated=server's time, Tag={nil,true if tagged by special events}
+local Map = {} -- Id={nil=unexplored,false=air,0=RandomBlock,####=Block}, Updated=server's time, Tag={nil,true if tagged by special events}, Owner="".
 Map.InitTime = os.time()
 Map.UpdatedTime = os.time()
 
@@ -96,16 +96,48 @@ Map.UpdatedTime = os.time()
 -- none
 
 --------------------------------------------------------------------------------------------------------------------------------
----------------- Public functions ----------------------------------------------------------------------------------------------
+---------------- Functions ----------------------------------------------------------------------------------------------
 
-function Step(...)
-	return Move(GetPos("f"),{...})
+-- Technical and independent functions
+local function PutMap (pos,name,value)
+	-- local shout = os.difftime(os.time() - Map.UpdatedTime)
+	Map.UpdatedTime = os.time()
+	
+	if Map[GetPos(pos,"x")] == nil then Map[GetPos(pos,"x")]={} end
+	if Map[GetPos(pos,"x")][GetPos(pos,"z")] == nil then Map[GetPos(pos,"x")][GetPos(pos,"z")]={} end
+	if Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")] == nil then Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")]={} end
+
+	Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")]["Updated"] = Map.UpdatedTime
+	Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")][name] = value
+	return shout
 end
-function StepUp(...)
-	return Move(4,{...})
+local function UpdatePos (face)
+--Logger.Debug("Nav.UpdateCoord(%s)\n",face)
+	Pos.x = GetPos(face,"x")
+	Pos.z = GetPos(face,"z")
+	Pos.y = GetPos(face,"y")
 end
-function StepDown(...)
-	return Move(5,{...})
+local function Test ()
+	return 1
+	end
+local function ComparePos (position1,position2)
+	if type(position1) ~= "table" then return "Nav TABLE" end
+	if type(position2) ~= "table" then return "Nav TABLE" end
+	pos1 = {}
+	pos2 = {}
+	pos1.x = position1.x or position1[1]
+	pos1.z = position1.z or position1[2]
+	pos1.y = position1.y or position1[3]
+	pos1.f = position1.f or position1[4]
+	pos2.x = position2.x or position2[1]
+	pos2.z = position2.z or position2[2]
+	pos2.y = position2.y or position2[3]
+	pos2.f = position2.f or position2[4]
+	if pos1.x ~= pos2.x then return false end
+	if pos1.z ~= pos2.z then return false end
+	if pos1.y ~= pos2.y then return false end
+	if pos1.f and pos2.f and pos1.f ~= pos2.f then return false end
+	return true
 end
 function GetPos ( ... ) -- Input Position (table), FacingDirection (num) and returnSwitch (string) in any order
 	local Face = nil
@@ -188,94 +220,18 @@ function GetPos ( ... ) -- Input Position (table), FacingDirection (num) and ret
 	end
 	return nil
 	end
-function Go ( ... ) -- table position, num isRelative, text option1 [, text option2 ...]
+
+-- Technical and dependent functions, 1st level
+function GetMap (pos,name)
+	--Logger.Debug("GetMap(%s,%s,%s)\n", x,z,y)
+	if Map[GetPos(pos,"x")] == nil then Map[GetPos(pos,"x")]={} end
+	if Map[GetPos(pos,"x")][GetPos(pos,"z")] == nil then Map[GetPos(pos,"x")][GetPos(pos,"z")]={} end
+	if Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")] == nil then Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")]={} end
 	
-	local target = {}
-	local options = {}
-	local isRelative = false
-	
-	for i=1,select('#',...) do
-		local temp = select(i,...)
-		if type(temp) == "table" then target = temp end
-		if type(temp) == "boolean" then if temp == true then isRelative = 1 else isRelative = 0 end end
-		if type(temp) == "number" then isRelative = temp end
-		if type(temp) == "text" then options[table.maxn(options)+1] = temp end
-	end
-	
-	target.x = target.x or target[1] or 0
-	target.z = target.z or target[2] or 0
-	target.y = target.y or target[3] or 0
-	target.f = target.f or target[4] or GetPos("f")
-	
-	if isRelative and isRelative > 0 then
-		if isRelative > 1 then
-			if GetPos("f") == 0 then target.x = GetPos("x") + target.x; target.z = GetPos("z") + target.z end
-			if GetPos("f") == 1 then target.x = GetPos("x") - target.z; target.z = GetPos("z") + target.x end
-			if GetPos("f") == 2 then target.x = GetPos("x") - target.x; target.z = GetPos("z") - target.z end
-			if GetPos("f") == 3 then target.x = GetPos("x") + target.z; target.z = GetPos("z") - target.x end
-		else
-			target.x = target.x + GetPos("x")
-			target.z = target.z + GetPos("z")
-		end	
-	end
-	
-	for i=1,table.maxn(options) do
-		if options[i] == "Normal" or options[i] == "normal" then options[i] = "Normal" 
-		elseif options[i] == "Careful" or options[i] == "careful" then options[i] = "Careful" 
-		elseif options[i] == "Dig" or options[i] == "dig" then return "Error: Style " .. options[i] .. " not implemented yet."
-		elseif options[i] == "DigCareful" or options[i] == "Digcareful" or options[i] == "digcareful" then return "Error: Style " .. options[i] .. " not implemented yet."
-		elseif options[i] == "Explore" or options[i] == "explore" then return "Error: Style " .. options[i] .. " not implemented yet."
-		elseif options[i] == "SurfaceExplore" or options[i] == "Surfaceexplore" or options[i] == "surfaceexplore" then return "Error: Style " .. options[i] .. " not implemented yet."
-		else options[i] = "Normal"
-		end
-	end
-	
-	
-	local tries=32 -- TODO
-	Logger.Debug("Nav.Go(%s,%s,%s) Style: %s\n", target.x, target.z, target.y, options[1])
-	repeat
-		if ComparePos(GetPos(),target) then return true else tries = tries - 1 end
-		-- Logger.Debug("Nav.Go() @ (%s,%s,%s,F%s)/%s\n",GetPos("x"),GetPos("z"),GetPos("y"),GetPos("f"),tries)
-		local fpath = GetPath(target,options)
-		if fpath == nil then 
-			-- Logger.Debug("Nav.Go() FPath=nil!")
-			UpdateMap()
-			TurnRight()
-		else
-			i = 1
-			success = false
-			while i <= table.maxn(fpath) and not success do 
-				-- Logger.Debug("%s",i)
-				-- Logger.Debug("@(%s,%s,%s),(%s,%s) Moving %s/%s ...\n", GetPos("x"),GetPos("z"),GetPos("y"),not fpath[i],not GetMap(GetPos(fpath[i]),"Id"),i,table.maxn(fpath))
-				success = not Move(fpath[i], options)
-				i = i + 1
-			end
-		end
-	until tries < 0
-	-- Logger.Debug("Nav.Go() Out-of-UNTIL! /%s",tries)
-	return false
-end
-function TurnRight ()
-	turtle.turnRight()
-	Logger.Debug("Nav.TurnRight() Nav.Pos.f. %s => ",GetPos("f"))
-	Pos.f = (GetPos("f")+1)%4
-	Logger.Debug("%s\n",GetPos("f"))
-	UpdateMap()
-end
-function TurnLeft ()
-	turtle.turnLeft()
-	Logger.Debug("Nav.TurnLeft() Nav.Pos.f. %s => ",GetPos("f"))
-	Pos.f = (GetPos("f")+3)%4
-	Logger.Debug("%s\n",GetPos("f"))
-	UpdateMap()    
-end
-function TurnAround ()
-	if 1==math.random(0,1) then
-		TurnRight()
-		TurnRight()
-	else
-		TurnLeft()
-		TurnLeft()
+	if name == nil then 
+		return Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")] 
+	else 
+		return Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")][name] 
 	end
 end
 function UpdateMap (location,value) -- location{nil|dir|XZY), value{false=air,0=unknown block,1+=known block}
@@ -292,19 +248,7 @@ function UpdateMap (location,value) -- location{nil|dir|XZY), value{false=air,0=
 		PutMap({location.x, location.x, location.y},"Id",value)
 	end
 end
-function GetDistance (target, ...) -- Gets distance between your position and a target with given options
-	local options = {}
-	for i=1,select('#',...) do
-		local temp = select(i,...)
-		if type(temp) == "text" then options[table.maxn(options)+1] = temp end
-	end
-	return table.maxn( GetPath(target,options) )
-end
-
---------------------------------------------------------------------------------------------------------------------------------
----------------- Private functions ---------------------------------------------------------------------------------------------
-
-function GetPath (target,options)  -- TODO: multiple targets!
+local function GetPath (_tTarget,_tOptions)  -- TODO: multiple targets!
 --[[ DISCLAIMER.
 This code (May 04, 2014) is written by Akuukis 
 	who based on code (Sep 21, 2006) by Altair
@@ -329,7 +273,11 @@ OR nil if closedlist==nil
 -- Intro to A* - http://www.raywenderlich.com/4946/introduction-to-a-pathfinding
 -- Try it out! - http://zerowidth.com/2013/05/05/jump-point-search-explained.html
 --]]
-if target.y == nil then target.y = GetPos("y") end
+if target.y == nil then 
+	target.y = GetPos("y")
+	
+
+
 
 CalcHeuristic = function (pos1, pos2, options)
 	-- Useful - http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
@@ -497,7 +445,8 @@ while openk > 0  and table.maxn(closedlist)<256 do   -- Growing loop
 	end
 	return nil
 end
-function Move (face, options) -- face={0=North|1=East|2=South|3=West|4=up|5=down}, returns true if succeeded
+
+local function Move (face, options) -- face={0=North|1=East|2=South|3=West|4=up|5=down}, returns true if succeeded
 	options[1] = options[1] or "Normal" -- Usually "Normal" because Nav.Go will default on "Normal".
 	local success = false
 	local Id = GetMap(GetPos(face),"Id")
@@ -549,57 +498,119 @@ function Move (face, options) -- face={0=North|1=East|2=South|3=West|4=up|5=down
 		end
 	end
 end
-function GetMap (pos,name)
-	--Logger.Debug("GetMap(%s,%s,%s)\n", x,z,y)
-	if Map[GetPos(pos,"x")] == nil then Map[GetPos(pos,"x")]={} end
-	if Map[GetPos(pos,"x")][GetPos(pos,"z")] == nil then Map[GetPos(pos,"x")][GetPos(pos,"z")]={} end
-	if Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")] == nil then Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")]={} end
-	
-	if name == nil then 
-		return Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")] 
-	else 
-		return Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")][name] 
-	end
-end
-function PutMap (pos,name,value)
-	-- local shout = os.difftime(os.time() - Map.UpdatedTime)
-	Map.UpdatedTime = os.time()
-	
-	if Map[GetPos(pos,"x")] == nil then Map[GetPos(pos,"x")]={} end
-	if Map[GetPos(pos,"x")][GetPos(pos,"z")] == nil then Map[GetPos(pos,"x")][GetPos(pos,"z")]={} end
-	if Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")] == nil then Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")]={} end
 
-	Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")]["Updated"] = Map.UpdatedTime
-	Map[GetPos(pos,"x")][GetPos(pos,"z")][GetPos(pos,"y")][name] = value
-	return shout
+-- Core functions
+function TurnRight ()
+	turtle.turnRight()
+	Logger.Debug("Nav.TurnRight() Nav.Pos.f. %s => ",GetPos("f"))
+	Pos.f = (GetPos("f")+1)%4
+	Logger.Debug("%s\n",GetPos("f"))
+	UpdateMap()
 end
-function Test ()
-	return 1
+function TurnLeft ()
+	turtle.turnLeft()
+	Logger.Debug("Nav.TurnLeft() Nav.Pos.f. %s => ",GetPos("f"))
+	Pos.f = (GetPos("f")+3)%4
+	Logger.Debug("%s\n",GetPos("f"))
+	UpdateMap()    
+end
+function Go ( ... ) -- table position, num isRelative, text option1 [, text option2 ...]
+	
+	local target = {}
+	local options = {}
+	local isRelative = false
+	
+	for i=1,select('#',...) do
+		local temp = select(i,...)
+		if type(temp) == "table" then target = temp end
+		if type(temp) == "boolean" then if temp == true then isRelative = 1 else isRelative = 0 end end
+		if type(temp) == "number" then isRelative = temp end
+		if type(temp) == "text" then options[table.maxn(options)+1] = temp end
 	end
-function ComparePos (position1,position2)
-	if type(position1) ~= "table" then return "Nav TABLE" end
-	if type(position2) ~= "table" then return "Nav TABLE" end
-	pos1 = {}
-	pos2 = {}
-	pos1.x = position1.x or position1[1]
-	pos1.z = position1.z or position1[2]
-	pos1.y = position1.y or position1[3]
-	pos1.f = position1.f or position1[4]
-	pos2.x = position2.x or position2[1]
-	pos2.z = position2.z or position2[2]
-	pos2.y = position2.y or position2[3]
-	pos2.f = position2.f or position2[4]
-	if pos1.x ~= pos2.x then return false end
-	if pos1.z ~= pos2.z then return false end
-	if pos1.y ~= pos2.y then return false end
-	if pos1.f and pos2.f and pos1.f ~= pos2.f then return false end
-	return true
+	
+	target.x = target.x or target[1] or 0
+	target.z = target.z or target[2] or 0
+	target.y = target.y or target[3] or 0
+	target.f = target.f or target[4] or GetPos("f")
+	
+	if isRelative and isRelative > 0 then
+		if isRelative > 1 then
+			if GetPos("f") == 0 then target.x = GetPos("x") + target.x; target.z = GetPos("z") + target.z end
+			if GetPos("f") == 1 then target.x = GetPos("x") - target.z; target.z = GetPos("z") + target.x end
+			if GetPos("f") == 2 then target.x = GetPos("x") - target.x; target.z = GetPos("z") - target.z end
+			if GetPos("f") == 3 then target.x = GetPos("x") + target.z; target.z = GetPos("z") - target.x end
+		else
+			target.x = target.x + GetPos("x")
+			target.z = target.z + GetPos("z")
+		end	
+	end
+	
+	for i=1,table.maxn(options) do
+		if options[i] == "Normal" or options[i] == "normal" then options[i] = "Normal" 
+		elseif options[i] == "Careful" or options[i] == "careful" then options[i] = "Careful" 
+		elseif options[i] == "Dig" or options[i] == "dig" then return "Error: Style " .. options[i] .. " not implemented yet."
+		elseif options[i] == "DigCareful" or options[i] == "Digcareful" or options[i] == "digcareful" then return "Error: Style " .. options[i] .. " not implemented yet."
+		elseif options[i] == "Explore" or options[i] == "explore" then return "Error: Style " .. options[i] .. " not implemented yet."
+		elseif options[i] == "SurfaceExplore" or options[i] == "Surfaceexplore" or options[i] == "surfaceexplore" then return "Error: Style " .. options[i] .. " not implemented yet."
+		else options[i] = "Normal"
+		end
+	end
+	
+	
+	local tries=32 -- TODO
+	Logger.Debug("Nav.Go(%s,%s,%s) Style: %s\n", target.x, target.z, target.y, options[1])
+	repeat
+		if ComparePos(GetPos(),target) then return true else tries = tries - 1 end
+		-- Logger.Debug("Nav.Go() @ (%s,%s,%s,F%s)/%s\n",GetPos("x"),GetPos("z"),GetPos("y"),GetPos("f"),tries)
+		local fpath = GetPath(target,options)
+		if fpath == nil then 
+			-- Logger.Debug("Nav.Go() FPath=nil!")
+			UpdateMap()
+			TurnRight()
+		else
+			i = 1
+			success = false
+			while i <= table.maxn(fpath) and not success do 
+				-- Logger.Debug("%s",i)
+				-- Logger.Debug("@(%s,%s,%s),(%s,%s) Moving %s/%s ...\n", GetPos("x"),GetPos("z"),GetPos("y"),not fpath[i],not GetMap(GetPos(fpath[i]),"Id"),i,table.maxn(fpath))
+				success = not Move(fpath[i], options)
+				i = i + 1
+			end
+		end
+	until tries < 0
+	-- Logger.Debug("Nav.Go() Out-of-UNTIL! /%s",tries)
+	return false
 end
-function UpdatePos (face)
---Logger.Debug("Nav.UpdateCoord(%s)\n",face)
-	Pos.x = GetPos(face,"x")
-	Pos.z = GetPos(face,"z")
-	Pos.y = GetPos(face,"y")
+
+-- Shortcut functions
+function TurnAround ()
+	if 1==math.random(0,1) then
+		TurnRight()
+		TurnRight()
+	else
+		TurnLeft()
+		TurnLeft()
+	end
+end
+function Step(...)
+	return Move(GetPos("f"),{...})
+end
+function StepUp(...)
+	return Move(4,{...})
+end
+function StepDown(...)
+	return Move(5,{...})
+end
+function GetDistance (target, ...) -- Gets distance between your position and a target with given options
+	local options = {}
+	for i=1,select('#',...) do
+		local temp = select(i,...)
+		if type(temp) == "text" then options[table.maxn(options)+1] = temp end
+	end
+	return table.maxn( GetPath(target,options) )
+end
+function GoNextTo ( ... )
+-- WiP
 end
 
 --------------------------------------------------------------------------------------------------------------------------------

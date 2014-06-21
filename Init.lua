@@ -46,7 +46,113 @@ setfenv(1, Lib)
 --------------------------------------------------------------------------------------------------------------------------------
 ---------------- Classes -------------------------------------------------------------------------------------------------------
 
--- none
+local clsObject = { -- WiP!!!
+	UniqId = "", -- UniqId of this object inside parent.
+	Type = "", -- TheWorld | Base | Farm | Turtle | Inventory | Bag | Container | Resource
+	
+	Id = "",
+	Meta = "",
+	Extra = {}, -- Military or Research for TheWorld, Upgrades for Bases and Farms, Hierarchy for Turtles, Item|Fluid|Energy for Containers and Resources.
+	Position = {} or 0, -- X,Z,Y,F for the back buttom left corner relative to its parent or SlotId.
+	Size = {} or 0, -- X,Z,Y size in blocks or amount in stack if inside.
+	TimeofBirth = 0,-- mostly used for registering future objects.
+	
+	Parent = "", -- TheWorld object is the only one that has Parent = nil
+	Children = {}, -- Table of children clsObject objects, things within this object. For Inventory|Bag|Container index = SlotId.
+	
+	Value = 0, -- For Inventory|Bags|Containers|Resources its the supply value, for TheWorld|Base|Farm|Turtle its cached sum of PartList supply value
+
+	TimeUpdated = 0, -- Time of last change
+	
+	function new (self)
+		local o
+		setmetatable(o, self)
+		self.__index = self
+		return o
+    end	
+	}
+	
+local clsTheWorld = clsObject:new()
+clsTheWorld.Profile = {}, -- set of randomized defaults.
+
+local clsBase = {
+	Profile = {}, -- set of randomized defaults.
+	PartList = {}, -- For Bases & Farms & Turles & Inventories its the resources collected if destroyed including those inside Containers for Flows.
+	Flows = {	-- For objects that generate something on their own (like defense systems)
+		InputList = {
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to a valid Inventory | Bag | Container
+			}, 
+		OutputList = {
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to a valid Inventory | Bag | Container
+			},
+		Cycle = 0, -- Lenght of one cycle to transform InputList into OutputList in ticks. 1sec = 20 tics.
+		FlagRun = true, -- True: flows until input is valid. False: flows until Inventory is full. Nil: flows only if output inventory is empty
+		FlagInput = true, -- True: Input is taken at start. False: Input is taken at the end. Nil: Input is taken somewhere in middle.
+		FlagOutput = true,	-- True: Output is made at start. False: Output is made at the end. Nil: Output is made somewhere in middle.
+		Type = 0, -- Different types of flows can run in parralel, but only one flow per each type. 
+		Priority = 0, -- 1 is higher priority over 2, and only 0 will stop any non-0 priority flow.
+		},
+	}
+local clsFarm = {
+	Profile = {}, -- set of randomized defaults.
+	PartList = {}, -- For Bases & Farms & Turles & Inventories its the resources collected if destroyed including those inside Containers for Flows.
+	Flows = {	-- For objects that generate something on their own (like automated tree farms)
+		InputList = {
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to a valid Inventory | Bag | Container
+			}, 
+		OutputList = {
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to a valid Inventory | Bag | Container
+			},
+		Cycle = 0, -- Lenght of one cycle to transform InputList into OutputList in ticks. 1sec = 20 tics.
+		FlagRun = true, -- True: flows until input is valid. False: flows until Inventory is full. Nil: flows only if output inventory is empty
+		FlagInput = true, -- True: Input is taken at start. False: Input is taken at the end. Nil: Input is taken somewhere in middle.
+		FlagOutput = true,	-- True: Output is made at start. False: Output is made at the end. Nil: Output is made somewhere in middle.
+		Type = 0, -- Different types of flows can run in parralel, but only one flow per each type. 
+		Priority = 0, -- 1 is higher priority over 2, and only 0 will stop any non-0 priority flow.
+		},
+	}
+local clsTurtle = {
+	Profile = {}, -- set of randomized defaults.
+	PartList = {}, -- For Bases & Farms & Turles & Inventories its the resources collected if destroyed including those inside Containers for Flows.
+	Flows = {	-- For objects that generate something on their own (like Turtle generates WorkSeconds)
+		InputList = {
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to a valid Inventory | Bag | Container
+			}, 
+		OutputList = {
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to a valid Inventory | Bag | Container
+			},
+		Cycle = 0, -- Lenght of one cycle to transform InputList into OutputList in ticks. 1sec = 20 tics.
+		FlagRun = true, -- True: flows until input is valid. False: flows until Inventory is full. Nil: flows only if output inventory is empty
+		FlagInput = true, -- True: Input is taken at start. False: Input is taken at the end. Nil: Input is taken somewhere in middle.
+		FlagOutput = true,	-- True: Output is made at start. False: Output is made at the end. Nil: Output is made somewhere in middle.
+		Type = 0, -- Different types of flows can run in parralel, but only one flow per each type. 
+		Priority = 0, -- 1 is higher priority over 2, and only 0 will stop any non-0 priority flow.
+		},
+	}
+local clsInventory = {}
+local clsBag = {}
+local clsContainer = {}
+local clsResource = {}
+
+
 
 --------------------------------------------------------------------------------------------------------------------------------
 ---------------- Public functions ----------------------------------------------------------------------------------------------

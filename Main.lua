@@ -336,6 +336,7 @@ Start()
 -- The First coroutine
 local n = 1
 Threads[n] = coroutine.create(Init.Start)
+n = n + 1; coroutine.create(Debug.PlayerRun)
 tFilters[Threads[n]] = nil
 -- Run until no coroutines left (won't happen normally)
 while n > 0 do 

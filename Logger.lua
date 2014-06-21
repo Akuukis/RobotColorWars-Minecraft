@@ -18,7 +18,7 @@ Logger = Lib
 ---- Luaj unmodified libraries. Import only needed sub-functions.
 -- Full list (functions): assert, collectgarbage, error, _G, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
 -- Full list (tables): coroutine, package, table, math
-local select, unpack = select, unpack
+local select, tostring, unpack = select, tostring, unpack
 local string, coroutine = string, coroutine
 
 ---- CC libraries. Import only needed sub-functions.
