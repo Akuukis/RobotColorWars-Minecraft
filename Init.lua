@@ -64,16 +64,16 @@ local clsObject = { -- WiP!!!
 
 	TimeUpdated = 0, -- Time of last change
 	
-	function new (self)
+	new = function (self)
 		local o
 		setmetatable(o, self)
 		self.__index = self
 		return o
-    end	
+    end,
 	}
 	
-local clsTheWorld = clsObject:new()
-clsTheWorld.Profile = {}, -- set of randomized defaults.
+--local clsTheWorld = clsObject:new()
+--clsTheWorld.Profile = {} -- set of randomized defaults.
 
 local clsBase = {
 	Profile = {}, -- set of randomized defaults.
@@ -166,13 +166,13 @@ end
 
 function PlayerRun()
 	--Utils.Refuel()
-	Logger.Info("\n# ")
+	Logger.Info("# ")
 	str = read()
 	ch = loadstring(str)
 	print(pcall(ch))
 	
 	pos = Nav.GetPos()
-	Logger.Info(" Coords: (%s,%s,%s), F:%s\n",Nav.GetPos("x"),Nav.GetPos("z"),Nav.GetPos("y"),Nav.GetPos("f"))
+	Logger.Info(" Coords: (%s,%s,%s), F:%s\n",Nav.GetPos().x,Nav.GetPos().z,Nav.GetPos().y,Nav.GetPos().f)
 	coroutine.yield("_Call",PlayerRun)
 end
 
