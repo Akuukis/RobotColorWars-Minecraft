@@ -330,20 +330,30 @@ local Args = {}
 local Names = {}
 local eventData = {}
 
+local function wait ( nTime )
+	local History = {}
+    local timerID = os.startTimer( nTime or 0.05 )
+    repeat
+        History[table.maxn(History)+1] = { os.pullEvent() }
+		for n in pairs(History) do print(n,": ", unpack(History[n])) end
+    until History[table.maxn(History)][1] == "timer" and History[table.maxn(History)][2] == timerID
+	for i=1,table.maxn(History)-1 do
+		os.queueEvent(unpack(History[i]))	
+	end
+end
+
 print("Initialized Main!")
 Start()
 
 -- The First coroutine
 local n = 1
 Threads[n] = coroutine.create(Init.Start)
-n = n + 1; coroutine.create(Debug.PlayerRun)
 tFilters[Threads[n]] = nil
 -- Run until no coroutines left (won't happen normally)
 while n > 0 do 
 	--Logger.Check("inside While, n=%s\n",n)
 	-- Cycle through active coroutines. Repeat twice if coroutine kills or calls other coroutine (see "i = i - 1")
 	for i=1,n do 
-		--Logger.Check("inside for, i=%s\n",i)
 		--Logger.Check("inside for, Threads[i]=%s\n",Threads[i])
 		-- Clean up the table of coroutines - if there's a gap, shift others up.
 		if Threads[i] == nil or coroutine.status( Threads[i] ) == "dead" then
@@ -367,15 +377,17 @@ while n > 0 do
 				--Logger.Check("inside resume, Ok=%s, tFilters[Threads[i]]=%s, Target=%s, Args[Threads[i]]=%s\n",Ok, tFilters[Threads[i]], Target, Args[Threads[i]])
 				if not Ok then Logger.Error("Coroutine failed! %s", tFilters[Threads[i]] ) -- Inform if coroutine failed
 				elseif tFilters[Threads[i]] == "_Call" then -- prepare a new coroutine
-					--Logger.Check("inside _Call")
-					n = n + 1
-					Threads[n] = coroutine.create(Target)
-					Args[Threads[n]] = ArgsNew
-					Names[n] = Utils.GenUniqString(16)
-					--Logger.Check("NewThr: %s\n",Threads[n])
-					i = i - 1
-					os.queueEvent("dummy")
-					eventData = Names[n]
+					Logger.Debug("inside _Call")
+					if type(Target) == "function" then
+						n = n + 1
+						Threads[n] = coroutine.create(Target)
+						Args[Threads[n]] = ArgsNew
+						Names[n] = Utils.GenUniqString(16)
+						Logger.Debug("NewThr: %s\n",Threads[n])
+						i = i - 1
+						os.queueEvent("dummy")
+						eventData = { Names[n] }
+					end
 				elseif tFilters[Threads[i]] == "_Stop" or tFilters[Threads[i]] == "_Kill" then
 					--Logger.Check("inside _Stop/Kill")
 					local TargetID = nil
@@ -399,6 +411,11 @@ while n > 0 do
 				end
 			end -- if Args[Threads[i]] or tFilters[Threads[i]] == nil or tFilters[Threads[i]] == Arguments[1] then
 		end -- if Threads[i] == nil or coroutine.status( Threads[i] ) == "dead" then
+		local cpx,cpy = term.getCursorPos()
+		term.setCursorPos(33, 1)
+		Logger.Debug("i=%s/n=%s\n",i,n)
+		term.setCursorPos(cpx,cpy)
+		wait()
 	end -- for i=1,n do 
 	--Logger.Check("eventData:\n")
 	eventData = { os.pullEventRaw() } -- after a cycle call pullEventRaw ( = coroutine.yield )
