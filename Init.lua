@@ -77,7 +77,7 @@ local clsObject = { -- WiP!!!
 
 local clsBase = {
 	Profile = {}, -- set of randomized defaults.
-	PartList = {}, -- For Bases & Farms & Turles & Inventories its the resources collected if destroyed including those inside Containers for Flows.
+	PartList = {}, -- For Bases & Farms & Turles its the resources collected if destroyed including those inside Containers for Flows.
 	Flows = {	-- For objects that generate something on their own (like defense systems)
 		InputList = {
 			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
@@ -101,7 +101,7 @@ local clsBase = {
 	}
 local clsFarm = {
 	Profile = {}, -- set of randomized defaults.
-	PartList = {}, -- For Bases & Farms & Turles & Inventories its the resources collected if destroyed including those inside Containers for Flows.
+	PartList = {}, -- For Bases & Farms & Turles its the resources collected if destroyed including those inside Containers for Flows.
 	Flows = {	-- For objects that generate something on their own (like automated tree farms)
 		InputList = {
 			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
@@ -125,7 +125,7 @@ local clsFarm = {
 	}
 local clsTurtle = {
 	Profile = {}, -- set of randomized defaults.
-	PartList = {}, -- For Bases & Farms & Turles & Inventories its the resources collected if destroyed including those inside Containers for Flows.
+	PartList = {}, -- For Bases & Farms & Turles its the resources collected if destroyed including those inside Containers for Flows.
 	Flows = {	-- For objects that generate something on their own (like Turtle generates WorkSeconds)
 		InputList = {
 			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
@@ -166,13 +166,16 @@ end
 
 function PlayerRun()
 	--Utils.Refuel()
-	Logger.Info("# ")
+	Logger.Info("@ ")
 	str = read()
 	ch = loadstring(str)
-	print(pcall(ch))
-	
-	pos = Nav.GetPos()
-	Logger.Info(" Coords: (%s,%s,%s), F:%s\n",Nav.GetPos().x,Nav.GetPos().z,Nav.GetPos().y,Nav.GetPos().f)
+	if ch and str ~="" then 
+		--print(pcall(ch))
+		coroutine.yield("_Call",pcall,{ch})
+		
+		pos = Nav.GetPos()
+		Logger.Info(" Coords: (%s,%s,%s), F:%s\n",Nav.GetPos().x,Nav.GetPos().z,Nav.GetPos().y,Nav.GetPos().f)
+	end
 	coroutine.yield("_Call",PlayerRun)
 end
 

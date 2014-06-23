@@ -93,11 +93,11 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 	Logger.Info("StartPos: %s, %s, %s",StartPos.x,StartPos.z,StartPos.y)
 	
 	if isBaseLevel then
-		local f = Nav.GetPos("f")
-		if f == 0 then RelPos.x =  Nav.GetPos("x"); RelPos.z =  Nav.GetPos("z") end -- North
-		if f == 1 then RelPos.x = -Nav.GetPos("z"); RelPos.z = -Nav.GetPos("x") end -- East
-		if f == 2 then RelPos.x = -Nav.GetPos("x"); RelPos.z = -Nav.GetPos("z") end -- South
-		if f == 3 then RelPos.x =  Nav.GetPos("z"); RelPos.z =  Nav.GetPos("x") end -- West
+		local f = Nav.GetPos().f
+		if f == 0 then RelPos.x =  Nav.GetPos().x; RelPos.z =  Nav.GetPos().z end -- North
+		if f == 1 then RelPos.x = -Nav.GetPos().z; RelPos.z = -Nav.GetPos().x end -- East
+		if f == 2 then RelPos.x = -Nav.GetPos().x; RelPos.z = -Nav.GetPos().z end -- South
+		if f == 3 then RelPos.x =  Nav.GetPos().z; RelPos.z =  Nav.GetPos().x end -- West
 		Logger.Info("%s, %s, %s\n",RelPos.x,RelPos.z,RelPos.y,f)
 	else
 		RelPos = nil
@@ -131,11 +131,11 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 		if isBaseLevel then 
 			local TorchLine = 0
 			local TempPos = {}
-			local f = Nav.GetPos("f")
-			if f == 0 then TempPos.x =  Nav.GetPos("x"); TempPos.z =  Nav.GetPos("z") end -- North
-			if f == 1 then TempPos.x = -Nav.GetPos("z"); TempPos.z = -Nav.GetPos("x") end -- East
-			if f == 2 then TempPos.x = -Nav.GetPos("x"); TempPos.z = -Nav.GetPos("z") end -- South
-			if f == 3 then TempPos.x =  Nav.GetPos("z"); TempPos.z =  Nav.GetPos("x") end -- West
+			local f = Nav.GetPos().f
+			if f == 0 then TempPos.x =  Nav.GetPos().x; TempPos.z =  Nav.GetPos().z end -- North
+			if f == 1 then TempPos.x = -Nav.GetPos().z; TempPos.z = -Nav.GetPos().x end -- East
+			if f == 2 then TempPos.x = -Nav.GetPos().x; TempPos.z = -Nav.GetPos().z end -- South
+			if f == 3 then TempPos.x =  Nav.GetPos().z; TempPos.z =  Nav.GetPos().x end -- West
 			Logger.Info("%s, %s, %s\n",RelPos.x,RelPos.z,f)
 			Logger.Info("%s, %s, %s\n",TempPos.x,TempPos.z,f)
 			if (RelPos.z - TempPos.z) % 12 < 6 then TorchLine = 5 else TorchLine = 11 end
