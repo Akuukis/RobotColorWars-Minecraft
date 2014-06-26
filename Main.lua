@@ -277,9 +277,9 @@ PastebinList["Mox"] = {
 "bpyKQrn4","Y9RjARM5","TbXnTHVs","sKRJw3YD","--------",
 "jQizTuJd","--------",}
 PastebinList["Hek"] = {
-"smpuk04E","LHNWPcXr","5frXRLYb","vfykx5yU","vkqKAC75",
-"HYzrtMtW","m684sRqW","4TLXbEAr","ED6JUvXF","--------",
-"BVivED7g","--------",}
+"sCCxs23y","cRPh5hK5","4B9wHmfB","eXUFfw98","buAi08ga",
+"CaGGcpS3","0NP4EJcZ","Lvwz0A3b","mFFxtZUs","UmtZSab5",
+"eru9yvdg","BNVW9D5u",}
 PastebinList["Mar"] = {
 "YwEvnNuv","VqYY94pE","a2pZzJhK","AyQ4RJRy","hTbMg1BG",
 "VymxZieZ","gdL40bFx","0rFQyhKi","rz2BBebP","0xMDUvL0",
