@@ -383,7 +383,7 @@ while n > 0 do
 						Threads[n] = coroutine.create(Target)
 						Args[Threads[n]] = ArgsNew
 						Names[n] = Utils.GenUniqString(16)
-						Logger.Debug("NewThr: %s\n",Threads[n])
+						--Logger.Debug("NewThr: %s\n",Threads[n])
 						i = i - 1
 						os.queueEvent("dummy")
 						eventData = { Names[n] }
