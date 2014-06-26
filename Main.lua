@@ -377,7 +377,7 @@ while n > 0 do
 				--Logger.Check("inside resume, Ok=%s, tFilters[Threads[i]]=%s, Target=%s, Args[Threads[i]]=%s\n",Ok, tFilters[Threads[i]], Target, Args[Threads[i]])
 				if not Ok then Logger.Error("Coroutine failed! %s", tFilters[Threads[i]] ) -- Inform if coroutine failed
 				elseif tFilters[Threads[i]] == "_Call" then -- prepare a new coroutine
-					Logger.Debug("inside _Call")
+					--Logger.Debug("inside _Call")
 					if type(Target) == "function" then
 						n = n + 1
 						Threads[n] = coroutine.create(Target)
