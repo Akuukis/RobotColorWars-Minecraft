@@ -173,18 +173,24 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
  
 local function get(paste)
-	write( "Connecting to pastebin.com... " )
+	--write( "Connecting to pastebin.com... " )
+	write("connecting...")
+	local cpx,cpy = term.getCursorPos()
+	term.setCursorPos(cpx-string.len("Connecting..."), cpy)
 	local response = http.get(
 		"http://pastebin.com/raw.php?i="..textutils.urlEncode( paste )
 	)
 			
 	if response then
-		print( "Success." )
+		write( "connected, " )
+		local cpx,cpy = term.getCursorPos()
+		term.setCursorPos(cpx-string.len("connected, "), cpy)
 		local sResponse = response.readAll()
 		response.close()
 		return sResponse
 	else
-		printError( "Failed." )
+		write( "Failed connection." )
+		sleep(2)
 	end
 end
 
@@ -192,8 +198,8 @@ local function PastebinGet( ... )
 	local tArgs = { ... }
 	if #tArgs < 2 then return	end
 	if not http then
-		printError( "Pastebin requires http API" )
-		printError( "Set enableAPI_http to true in ComputerCraft.cfg" )
+		print( "Pastebin requires http API" )
+		print( "Set enableAPI_http to true in ComputerCraft.cfg" )
 		return
 	end
 	-- Download a file from pastebin.com
@@ -202,7 +208,7 @@ local function PastebinGet( ... )
 	local sFile = tArgs[2]
 	local sPath = shell.resolve( sFile )
 	if fs.exists( sPath ) then
-			print( "File already exists" )
+			--write( "File already exists" )
 			--return
 	end
 	-- GET the contents from pastebin
@@ -211,54 +217,74 @@ local function PastebinGet( ... )
 			local file = fs.open( sPath, "w" )
 			file.write( res )
 			file.close()
-			print( "Downloaded as "..sFile )
+			--print( "Downloaded as "..sFile )
+			write("fetched, ")
 	end 
 	return
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-function StartDownloaderPastebin( nick, ... )
-for i=1,select('#',...) do
-	local tmp = select(i,...)
-	if tmp == "start" then shell.run("delete Downloads/Pastebin") end
-	if tmp == "start" or tmp == "all" or tmp == "Init"   then PastebinGet( PastebinList[nick][01], "Downloads/Pastebin/" .. nick .. "/Init") end
-	if tmp == "start" or tmp == "all" or tmp == "Nav"    then PastebinGet( PastebinList[nick][02], "Downloads/Pastebin/" .. nick .. "/Nav") end
-	if tmp == "start" or tmp == "all" or tmp == "Comm"   then PastebinGet( PastebinList[nick][03], "Downloads/Pastebin/" .. nick .. "/Comm") end
-	if tmp == "start" or tmp == "all" or tmp == "Utils"  then	PastebinGet( PastebinList[nick][04], "Downloads/Pastebin/" .. nick .. "/Utils") end
-	if tmp == "start" or tmp == "all" or tmp == "Jobs"   then PastebinGet( PastebinList[nick][05], "Downloads/Pastebin/" .. nick .. "/Jobs") end
-	if tmp == "start" or tmp == "all" or tmp == "Resm"   then PastebinGet( PastebinList[nick][06], "Downloads/Pastebin/" .. nick .. "/Resm") end
-	if tmp == "start" or tmp == "all" or tmp == "Logic"  then PastebinGet( PastebinList[nick][07], "Downloads/Pastebin/" .. nick .. "/Logic") end
-	if tmp == "start" or tmp == "all" or tmp == "Logger" then PastebinGet( PastebinList[nick][08], "Downloads/Pastebin/" .. nick .. "/Logger") end
-	if tmp == "start" or tmp == "all" or tmp == "Stats"  then PastebinGet( PastebinList[nick][09], "Downloads/Pastebin/" .. nick .. "/Stats") end
-	if tmp == "start" or tmp == "all" or tmp == "Gui"    then PastebinGet( PastebinList[nick][10], "Downloads/Pastebin/" .. nick .. "/Gui") end
-	if tmp == "start" or tmp == "all" or tmp == "Rui"    then PastebinGet( PastebinList[nick][11], "Downloads/Pastebin/" .. nick .. "/Rui") end
-	if tmp == "start" or tmp == "all" or tmp == "Hud"    then PastebinGet( PastebinList[nick][12], "Downloads/Pastebin/" .. nick .. "/Hud") end
-	if tmp == "start" or tmp == "all" or tmp == "Init"   then print("Init: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Init"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Nav"    then print("Nav: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Nav"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Comm"   then print("Comm: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Comm"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Utils"  then print("Utils: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Utils"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Jobs"   then print("Jobs: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Jobs"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Resm"   then print("Resm: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Resm"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Logic"  then print("Logic: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Logic"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Logger" then print("Logger: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Logger"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Stats"  then print("Stats: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Stats"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Gui"    then print("Gui: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Gui"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Rui"    then print("Rui: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Rui"), ", ") end 
-	if tmp == "start" or tmp == "all" or tmp == "Hud"    then print("Hud: ", os.loadAPI("Downloads/Pastebin/" .. nick .. "/Hud"), ", ") end
-	print()
-	return 1
-end
+function StartDownloaderPastebin( ... )
+	for i=1,select('#',...) do
+		local tmp = select(i,...)
+		if tmp == "start" then shell.run("delete Downloads/Pastebin" .. nick) end
+		for j=1,12 do
+			if tmp == "start" or tmp == "all" or tmp == ApiList[j] then
+				write(ApiList[j] .. ": ") -- 39-8, 31-9, 22-8, 14-9, 5
+				PastebinGet( PastebinList[nick][j], "Downloads/Pastebin/" .. nick .. "/" .. ApiList[j] )
+				local Function, Error = loadfile("Downloads/Pastebin/" .. nick .. "/" .. ApiList[j] )
+				if Function == nil then 
+					write("error at loading: \n" .. Error .. "\n")
+					sleep(5)
+				else
+					write("loaded, ")
+					local Ok, Error = pcall(Function)
+					if Ok == false then 
+						write("Error at executing: \n" .. Error .. "\n")
+						sleep(5)
+					else
+						write("executed!\n")
+					end
+				end
+			end
+		end
+	end
 end
 
+nick = ""
 PastebinList = {}
+ApiList = {
+"Gui","Rui","Hud","Logger","Stats",
+"Comm","Utils","Nav","Jobs","Resm",
+"Logic","Init"
+}
+--[[ebinList["Nam"] = {
+"Gui.....","Rui.....","Hud.....","Logger..","Stats...",
+"Comm....","Utils...","Nav.....","Jobs....","Resm....",
+"Logic...","Init....",}
+--]]
+PastebinList["Aku"] = {
+"EiNQu1tr","Vf4iEtwA","y9b6Vm0P","Yxhz7Gju","VeVb4816",
+"5kqCkMdY","VtBzt7BU","3AKpWFvr","AigXBa8F","TsMtkpDU",
+"FMsxxBSe","YqXAK4gf",}
+PastebinList["Alk"] = {
+"4j3xkFqi","Nhde3VzW","zeJ6qg7L","yJ2TDrAC","W2x8HN2Z",
+"de84SYF8","cf9SZvTb","HNAWHYUC","g75ryBk7","QpNgZqDk",
+"URjcXVqp","Z2wLpHNw",}
+PastebinList["Mox"] = {
+"LCzvnrgm","yaz8QfNQ","EaH1rTcN","0jqNejLc","brF1SQX7",
+"bpyKQrn4","Y9RjARM5","TbXnTHVs","sKRJw3YD","--------",
+"jQizTuJd","--------",}
+PastebinList["Hek"] = {
+"smpuk04E","LHNWPcXr","5frXRLYb","vfykx5yU","vkqKAC75",
+"HYzrtMtW","m684sRqW","4TLXbEAr","ED6JUvXF","--------",
+"BVivED7g","--------",}
+PastebinList["Mar"] = {
+"YwEvnNuv","VqYY94pE","a2pZzJhK","AyQ4RJRy","hTbMg1BG",
+"VymxZieZ","gdL40bFx","0rFQyhKi","rz2BBebP","0xMDUvL0",
+"3KZ9UcCK","D7mpfTqH",}
 
---stebinList[Nam] = {"Init....","Nav.....","Comm....","Utils...","Jobs....", "Resm....","Logic...","Logger..","Stats...","Gui.....", "Rui.....","Hud....."}
-PastebinList["Aku"] = {"YqXAK4gf","3AKpWFvr","5kqCkMdY","VtBzt7BU","AigXBa8F", "TsMtkpDU","FMsxxBSe","Yxhz7Gju","VeVb4816","EiNQu1tr","Vf4iEtwA","y9b6Vm0P"}
-PastebinList["Alk"] = {"--------","HNAWHYUC","de84SYF8","cf9SZvTb","g75ryBk7", "--------","URjcXVqp","yJ2TDrAC","W2x8HN2Z","4j3xkFqi","Nhde3VzW","zeJ6qg7L"}
-PastebinList["Mox"] = {"--------","TbXnTHVs","bpyKQrn4","Y9RjARM5","sKRJw3YD", "--------","jQizTuJd","0jqNejLc","brF1SQX7","LCzvnrgm","yaz8QfNQ","EaH1rTcN"}
-PastebinList["Hek"] = {"--------","4TLXbEAr","HYzrtMtW","m684sRqW","ED6JUvXF", "--------","BVivED7g","vfykx5yU","vkqKAC75","smpuk04E","LHNWPcXr","5frXRLYb"}
-PastebinList["Mar"] = {"D7mpfTqH","0rFQyhKi","VymxZieZ","gdL40bFx","rz2BBebP", "0xMDUvL0","3KZ9UcCK","AyQ4RJRy","hTbMg1BG","YwEvnNuv","VqYY94pE","a2pZzJhK"}
 
 function Start()
 	term.clear()
@@ -272,12 +298,12 @@ function Start()
 	print("5 - Pastebin of Hekaya")
 	print("6 - Pastebin of marchrime")
 	event, param1 = os.pullEvent("char")
-	if event == "char" and param1 == "1" then StartDownloaderGitHub("start") end
-	if event == "char" and param1 == "2" then StartDownloaderPastebin("Aku","start") end
-	if event == "char" and param1 == "3" then StartDownloaderPastebin("Alk","start") end 
-	if event == "char" and param1 == "4" then StartDownloaderPastebin("Mox","start") end 
-	if event == "char" and param1 == "5" then StartDownloaderPastebin("Hek","start") end
-	if event == "char" and param1 == "6" then StartDownloadetPastebin("Mar","start") end
+	if event == "char" and param1 == "1" then nick = "Git"; StartDownloaderGitHub("start") end
+	if event == "char" and param1 == "2" then nick = "Aku"; StartDownloaderPastebin("start") end
+	if event == "char" and param1 == "3" then nick = "Alk"; StartDownloaderPastebin("start") end 
+	if event == "char" and param1 == "4" then nick = "Mox"; StartDownloaderPastebin("start") end 
+	if event == "char" and param1 == "5" then nick = "Hek"; StartDownloaderPastebin("start") end
+	if event == "char" and param1 == "6" then nick = "Mar"; StartDownloadetPastebin("start") end
 end
 
 function UpdateAPI( nick, ... )
@@ -296,17 +322,31 @@ end
 	 [5. table Args: Args to be passed to Call ] ]
 --]]
 
-local n = 1
+-- Warning: functions like: read(), sleep() etc. empty the event stack and you will not be able to pull the event after that
+
 local Threads = {}
 local tFilters = {}
 local Args = {}
 local Names = {}
 local eventData = {}
 
-print("Initialized Main!")
+local function wait ( nTime )
+	local History = {}
+    local timerID = os.startTimer( nTime or 0.05 )
+    repeat
+        History[table.maxn(History)+1] = { os.pullEvent() }
+		for n in pairs(History) do print(n,": ", unpack(History[n])) end
+    until History[table.maxn(History)][1] == "timer" and History[table.maxn(History)][2] == timerID
+	for i=1,table.maxn(History)-1 do
+		os.queueEvent(unpack(History[i]))	
+	end
+end
 
+print("Initialized Main!")
 Start()
+
 -- The First coroutine
+local n = 1
 Threads[n] = coroutine.create(Init.Start)
 tFilters[Threads[n]] = nil
 -- Run until no coroutines left (won't happen normally)
@@ -314,7 +354,6 @@ while n > 0 do
 	--Logger.Check("inside While, n=%s\n",n)
 	-- Cycle through active coroutines. Repeat twice if coroutine kills or calls other coroutine (see "i = i - 1")
 	for i=1,n do 
-		--Logger.Check("inside for, i=%s\n",i)
 		--Logger.Check("inside for, Threads[i]=%s\n",Threads[i])
 		-- Clean up the table of coroutines - if there's a gap, shift others up.
 		if Threads[i] == nil or coroutine.status( Threads[i] ) == "dead" then
@@ -338,15 +377,17 @@ while n > 0 do
 				--Logger.Check("inside resume, Ok=%s, tFilters[Threads[i]]=%s, Target=%s, Args[Threads[i]]=%s\n",Ok, tFilters[Threads[i]], Target, Args[Threads[i]])
 				if not Ok then Logger.Error("Coroutine failed! %s", tFilters[Threads[i]] ) -- Inform if coroutine failed
 				elseif tFilters[Threads[i]] == "_Call" then -- prepare a new coroutine
-					--Logger.Check("inside _Call")
-					n = n + 1
-					Threads[n] = coroutine.create(Target)
-					Args[Threads[n]] = ArgsNew
-					Names[n] = Utils.GenUniqString(16)
-					--Logger.Check("NewThr: %s\n",Threads[n])
-					i = i - 1
-					os.queueEvent("dummy")
-					eventData = Names[n]
+					Logger.Debug("inside _Call")
+					if type(Target) == "function" then
+						n = n + 1
+						Threads[n] = coroutine.create(Target)
+						Args[Threads[n]] = ArgsNew
+						Names[n] = Utils.GenUniqString(16)
+						Logger.Debug("NewThr: %s\n",Threads[n])
+						i = i - 1
+						os.queueEvent("dummy")
+						eventData = { Names[n] }
+					end
 				elseif tFilters[Threads[i]] == "_Stop" or tFilters[Threads[i]] == "_Kill" then
 					--Logger.Check("inside _Stop/Kill")
 					local TargetID = nil
@@ -364,14 +405,21 @@ while n > 0 do
 					os.queueEvent("dummy")
 				elseif tFilters[Threads[i]] == "_UpdateAPI" then -- updates API. Other APIs cannot call functions of Main directly,
 					Target = Target or ArgsNew
-					UpdateAPI(nick, unpack(Target))
+					UpdateAPI(unpack(Target))
 					i = i - 1
 					os.queueEvent("dummy")					
 				end
 			end -- if Args[Threads[i]] or tFilters[Threads[i]] == nil or tFilters[Threads[i]] == Arguments[1] then
 		end -- if Threads[i] == nil or coroutine.status( Threads[i] ) == "dead" then
+		--[[
+		local cpx,cpy = term.getCursorPos()
+		term.setCursorPos(33, 1)
+		Logger.Debug("i=%s/n=%s\n",i,n)
+		term.setCursorPos(cpx,cpy)
+		wait()
+		--]]
 	end -- for i=1,n do 
 	--Logger.Check("eventData:\n")
 	eventData = { os.pullEventRaw() } -- after a cycle call pullEventRaw ( = coroutine.yield )
 end -- while n > 0 do 
-Logger.Check("Out-of-coroutines!")
+Logger.Check("Out-of-coroutines!\n")

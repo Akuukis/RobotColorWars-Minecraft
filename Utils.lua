@@ -1,3 +1,49 @@
+--------------------------------------------------------------------------------------------------------------------------------
+--[[------------ Descriptions of function calls --------------------------------------------------------------------------------
+WiP
+--]]
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Dependencies --------------------------------------------------------------------------------------------------
+-- Name Section: 
+-- Declare the name library will use. Leave it alone and
+local Lib = {}
+Utils = Lib
+
+-- Import Section:
+-- declare everything this library needs from outside
+-- FYI You can change or shorten names if you wish so.
+
+---- Luaj unmodified libraries. Import only needed sub-functions.
+-- Full list (functions): assert, collectgarbage, error, _G, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
+-- Full list (tables): coroutine, package, table, math
+local string, math = string, math
+
+---- CC libraries. Import only needed sub-functions.
+-- Full list (modified Luaj functions): getfenv, getmetatable, loadfile, dofile, print, type, string.sub, string.find, write
+-- Full list (modified Luaj tables): string, os, io
+-- Full list (new tables): os, colors, disk, gps, help, keys, paintutils, parallel, peripheral, rednet, term, textutils, turtle, vector, window
+local turtle = turtle
+
+---- TuCoWa libraries. Import only needed sub-functions.
+-- Full list: Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic, Init
+local Gui, Rui, Hud, Logger, Stats, Comm = Gui, Rui, Hud, Logger, Stats, Comm
+
+-- no more external access after this point
+setfenv(1, Lib)
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Library wide variables ----------------------------------------------------------------------------------------
+
+-- none
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Classes -------------------------------------------------------------------------------------------------------
+
+-- none
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Public functions ----------------------------------------------------------------------------------------------
+
 function Refuel(self)
 	if turtle.getFuelLevel() < 128 then
 		if turtle.refuel() then 
@@ -7,40 +53,6 @@ function Refuel(self)
 		end
 	end
 	return turtle.getFuelLevel()
-end
-
-function myformat(fmt, ... )
-	local buf = {}
-	for i = 1, select( '#', ... ) do
-		local a = select( i, ... )
-		if type( a ) ~= 'string' and type( a ) ~= 'number' then
-			a = tostring( a )
-		end
-		buf[i] = a
-	end
-	
-	return string.format( fmt, unpack( buf ) )
-end
-
-local GlobalSteps = 0
-local CountedSteps = 0
-
-function Step(x)
-	x = x or 1 -- create object if user does not provide one
-	GlobalSteps = GlobalSteps + 1
-	CountedSteps = CountedSteps + 1
-end
-
-function GetGlobalSteps()
-	return GlobalSteps
-end
-
-function GetCountedSteps()
-	return CountedSteps
-end
-
-function ResetCountedSteps()
-	CountedSteps = 0
 end
 
 function GenUniqString(lenght)
@@ -57,21 +69,10 @@ function GenUniqString(lenght)
 	return Str
 end
 
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Private functions ---------------------------------------------------------------------------------------------
 
+-- none
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+--------------------------------------------------------------------------------------------------------------------------------
+---------------- Details & Notes -----------------------------------------------------------------------------------------------
