@@ -48,7 +48,7 @@ setfenv(1, Lib)
 
 local clsObject = { -- WiP!!!
 	UniqId = "", -- UniqId of this object inside parent.
-	Type = "", -- TheWorld | Base | Farm | Turtle | Inventory | Bag | Container | Resource
+	Type = "", -- Colony | Base | Farm | Turtle | Inventory | Bag | Container | Resource
 	
 	Id = "",
 	Meta = "",

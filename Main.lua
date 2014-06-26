@@ -411,11 +411,13 @@ while n > 0 do
 				end
 			end -- if Args[Threads[i]] or tFilters[Threads[i]] == nil or tFilters[Threads[i]] == Arguments[1] then
 		end -- if Threads[i] == nil or coroutine.status( Threads[i] ) == "dead" then
+		--[[
 		local cpx,cpy = term.getCursorPos()
 		term.setCursorPos(33, 1)
 		Logger.Debug("i=%s/n=%s\n",i,n)
 		term.setCursorPos(cpx,cpy)
 		wait()
+		--]]
 	end -- for i=1,n do 
 	--Logger.Check("eventData:\n")
 	eventData = { os.pullEventRaw() } -- after a cycle call pullEventRaw ( = coroutine.yield )
