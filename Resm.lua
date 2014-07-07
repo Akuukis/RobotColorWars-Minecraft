@@ -8,6 +8,7 @@ WiP
 -- Name Section: 
 -- Declare the name library will use. Leave it alone and
 local Lib = {}
+if type(Resm) == "table" then Lib = Resm end
 Resm = Lib
 
 -- Import Section:
@@ -75,7 +76,7 @@ function ClosePeriod() end -- resets Deallist
 --[[ How does it work? 
 
 Process: Exchange -- Add value by exchange. 
-Goal: Build a lot Turtles! -- The only demand is a new turtle.
+Goal: Build a lot Wonders! -- The only demand is a new turtle.
 Optimization: Growth -- Decisions are made by maximizing Added value per period.
 
 There are Valuables (Resources, Space, Points, Containers, Time) that can be used (otherwise they Depreciate)

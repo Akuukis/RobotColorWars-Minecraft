@@ -51,7 +51,8 @@
 -- Name Section: 
 -- Declare the name library will use. Leave it alone and
 local Lib = {}
-Nav = Nav or Lib
+if type(Nav) == "table" then Lib = Nav end
+Nav = Lib
 
 -- Import Section:
 -- declare everything this library needs from outside
@@ -106,7 +107,7 @@ end
 ---------------- Functions ----------------------------------------------------------------------------------------------
 
 -- Technical and independent functions
-local function PutMap (pos,name,value)
+local PutMap = function(pos,name,value)
 	-- local shout = os.difftime(os.time() - Map.UpdatedTime)
 	Map.UpdatedTime = os.time()
 	
@@ -229,7 +230,7 @@ function UpdateMap (location, value) -- location{nil|dir|XZY), value{false=air,0
 		PutMap({location.x, location.x, location.y},"Id",value)
 	end
 end
-local function GetPath (_tTargets, _tOptions)  -- TODO: multiple targets!
+local function GetPath (_tTargets, _tOptions)
 	--[[ DISCLAIMER.
 	This code (May 04, 2014) is written by Akuukis 
 		who based on code (Sep 21, 2006) by Altair
@@ -444,7 +445,7 @@ local function GetPath (_tTargets, _tOptions)  -- TODO: multiple targets!
 				path[i].y = closedlist[pathIndex[table.maxn(pathIndex)+1-i]].y 
 				Logger.Debug("%s|%s|%s, ", path[i].x,path[i].z,path[i].y)
 			end
-			Logger.Debug("\n")     
+			--Logger.Debug("\n")     
 
 			--for i=1,table.maxn(pathIndex) do
 			--	Logger.Debug("%s(%s,%s,%s)", i, path[i].x, path[i].z, path[i].y)
@@ -453,7 +454,7 @@ local function GetPath (_tTargets, _tOptions)  -- TODO: multiple targets!
 			closedlist=nil
 			
 			-- Change list of XZ coordinates into a list of directions 
-			--Logger.Debug("FacePath. ")
+			Logger.Debug("FacePath. ")
 			local fpath = {}
 			for i=1,table.maxn(path)-1,1 do
 				if path[i+1].x > path[i].x then fpath[i]=0 end -- North
@@ -462,9 +463,10 @@ local function GetPath (_tTargets, _tOptions)  -- TODO: multiple targets!
 				if path[i+1].z < path[i].z then fpath[i]=3 end -- West
 				if path[i+1].y > path[i].y then fpath[i]=4 end -- Up
 				if path[i+1].y < path[i].y then fpath[i]=5 end -- Down
-				--Logger.Debug("%s, ", fpath[i])
+				Logger.Debug("%s, ", fpath[i])
 			end
-			--Logger.Debug("\n")
+			Logger.Debug("\n")
+			Logger.Debug("%s\n",fpath)
 			return fpath
 		end
 	end
@@ -474,6 +476,7 @@ end
 -- Technical and dependent functions, sub-Core level
 local function Move (_Face, _tOptions) -- _Face={0=North|1=East|2=South|3=West|4=up|5=down}, returns true if succeeded
 
+	Logger.Debug("0..")
 	local OptionMoveStyle = "Normal" -- or "Careful" or "Blind" (Don't use Blind!)
 	tOptions = _tOptions or {}
 	for n,v in pairs(tOptions) do
@@ -613,6 +616,7 @@ function Go ( ... ) -- table target1 [, table target2 ...] text option1 [, text 
 			UpdateMap()
 			TurnRight()
 		else
+			Logger.Debug("Start moving!")
 			i = 1
 			success = true
 			while i <= table.maxn(fpath) and success do 

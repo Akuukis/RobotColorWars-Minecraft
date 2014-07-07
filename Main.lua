@@ -303,7 +303,7 @@ function Start()
 	if event == "char" and param1 == "3" then nick = "Alk"; StartDownloaderPastebin("start") end 
 	if event == "char" and param1 == "4" then nick = "Mox"; StartDownloaderPastebin("start") end 
 	if event == "char" and param1 == "5" then nick = "Hek"; StartDownloaderPastebin("start") end
-	if event == "char" and param1 == "6" then nick = "Mar"; StartDownloadetPastebin("start") end
+	if event == "char" and param1 == "6" then nick = "Mar"; StartDownloaderPastebin("start") end
 end
 
 function UpdateAPI( nick, ... )
@@ -386,7 +386,7 @@ while n > 0 do
 						--Logger.Debug("NewThr: %s\n",Threads[n])
 						i = i - 1
 						os.queueEvent("dummy")
-						eventData = { Names[n] }
+						--eventData = { Names[n] }
 					end
 				elseif tFilters[Threads[i]] == "_Stop" or tFilters[Threads[i]] == "_Kill" then
 					--Logger.Check("inside _Stop/Kill")

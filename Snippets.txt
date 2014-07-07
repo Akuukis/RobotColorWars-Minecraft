@@ -1,6 +1,6 @@
 pastebin run m1Tnt0wv Start
 for i=1,4 do Jobs.MineH(8);	Nav.TurnLeft(); Nav.Step("Normal"); Nav.TurnLeft() end
-coroutine.yield("_UpdateAPI",{"Init"})
+coroutine.yield("_UpdateAPI",{"Nav"})
 for i=1,list.getInventorySize() do list.pushItem("west",i) end
 for i=1,16 do list.pullItem("west",i) end
 Jobs.MineH(6,8,true)

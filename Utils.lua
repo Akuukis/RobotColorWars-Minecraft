@@ -7,6 +7,7 @@ WiP
 -- Name Section: 
 -- Declare the name library will use. Leave it alone and
 local Lib = {}
+if type(Utils) == "table" then Lib = Utils end
 Utils = Lib
 
 -- Import Section:
