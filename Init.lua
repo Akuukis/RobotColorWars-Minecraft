@@ -7,6 +7,7 @@ WiP
 -- Name Section: 
 -- Declare the name library will use. Leave it alone and
 local Lib = {}
+if type(Init) == "table" then Lib = Init end
 Init = Lib
 
 -- Import Section:
@@ -176,7 +177,8 @@ function PlayerRun()
 		pos = Nav.GetPos()
 		Logger.Info(" Coords: (%s,%s,%s), F:%s\n",Nav.GetPos().x,Nav.GetPos().z,Nav.GetPos().y,Nav.GetPos().f)
 	end
-	coroutine.yield("_Call",PlayerRun)
+	PlayerRun()
+	--coroutine.yield("_Call",PlayerRun)
 end
 
 --------------------------------------------------------------------------------------------------------------------------------

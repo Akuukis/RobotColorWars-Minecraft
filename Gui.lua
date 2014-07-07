@@ -7,6 +7,7 @@ WiP
 -- Name Section: 
 -- Declare the name library will use. Leave it alone and
 local Lib = {}
+if type(Gui) == "table" then Lib = Gui end
 Gui = Lib
 
 -- Import Section:

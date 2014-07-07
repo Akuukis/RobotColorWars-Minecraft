@@ -9,6 +9,7 @@ for n in pairs(list) do print(n,": ", list[n]) end
 -- Name Section: 
 -- Declare the name library will use. Leave it alone and
 local Lib = {}
+if type(Logger) == "table" then Lib = Logger end
 Logger = Lib
 
 -- Import Section:

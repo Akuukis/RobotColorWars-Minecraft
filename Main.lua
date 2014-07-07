@@ -277,9 +277,9 @@ PastebinList["Mox"] = {
 "bpyKQrn4","Y9RjARM5","TbXnTHVs","sKRJw3YD","--------",
 "jQizTuJd","--------",}
 PastebinList["Hek"] = {
-"smpuk04E","LHNWPcXr","5frXRLYb","vfykx5yU","vkqKAC75",
-"HYzrtMtW","m684sRqW","4TLXbEAr","ED6JUvXF","--------",
-"BVivED7g","--------",}
+"sCCxs23y","cRPh5hK5","4B9wHmfB","eXUFfw98","buAi08ga",
+"CaGGcpS3","0NP4EJcZ","Lvwz0A3b","mFFxtZUs","UmtZSab5",
+"eru9yvdg","BNVW9D5u",}
 PastebinList["Mar"] = {
 "YwEvnNuv","VqYY94pE","a2pZzJhK","AyQ4RJRy","hTbMg1BG",
 "VymxZieZ","gdL40bFx","0rFQyhKi","rz2BBebP","0xMDUvL0",
@@ -303,7 +303,7 @@ function Start()
 	if event == "char" and param1 == "3" then nick = "Alk"; StartDownloaderPastebin("start") end 
 	if event == "char" and param1 == "4" then nick = "Mox"; StartDownloaderPastebin("start") end 
 	if event == "char" and param1 == "5" then nick = "Hek"; StartDownloaderPastebin("start") end
-	if event == "char" and param1 == "6" then nick = "Mar"; StartDownloadetPastebin("start") end
+	if event == "char" and param1 == "6" then nick = "Mar"; StartDownloaderPastebin("start") end
 end
 
 function UpdateAPI( nick, ... )
@@ -377,16 +377,16 @@ while n > 0 do
 				--Logger.Check("inside resume, Ok=%s, tFilters[Threads[i]]=%s, Target=%s, Args[Threads[i]]=%s\n",Ok, tFilters[Threads[i]], Target, Args[Threads[i]])
 				if not Ok then Logger.Error("Coroutine failed! %s", tFilters[Threads[i]] ) -- Inform if coroutine failed
 				elseif tFilters[Threads[i]] == "_Call" then -- prepare a new coroutine
-					Logger.Debug("inside _Call")
+					--Logger.Debug("inside _Call")
 					if type(Target) == "function" then
 						n = n + 1
 						Threads[n] = coroutine.create(Target)
 						Args[Threads[n]] = ArgsNew
 						Names[n] = Utils.GenUniqString(16)
-						Logger.Debug("NewThr: %s\n",Threads[n])
+						--Logger.Debug("NewThr: %s\n",Threads[n])
 						i = i - 1
 						os.queueEvent("dummy")
-						eventData = { Names[n] }
+						--eventData = { Names[n] }
 					end
 				elseif tFilters[Threads[i]] == "_Stop" or tFilters[Threads[i]] == "_Kill" then
 					--Logger.Check("inside _Stop/Kill")
