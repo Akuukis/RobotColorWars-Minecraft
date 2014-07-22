@@ -1,9 +1,10 @@
 pastebin run m1Tnt0wv Start
 for i=1,4 do Jobs.MineH(8);	Nav.TurnLeft(); Nav.Step("Normal"); Nav.TurnLeft() end
 coroutine.yield("_UpdateAPI",{"Nav"})
+coroutine.yield("_UpdateAPI",{"Jobs"})
 for i=1,list.getInventorySize() do list.pushItem("west",i) end
 for i=1,16 do list.pullItem("west",i) end
-Jobs.MineH(6,8,true)
+Jobs.MineH(48,12,true)
 
 
 constDirNames = {"north","east","south","west","up","down"}; Slot = 2; Chest = peripheral.wrap("front"); for i = 1,6 do print(Chest.pullItem(constDirNames[i],Slot,64,1)) end
@@ -21,3 +22,29 @@ Nav.GoNextTo({3,0,2},"Careful")
 sleep(2);sleep(2)
 
 sleep(3); print("kuku")
+for n,v in pairs(Init.clsTurtle) do print(n,": ", v) end
+
+
+
+	
+
+    for j=1,5 do
+      for i=1,36 do
+        turtle.forward()
+        turtle.digDown()
+        if turtle.getItemCount(turtle.getSelectedSlot) == 1 then
+          turtle.select(turtle.getSelectedSlot() + 1)
+        end
+        turtle.placeDown()
+      end
+      if j%2==0 then
+        turtle.turnLeft()
+        turtle.forward()
+        turtle.turnLeft()
+      else
+        turtle.turnRight()
+        turtle.forward()
+        turtle.turnRight()
+      end
+    end
+
