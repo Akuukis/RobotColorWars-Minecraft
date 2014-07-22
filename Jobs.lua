@@ -105,6 +105,16 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 	end
 	
 	local function DigStep(Position,i)
+		local function DigStepNormal(Position)
+		end
+		local function DigStepTorch(Position)
+			--while turtle.detect() do turtle.dig() end
+			Nav.Go(Position)
+			while turtle.detectUp() do turtle.digUp() end
+			while turtle.detectDown() do turtle.digDown() end
+			while turtle.detectUp() do turtle.digUp(); os.sleep(0.5) end
+			return true
+		end
 		
 		if isBaseLevel then 
 			local TorchLine = 0
@@ -116,20 +126,21 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 			if f == 3 then TempPos.x =  Nav.GetPos().z; TempPos.z =  Nav.GetPos().x end -- West
 			Logger.Info("%s, %s, %s\n",RelPos.x,RelPos.z,f)
 			Logger.Info("%s, %s, %s\n",TempPos.x,TempPos.z,f)
-			if (RelPos.z - TempPos.z) % 12 >= 6 then TorchLine = 0 else TorchLine = 6 end
+			if (RelPos.z - TempPos.z) % 12 < 6 then TorchLine = 0 else TorchLine = 6 end
 			if (RelPos.x - TempPos.x) % 12 == TorchLine then -- we are on torch line
-				-- TODO: i is out of range ...
-				if i%2 == 0 then Nav.TurnRight() else Nav.TurnLeft() end 
-				Nav.StepDown()
-				while turtle.detect() do turtle.dig() end
-				turtle.select(15)
-				turtle.place()
-				Nav.StepUp()
-				while turtle.detect() do turtle.dig() end
-				turtle.select(16)
-				turtle.place()
-				turtle.select(1)
-				if i%2 == 0 then Nav.TurnLeft() else Nav.TurnRight() end 
+				if i%2 == 0 then -- TODO: i is out of range ...
+					Nav.TurnRight()
+					while turtle.detect() do turtle.dig() end
+					turtle.select(16)
+					turtle.place()
+					Nav.TurnLeft()
+				else
+					Nav.TurnLeft()
+					while turtle.detect() do turtle.dig() end
+					turtle.select(16)
+					turtle.place()
+					Nav.TurnRight()
+				end
 				
 				if (RelPos.z - TempPos.z) % 6 == 0 then -- we should leave a torch in our place
 					Nav.StepDown()
@@ -139,7 +150,6 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 					Nav.StepUp()
 					turtle.select(16)
 					turtle.placeDown()
-					turtle.select(1)
 				end
 			end
 		end
@@ -175,7 +185,6 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 			if not Chest.getStackInSlot(j) then ChestSlot = j end 
 			j = j + 1
 		end
-		ChestSlot = ChestSlot or ChestInvSize
 		Logger.Info("Chest has a free slot at No. %s\n", ChestSlot)
 		for i = 1,6 do 		
 			Logger.Info("Trying %s... ", constDirNames[i])
@@ -206,7 +215,7 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 	
 	local TempPos = {}
 	for i=0,Width-1 do
-		if type(TempPos) == "table" then Nav.Go(TempPos,"Normal") end
+		if type(TempPos) == "table" then Nav.Go(TempPos,"Careful") end
 		local Start, Finish, Step
 		if i%2 == 0 then Start = 0; Finish = Length-1; Step = 1 else Start = Length-1; Finish = 0; Step = -1 end
 		Logger.Debug("i=%s, Remainder=%s, Start=%s, Finish=%s, Step=%s\n",i,i%2,Start,Finish,Step)
@@ -243,7 +252,7 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 		
 	end
 	
-	--Nav.Go(StartPos,"Careful")
+	Nav.Go(StartPos)
 	Logger.Info("Finished!")
 	
 end

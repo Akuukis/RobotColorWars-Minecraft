@@ -32,7 +32,7 @@ local write = write
 ---- TuCoWa libraries. Import only needed sub-functions.
 -- Full list: Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic, Init
 local Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic = Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic
-local TheColony = TheColony
+
 -- DEBUG only. Sets access to all functions.
 setmetatable(Lib, { __index = _G } )
 
@@ -47,338 +47,137 @@ setfenv(1, Lib)
 --------------------------------------------------------------------------------------------------------------------------------
 ---------------- Classes -------------------------------------------------------------------------------------------------------
 
-clsObject = { -- WiP!!!
+local clsObject = { -- WiP!!!
 	UniqId = "", -- UniqId of this object inside parent.
 	Type = "", -- Colony | Base | Farm | Turtle | Inventory | Bag | Container | Resource
-
-	Extra = {}, -- Military or Research for Colony, Upgrades for Bases and Farms, Hierarchy for Turtles, Item|Fluid|Energy for Containers and Resources.
-	Pos = {} or 0, -- X,Z,Y,F for the back buttom left corner relative to its parent or SlotId.
-	Size = {} or 0, -- # of chunkloaders placed for Colony, X,Z,Y size in blocks or amount in stack if inside.
+	
+	Id = "",
+	Meta = "",
+	Extra = {}, -- Military or Research for TheWorld, Upgrades for Bases and Farms, Hierarchy for Turtles, Item|Fluid|Energy for Containers and Resources.
+	Position = {} or 0, -- X,Z,Y,F for the back buttom left corner relative to its parent or SlotId.
+	Size = {} or 0, -- X,Z,Y size in blocks or amount in stack if inside.
 	TimeofBirth = 0,-- mostly used for registering future objects.
 	
-	Parent = "", -- Colony object is the only one that has Parent = false
+	Parent = "", -- TheWorld object is the only one that has Parent = nil
 	Children = {}, -- Table of children clsObject objects, things within this object. For Inventory|Bag|Container index = SlotId.
 	
-	Value = 0, -- For Inventory|Bags|Containers|Resources its the supply value, for Colony|Base|Farm|Turtle its cached sum of PartList supply value
+	Value = 0, -- For Inventory|Bags|Containers|Resources its the supply value, for TheWorld|Base|Farm|Turtle its cached sum of PartList supply value
 
 	TimeUpdated = 0, -- Time of last change
+	
+	new = function (self)
+		local o
+		setmetatable(o, self)
+		self.__index = self
+		return o
+    end,
 	}
---clsObject.__index = clsObject
-
-function clsObject:Inherit()
-	local o = {}
-	setmetatable(o, self)
-	self.__index = self
-	return o
-end	
-function clsObject:New ( _Obj )
-	local o = {}
-	o.UniqId = Utils.GenUniqString("Object") -- UniqId of this object.
-	o.TimeUpdated = Utils.GetTime()
-
-	local tTypes = { "Colony", "Base", "Farm", "Turtle", "Inventory", "Bag", "Container", "Resource" }
-	for i=1,table.maxn(tTypes) do
-		if _Obj.Type == tTypes[i] then o.Type = tTypes[i] end
-	end
-	if not o.Type then return "No valid Type provided" end
 	
-	o.Id = _Obj.Id or nil
-	o.Meta = _Obj.Meta or nil
-	o.Extra = _Obj.Extra;	if not o.Extra then return "No Extra provided" end 
-	o.Pos = _Obj.Pos;	if not o.Pos then return "No Position(Pos) provided" end
-	o.Size = _Obj.Size;	if not o.Size then return "No Size provided" end
-	o.TimeofBirth = _Obj.TimeofBirth or Utils.GetTime()
-	
-	o.Parent = _Obj.Parent;	if type(o.Parent) == "nil" then return "No Parent provided" end
-	o.Children = _Obj.Children or {}
-	
-	o.Value = _Obj.Value;	if not o.Value then return "No Value provided" end
+--local clsTheWorld = clsObject:new()
+--clsTheWorld.Profile = {} -- set of randomized defaults.
 
-	return o		
-end
-
-clsColony = clsObject:Inherit()
-clsBase = clsObject:Inherit()
-clsFarm = clsObject:Inherit()
-clsTurtle = clsObject:Inherit()
-clsInventory = clsObject:Inherit()
-clsBag = clsObject:Inherit()
-clsContainer = clsObject:Inherit()
-clsResource = clsObject:Inherit()
-
-clsColony.Profile = {}
-clsColony.Partlist = {}
-clsColony.Flows = {}
-function clsColony:New( _Obj )
-	local o
-	o = clsObject:New( {
-		--UniqId
-		--TimeUpdated
-		["Type"] = "Colony",
-		["Extra"] = {
-			["Research"] = {},
-			["Espionage"] = {},
-			["Military"] = {},
+local clsBase = {
+	Profile = {}, -- set of randomized defaults.
+	PartList = {}, -- For Bases & Farms & Turles its the resources collected if destroyed including those inside Containers for Flows.
+	Flows = {	-- For objects that generate something on their own (like defense systems)
+		InputList = {
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to a valid Inventory | Bag | Container
+			}, 
+		OutputList = {
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to a valid Inventory | Bag | Container
 			},
-		["Pos"] = Nav.GetPos(),
-		["Size"] = 1, -- At the start there's always only 1 chunkloader
-		--TimeofBirth
-		["Parent"] = false,
-		--Children
-		["Value"] = 0,
-		} )
-	
-	if type(o) == "string" then return o end -- return error if any
-		
-	o.Profile = {} -- TODO
-	
-	setmetatable(o, self)
-	self.__index = self
-	return o		
-end
-
-clsBase.Profile = {}
-clsBase.Partlist = {}
-clsBase.Flows = {}
-function clsBase:New( _Obj )
-	local o
-	o = clsObject:New( {
-		--UniqId
-		--TimeUpdated
-		["Type"] = "Base",
-		["Extra"] = {
-			["hasBrains"] = false,
-			["isConnectedNorth"] = false,
-			["isConnectedEast"] = false,
-			["isConnectedSouth"] = false,
-			["isConnectedWest"] = false,
+		Cycle = 0, -- Lenght of one cycle to transform InputList into OutputList in ticks. 1sec = 20 tics.
+		FlagRun = true, -- True: flows until input is valid. False: flows until Inventory is full. Nil: flows only if output inventory is empty
+		FlagInput = true, -- True: Input is taken at start. False: Input is taken at the end. Nil: Input is taken somewhere in middle.
+		FlagOutput = true,	-- True: Output is made at start. False: Output is made at the end. Nil: Output is made somewhere in middle.
+		Type = 0, -- Different types of flows can run in parralel, but only one flow per each type. 
+		Priority = 0, -- 1 is higher priority over 2, and only 0 will stop any non-0 priority flow.
+		},
+	}
+local clsFarm = {
+	Profile = {}, -- set of randomized defaults.
+	PartList = {}, -- For Bases & Farms & Turles its the resources collected if destroyed including those inside Containers for Flows.
+	Flows = {	-- For objects that generate something on their own (like automated tree farms)
+		InputList = {
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to a valid Inventory | Bag | Container
+			}, 
+		OutputList = {
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to a valid Inventory | Bag | Container
 			},
-		["Pos"] = _Obj.Pos,
-		["Size"] = {144,144,255}, -- 9 chunks x 16 blocks, from bottom to sky
-		--TimeofBirth
-		["Parent"] = _Obj.Parent,
-		--Children
-		["Value"] = 0,
-		} )
-	if type(o) == "string" then return o end -- return error if any
-	
-	o.Profile = {} --TODO
-	o.PartList = {} -- TODO
-	o.Flows = {} -- TODO
-	
-	setmetatable(o, self)
-	self.__index = self
-	return o
-end	
-
-clsFarm.Profile = {}
-clsFarm.Partlist = {}
-clsFarm.Flows = {}
-function clsFarm:New( _Obj )
-	local o
-	o = clsObject:New( {
-		--UniqId
-		--TimeUpdated
-		["Type"] = "Farm",
-		["Extra"] = {
-			["hasBrains"] = false,
-			["isConnectedNorth"] = false,
-			["isConnectedEast"] = false,
-			["isConnectedSouth"] = false,
-			["isConnectedWest"] = false,
+		Cycle = 0, -- Lenght of one cycle to transform InputList into OutputList in ticks. 1sec = 20 tics.
+		FlagRun = true, -- True: flows until input is valid. False: flows until Inventory is full. Nil: flows only if output inventory is empty
+		FlagInput = true, -- True: Input is taken at start. False: Input is taken at the end. Nil: Input is taken somewhere in middle.
+		FlagOutput = true,	-- True: Output is made at start. False: Output is made at the end. Nil: Output is made somewhere in middle.
+		Type = 0, -- Different types of flows can run in parralel, but only one flow per each type. 
+		Priority = 0, -- 1 is higher priority over 2, and only 0 will stop any non-0 priority flow.
+		},
+	}
+local clsTurtle = {
+	Profile = {}, -- set of randomized defaults.
+	PartList = {}, -- For Bases & Farms & Turles its the resources collected if destroyed including those inside Containers for Flows.
+	Flows = {	-- For objects that generate something on their own (like Turtle generates WorkSeconds)
+		InputList = {
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to a valid Inventory | Bag | Container
+			}, 
+		OutputList = {
+			ResourceId = 0, -- May be also a Container with a specific content or a virtual Point
+			AvgAmount = 0,
+			StDev = 0,
+			Position = "", -- UniqId from PartList pointing to a valid Inventory | Bag | Container
 			},
-		["Pos"] = _Obj.Pos,
-		["Size"] = _Obj.Size,
-		--TimeofBirth
-		["Parent"] = _Obj.Parent,
-		--Children
-		["Value"] = 0,
-		} )
-	if type(o) == "string" then return o end -- return error if any
-	
-	o.Profile = {} --TODO
-	o.PartList = {} -- TODO
-	o.Flows = {} -- TODO
-	
-	setmetatable(o, self)
-	self.__index = self
-	return o
-end	
+		Cycle = 0, -- Lenght of one cycle to transform InputList into OutputList in ticks. 1sec = 20 tics.
+		FlagRun = true, -- True: flows until input is valid. False: flows until Inventory is full. Nil: flows only if output inventory is empty
+		FlagInput = true, -- True: Input is taken at start. False: Input is taken at the end. Nil: Input is taken somewhere in middle.
+		FlagOutput = true,	-- True: Output is made at start. False: Output is made at the end. Nil: Output is made somewhere in middle.
+		Type = 0, -- Different types of flows can run in parralel, but only one flow per each type. 
+		Priority = 0, -- 1 is higher priority over 2, and only 0 will stop any non-0 priority flow.
+		},
+	}
+local clsInventory = {}
+local clsBag = {}
+local clsContainer = {}
+local clsResource = {}
 
-clsTurtle.Profile = {}
-clsTurtle.Partlist = {}
-clsTurtle.Flows = {}
-function clsTurtle:New( _Obj )
-	local o
-	o = clsObject:New( {
-		--UniqId
-		--TimeUpdated
-		["Type"] = "Turtle",
-		["Extra"] = {
-			["hasBrains"] = false,
-			["isConnectedNorth"] = false,
-			["isConnectedEast"] = false,
-			["isConnectedSouth"] = false,
-			["isConnectedWest"] = false,
-			},
-		["Pos"] = _Obj.Pos,
-		["Size"] = _Obj.Size,
-		--TimeofBirth
-		["Parent"] = _Obj.Parent,
-		--Children
-		["Value"] = 0,
-		} )
-	if type(o) == "string" then return o end -- return error if any
-	
-	o.Profile = {} --TODO
-	o.PartList = {} -- TODO
-	o.Flows = {} -- TODO
-	
-	setmetatable(o, self)
-	self.__index = self
-	return o
-end	
-
-clsInventory.Id = -1 -- Unknown
-clsInventory.Meta = -1 -- Unknown
-function clsInventory:New( _Obj )
-	local o
-	o = clsObject:New( {
-		--UniqId
-		--TimeUpdated
-		["Type"] = "Inventory",
-		["Extra"] = _Obj.Extra,
-		["Pos"] = _Obj.Pos,
-		["Size"] = 1, -- All inventories are of size 1
-		--TimeofBirth
-		["Parent"] = _Obj.Parent,
-		--Children
-		["Value"] = 0,
-		} )
-	if type(o) == "string" then return o end -- return error if any
-	
-	o.Id = _Obj.Id or nil
-	o.Meta = _Obj.Meta or nil
-	
-	setmetatable(o, self)
-	self.__index = self
-	return o
-end	
-
-clsBag.Id = -1 -- Unknown
-clsBag.Meta = -1 -- Unknown
-function clsBag:New( _Obj )
-	local o
-	o = clsObject:New( {
-		--UniqId
-		--TimeUpdated
-		["Type"] = "Bag",
-		["Extra"] = _Obj.Extra,
-		["Pos"] = _Obj.Pos,
-		["Size"] = _Obj.Size or 1,
-		--TimeofBirth
-		["Parent"] = _Obj.Parent,
-		--Children
-		["Value"] = 0,
-		} )
-	if type(o) == "string" then return o end -- return error if any
-	
-	o.Id = _Obj.Id or nil
-	o.Meta = _Obj.Meta or nil
-	
-	setmetatable(o, self)
-	self.__index = self
-	return o
-end	
-
-clsContainer.Id = -1 -- Unknown
-clsContainer.Meta = -1 -- Unknown
-function clsContainer:New( _Obj )
-	local o
-	o = clsObject:New( {
-		--UniqId
-		--TimeUpdated
-		["Type"] = "Container",
-		["Extra"] = _Obj.Extra,
-		["Pos"] = _Obj.Pos,
-		["Size"] = _Obj.Size or 1,
-		--TimeofBirth
-		["Parent"] = _Obj.Parent,
-		--Children
-		["Value"] = 0,
-		} )
-	if type(o) == "string" then return o end -- return error if any
-	
-	o.Id = _Obj.Id or nil
-	o.Meta = _Obj.Meta or nil
-	
-	setmetatable(o, self)
-	self.__index = self
-	return o
-end	
-
-clsResource.Id = -1 -- Unknown
-clsResource.Meta = -1 -- Unknown
-function clsResource:New( _Obj )
-	local o
-	o = clsObject:New( {
-		--UniqId
-		--TimeUpdated
-		["Type"] = "Resource",
-		["Extra"] = _Obj.Extra,
-		["Pos"] = _Obj.Pos,
-		["Size"] = _Obj.Size or 1,
-		--TimeofBirth
-		["Parent"] = _Obj.Parent,
-		--Children
-		["Value"] = 0,
-		} )
-	if type(o) == "string" then return o end -- return error if any
-	
-	o.Id = _Obj.Id or nil
-	o.Meta = _Obj.Meta or nil
-	
-	setmetatable(o, self)
-	self.__index = self
-	return o
-end	
 
 
 --------------------------------------------------------------------------------------------------------------------------------
 ---------------- Public functions ----------------------------------------------------------------------------------------------
 
 function Start ()
-	TheColony = clsColony:New()
 	Nav.UpdateMap({0,0,0},false)
-	coroutine.yield("_Call",Logger.Info,{"itialized!\n\n"})
-	--coroutine.yield("_Call",PlayerRun)
-	write("In")
-	-- first turtle will look for signs with instructions (if another turtle made it)
-	--write("No signs found.\n")
-	write("Human, choose fate of the turtle:\n")
-	write("1. Player assistant (only one working atm)\n")
-	write("2. Start independent colony\n")
-	write("3. Start independent colony (debug mode)\n")
-	while true do
-		local event, param1 = os.pullEvent("char")
-		if event == "char" and param1 == "1" then InitPlayerAssistant(); break end
-		if event == "char" and param1 == "2" then InitColonyMember(); break end
-		if event == "char" and param1 == "3" then InitColonyMemberDebug(); break end
-	end
+	coroutine.yield("_Call",Logger.Info,{"In"})
+	coroutine.yield("_Call",PlayerRun)
+	write("itialized!\n")
 end
 
-function InitPlayerAssistant()
+function PlayerRun()
 	--Utils.Refuel()
 	Logger.Info("@ ")
 	str = read()
-	local ch = loadstring(str)
+	ch = loadstring(str)
 	if ch and str ~="" then 
 		--print(pcall(ch))
 		coroutine.yield("_Call",pcall,{ch})
-		coroutine.yield()
+		
+		pos = Nav.GetPos()
 		Logger.Info(" Coords: (%s,%s,%s), F:%s\n",Nav.GetPos().x,Nav.GetPos().z,Nav.GetPos().y,Nav.GetPos().f)
 	end
-	InitPlayerAssistant()
+	PlayerRun()
 	--coroutine.yield("_Call",PlayerRun)
 end
 

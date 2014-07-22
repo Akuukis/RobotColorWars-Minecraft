@@ -343,9 +343,7 @@ local function wait ( nTime )
 end
 
 print("Initialized Main!")
-TheColony = {}
 Start()
---
 
 -- The First coroutine
 local n = 1

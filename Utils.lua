@@ -56,10 +56,10 @@ function Refuel(self)
 	return turtle.getFuelLevel()
 end
 
-function GenUniqString( _Name ) -- Accept "string" for names, check database for uniq
+function GenUniqString(lenght)
 	-- char(67) -- TODO need unique ... 65-90 capitals, 97-122 lowercase, 48-57 numbers (26+26+10=62)
 	local Str = ""
-	for i=0,16 do
+	for i=0,lenght do
 		local Char = math.random(0,61)
 		if Char < 26 then Char = Char + 65
 		elseif Char < 52 then Char = Char + 97 - 26
@@ -68,10 +68,6 @@ function GenUniqString( _Name ) -- Accept "string" for names, check database for
 		Str = Str .. string.char(Char)
 	end
 	return Str
-end
-
-function GetTime()
-	return os.time()
 end
 
 --------------------------------------------------------------------------------------------------------------------------------
