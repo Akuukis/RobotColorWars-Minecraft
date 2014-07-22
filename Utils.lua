@@ -17,7 +17,7 @@ Utils = Lib
 ---- Luaj unmodified libraries. Import only needed sub-functions.
 -- Full list (functions): assert, collectgarbage, error, _G, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
 -- Full list (tables): coroutine, package, table, math
-local string, math = string, math
+local os, string, math = os, string, math
 
 ---- CC libraries. Import only needed sub-functions.
 -- Full list (modified Luaj functions): getfenv, getmetatable, loadfile, dofile, print, type, string.sub, string.find, write

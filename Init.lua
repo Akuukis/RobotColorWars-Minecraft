@@ -2,6 +2,8 @@
 --[[------------ Descriptions of function calls --------------------------------------------------------------------------------
 WiP
 --]]
+
+--[[ let's drop Environment thingy
 --------------------------------------------------------------------------------------------------------------------------------
 ---------------- Dependencies --------------------------------------------------------------------------------------------------
 -- Name Section: 
@@ -38,6 +40,8 @@ setmetatable(Lib, { __index = _G } )
 
 -- no more external access after this point.
 setfenv(1, Lib)
+--]]
+
 
 --------------------------------------------------------------------------------------------------------------------------------
 ---------------- Library wide variables ----------------------------------------------------------------------------------------
@@ -347,18 +351,21 @@ end
 --------------------------------------------------------------------------------------------------------------------------------
 ---------------- Public functions ----------------------------------------------------------------------------------------------
 
-function Start ()
+function InitStart ()
 	TheColony = clsColony:New()
+	assert(TheColony.Type=="Colony","TheColony table failed!")
+	
 	Nav.UpdateMap({0,0,0},false)
-	coroutine.yield("_Call",Logger.Info,{"itialized!\n\n"})
-	--coroutine.yield("_Call",PlayerRun)
 	write("In")
+	coroutine.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = Logger.Info, ["Args"] = {"itialized!\n\n"} })
+	coroutine.yield()
+	--coroutine.yield("_Call",PlayerRun)
 	-- first turtle will look for signs with instructions (if another turtle made it)
 	--write("No signs found.\n")
 	write("Human, choose fate of the turtle:\n")
-	write("1. Player assistant (only one working atm)\n")
-	write("2. Start independent colony\n")
-	write("3. Start independent colony (debug mode)\n")
+	write("1. Player assistant\n")
+	write("2. Independent colony (WiP!)\n")
+	write("3. Independent colony (debug, WiP!)\n")
 	while true do
 		local event, param1 = os.pullEvent("char")
 		if event == "char" and param1 == "1" then InitPlayerAssistant(); break end
@@ -374,8 +381,8 @@ function InitPlayerAssistant()
 	local ch = loadstring(str)
 	if ch and str ~="" then 
 		--print(pcall(ch))
-		coroutine.yield("_Call",pcall,{ch})
-		coroutine.yield()
+		coroutine.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = pcall, ["Args"] = {ch} })
+		coroutine.yield("dummy")
 		Logger.Info(" Coords: (%s,%s,%s), F:%s\n",Nav.GetPos().x,Nav.GetPos().z,Nav.GetPos().y,Nav.GetPos().f)
 	end
 	InitPlayerAssistant()
