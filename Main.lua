@@ -330,12 +330,6 @@ TheColony = { "Emptyness" }
 Start()
 --
 
-
-
-function CycleCoroutine( _Thread )
-
-end
-
 local tThreads = {}
 local EventData = {"TuCoWa_dummy"}
 
@@ -400,11 +394,35 @@ while lastThread > 0 do  -- Run until no coroutines left (won't happen normally)
 							end
 						end
 						os.queueEvent("TuCoWa_dummy")
-					elseif tArgs.Flag and tArgs.Flag == "TuCoWa_Send" then 
-						-- TODO
-					elseif tArgs.Flag and tArgs.Flag == "TuCoWa_Stop" or tArgs.Flag == "TuCoWa_Kill" then
-						-- TODO
+					elseif tArgs.Flag and tArgs.Flag == "TuCoWa_Send" then
+						-- TODO: Not tested
+						if type(tArgs.Id) == "string" and type(tArgs.Args) == "table" then
+							for _,Thread in pairs(tThreads) do
+								if Thread.Id == tArgs.Id then
+									Thread.lastArgSet = Thread.lastArgSet + 1 
+									Thread.tArgSets[ Thread.lastArgSet ] = tArgs.Args or nil
+								end
+							end
+						end
+					elseif tArgs.Flag and tArgs.Flag == "TuCoWa_Stop" then
+						-- TODO: Not tested
+						if type(tArgs.Id) == "string" then
+							for _,Thread in pairs(tThreads) do
+								if Thread.Id == tArgs.Id then
+									Thread.lastArgSet = Thread.lastArgSet + 1 
+									Thread.tArgSets[ Thread.lastArgSet ] = { "Stop!" } or nil
+								end
+							end
+						end
+					elseif tArgs.Flag and tArgs.Flag == "TuCoWa_Kill" then
+						-- Works!
+						if type(tArgs.Id) == "string" then
+							for i=1,lastThread do
+								if tThreads[i] and tThreads[i].Id == tArgs.Id then tThreads[i] = nil end
+							end
+						end
 					elseif tArgs.Flag and tArgs.Flag == "TuCoWa_UpdateLib" then
+						-- TODO: Not tested
 						UpdateAPI(unpack(tArgs or {}))
 						os.queueEvent("TuCoWa_dummy")
 					else	
@@ -432,4 +450,4 @@ while lastThread > 0 do  -- Run until no coroutines left (won't happen normally)
 	end
 	
 end
-Logger.Check("Out-of-coroutines!\n")
+Logger.Debug("Out-of-coroutines!\n")

@@ -1,7 +1,6 @@
 pastebin run m1Tnt0wv Start
 for i=1,4 do Jobs.MineH(8);	Nav.TurnLeft(); Nav.Step("Normal"); Nav.TurnLeft() end
-coroutine.yield("_UpdateAPI",{"Nav"})
-coroutine.yield("_UpdateAPI",{"Jobs"})
+print(coroutine.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = Logger.Info, ["Args"] = {"itialized!\n\n"} }))
 for i=1,list.getInventorySize() do list.pushItem("west",i) end
 for i=1,16 do list.pullItem("west",i) end
 Jobs.MineH(48,12,true)
@@ -24,8 +23,9 @@ sleep(2);sleep(2)
 sleep(3); print("kuku")
 for n,v in pairs(Init.clsTurtle) do print(n,": ", v) end
 
-
-
+x = coroutine.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnRight(); sleep(3) end end })
+coroutine.yield({ ["Flag"] = "TuCoWa_Kill", ["Id"] = x })
+y = coroutine.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnLeft() end end })
 	
 
     for j=1,5 do
