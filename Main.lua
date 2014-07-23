@@ -324,102 +324,130 @@ end
 
 -- Warning: functions like: read(), sleep() etc. empty the event stack and you will not be able to pull the event after that
 
-local Threads = {}
-local tFilters = {}
-local Args = {}
-local Names = {}
-local eventData = {}
-
-local function wait ( nTime )
-	local History = {}
-    local timerID = os.startTimer( nTime or 0.05 )
-    repeat
-        History[table.maxn(History)+1] = { os.pullEvent() }
-		for n in pairs(History) do print(n,": ", unpack(History[n])) end
-    until History[table.maxn(History)][1] == "timer" and History[table.maxn(History)][2] == timerID
-	for i=1,table.maxn(History)-1 do
-		os.queueEvent(unpack(History[i]))	
-	end
-end
 
 print("Initialized Main!")
+TheColony = { "Emptyness" }
 Start()
+--
+
+local tThreads = {}
+local EventData = {"TuCoWa_dummy"}
 
 -- The First coroutine
-local n = 1
-Threads[n] = coroutine.create(Init.Start)
-tFilters[Threads[n]] = nil
--- Run until no coroutines left (won't happen normally)
-while n > 0 do 
-	--Logger.Check("inside While, n=%s\n",n)
-	-- Cycle through active coroutines. Repeat twice if coroutine kills or calls other coroutine (see "i = i - 1")
-	for i=1,n do 
-		--Logger.Check("inside for, Threads[i]=%s\n",Threads[i])
-		-- Clean up the table of coroutines - if there's a gap, shift others up.
-		if Threads[i] == nil or coroutine.status( Threads[i] ) == "dead" then
-			for j=i,n-1 do Threads[j] = Threads[j+1] end
-			for j=i,n-1 do Names[j] = Names[j+1] end
-			n = n - 1
-			i = i - 1
+local lastThread = 1
+local firstThread = 1
+tThreads[lastThread] = {
+	["Name"] = "InitStart",
+	["Id"] = Utils.GenUniqString(16),
+	["Function"] = coroutine.create(InitStart),
+	["Filter"] = nil,
+	["tArgSets"] = {},
+	["lastArgSet"] = 0,
+}
+
+local Focus = firstThread
+while lastThread > 0 do  -- Run until no coroutines left (won't happen normally)
+	
+	--Logger.Debug("Thread %s/%s (%s,%s)", Focus, lastThread ,EventData[1], EventData[2])
+	if type(tThreads[Focus]) == "table" then
+		--Logger.Debug("..")
+		tThreads[Focus].tArgSets[ tThreads[Focus].lastArgSet+1 ] = EventData
+		tThreads[Focus].lastArgSet = tThreads[Focus].lastArgSet + 1
+		
+		local i = 1
+		while i <= tThreads[Focus].lastArgSet do
+		
+			--Logger.Debug("i=%s..",i)
+			local isOk, tArgs = coroutine.resume( tThreads[Focus].Function, unpack(tThreads[Focus].tArgSets[i] or {}) )
 			
-		-- Resume one coroutine
-		else
-			--Logger.Check("inside else, Args[Threads[i]]=%s, tFilters=%s\n",Args[Threads[i]],tFilters[Threads[i]])
-			local Ok, Call, Target, Arguments, ArgsNew
-			Arguments = eventData
-			if Args[Threads[i]] then -- If the coroutine is a new one, call it with original arguments if it has any, otherwise call with eventData
-				--Logger.Check("inside Args, %s\n",Args[Threads[i]])
-				Arguments = Args[Threads[i]]
-				Args[Threads[i]] = nil
-			end
-			if Arguments[1] ~= nil or tFilters[Threads[i]] == nil then -- Check for filters
-				Ok, tFilters[Threads[i]], Target, ArgsNew = coroutine.resume( Threads[i], unpack(Arguments) ) -- Call a coroutine
-				--Logger.Check("inside resume, Ok=%s, tFilters[Threads[i]]=%s, Target=%s, Args[Threads[i]]=%s\n",Ok, tFilters[Threads[i]], Target, Args[Threads[i]])
-				if not Ok then Logger.Error("Coroutine failed! %s", tFilters[Threads[i]] ) -- Inform if coroutine failed
-				elseif tFilters[Threads[i]] == "_Call" then -- prepare a new coroutine
-					--Logger.Debug("inside _Call")
-					if type(Target) == "function" then
-						n = n + 1
-						Threads[n] = coroutine.create(Target)
-						Args[Threads[n]] = ArgsNew
-						Names[n] = Utils.GenUniqString(16)
-						--Logger.Debug("NewThr: %s\n",Threads[n])
-						i = i - 1
-						os.queueEvent("dummy")
-						--eventData = { Names[n] }
+			tThreads[Focus].tArgSets[i] = nil
+			if coroutine.status(tThreads[Focus].Function) == "dead" then tThreads[Focus] = nil end
+			
+			if not isOk then 
+				Logger.Error("Coroutine failed! %s\n", tArgs )
+			else
+				if tArgs and type(tArgs) == "string" then 
+					tThreads[Focus].Filter = tArgs
+				elseif tArgs and type(tArgs) == "table" then
+					if tArgs.Flag and tArgs.Flag == "TuCoWa_Call" then
+						local Target
+						if type(tArgs.Function) == "function" then Target = tArgs.Function else Target = loadstring(tArgs.Function) end
+						--Logger.Debug("%s..", Target)
+						if not Target then Logger.Error("Failed to loadstring! %s",tArgs.Function)
+						else
+							--Logger.Debug("4..")
+							Target = coroutine.create(Target)
+							if type(Target) ~= "thread" then 
+								Logger.Error("Failed to create coroutine! %s",tArgs.Function)
+							else
+								--Logger.Debug("5..")
+								tThreads[ lastThread+1 ] = {}
+								tThreads[ lastThread+1 ].Name = tArgs.Name or "Anonymous"
+								tThreads[ lastThread+1 ].Filter = tArgs.Filter or nil
+								tThreads[ lastThread+1 ].tArgSets = {}
+								tThreads[ lastThread+1 ].tArgSets[1] = tArgs.Args or nil
+								if tArgs.Args then tThreads[ lastThread+1 ].lastArgSet = 1 else tThreads[ lastThread+1 ].lastArgSet = 0 end
+								tThreads[ lastThread+1 ].Id = Utils.GenUniqString(16)
+								tThreads[ lastThread+1 ].Function = Target
+								tThreads[Focus].tArgSets[i] = { tThreads[ lastThread+1 ].Id }
+								lastThread = lastThread + 1
+							end
+						end
+						os.queueEvent("TuCoWa_dummy")
+					elseif tArgs.Flag and tArgs.Flag == "TuCoWa_Send" then
+						-- TODO: Not tested
+						if type(tArgs.Id) == "string" and type(tArgs.Args) == "table" then
+							for _,Thread in pairs(tThreads) do
+								if Thread.Id == tArgs.Id then
+									Thread.lastArgSet = Thread.lastArgSet + 1 
+									Thread.tArgSets[ Thread.lastArgSet ] = tArgs.Args or nil
+								end
+							end
+						end
+					elseif tArgs.Flag and tArgs.Flag == "TuCoWa_Stop" then
+						-- TODO: Not tested
+						if type(tArgs.Id) == "string" then
+							for _,Thread in pairs(tThreads) do
+								if Thread.Id == tArgs.Id then
+									Thread.lastArgSet = Thread.lastArgSet + 1 
+									Thread.tArgSets[ Thread.lastArgSet ] = { "Stop!" } or nil
+								end
+							end
+						end
+					elseif tArgs.Flag and tArgs.Flag == "TuCoWa_Kill" then
+						-- Works!
+						if type(tArgs.Id) == "string" then
+							for i=1,lastThread do
+								if tThreads[i] and tThreads[i].Id == tArgs.Id then tThreads[i] = nil end
+							end
+						end
+					elseif tArgs.Flag and tArgs.Flag == "TuCoWa_UpdateLib" then
+						-- TODO: Not tested
+						UpdateAPI(unpack(tArgs or {}))
+						os.queueEvent("TuCoWa_dummy")
+					else	
+						--os.queueEvent("dummy", unpack(tArgs or {}))
 					end
-				elseif tFilters[Threads[i]] == "_Stop" or tFilters[Threads[i]] == "_Kill" then
-					--Logger.Check("inside _Stop/Kill")
-					local TargetID = nil
-					for j=1,n do if Names[j] == Target then TargetID = j end end
-					if TargetID == nil then
-						--Logger.Check("StopThread: No such! %s\n",Target)
-					else
-						Ok = coroutine.resume(Threads[TargetID], tFilters[Threads[i]])
-						--Logger.Check("StopThread: %s\n",Threads[Target])
-						Threads[Target] = nil
-						Args[Threads[Target]] = nil
-						n = n - 1
-						i = i - 1
-					end
-					os.queueEvent("dummy")
-				elseif tFilters[Threads[i]] == "_UpdateAPI" then -- updates API. Other APIs cannot call functions of Main directly,
-					Target = Target or ArgsNew
-					UpdateAPI(unpack(Target))
-					i = i - 1
-					os.queueEvent("dummy")					
 				end
-			end -- if Args[Threads[i]] or tFilters[Threads[i]] == nil or tFilters[Threads[i]] == Arguments[1] then
-		end -- if Threads[i] == nil or coroutine.status( Threads[i] ) == "dead" then
-		--[[
-		local cpx,cpy = term.getCursorPos()
-		term.setCursorPos(33, 1)
-		Logger.Debug("i=%s/n=%s\n",i,n)
-		term.setCursorPos(cpx,cpy)
-		wait()
-		--]]
-	end -- for i=1,n do 
-	--Logger.Check("eventData:\n")
-	eventData = { os.pullEventRaw() } -- after a cycle call pullEventRaw ( = coroutine.yield )
-end -- while n > 0 do 
-Logger.Check("Out-of-coroutines!\n")
+			end
+			
+			if not tThreads[Focus] then break end
+			if tThreads[Focus].tArgSets[i] == nil then i = i + 1 end
+		end
+
+		if tThreads[Focus] then tThreads[Focus].lastArgSet = 0 end
+		
+	else
+		if Focus == lastThread then lastThread = lastThread - 1 end
+		if Focus == firstThread then firstThread = math.min(firstThread + 1, lastThread) end
+	end
+	--Logger.Debug("\n")
+	if Focus < lastThread then 
+		Focus = Focus + 1
+	else
+		Focus = firstThread
+		EventData = { os.pullEventRaw() } -- after a cycle call pullEventRaw ( = coroutine.yield )	
+	end
+	
+end
+Logger.Debug("Out-of-coroutines!\n")
