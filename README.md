@@ -22,7 +22,7 @@ During this "It is just started" phase you are welcome to contribute as you want
 ## How to test it?
 * Start Minecraft with ComnputerCraft 1.63 and OpenPeripherials 0.4.1 mods enabled
 * Run inside the turtle "pastebin run m1Tnt0wv"
-* Press 1 (or 2 or 3, usually not everyone works but at least someone works)
+* Press 2 (or something else, usually not everyone works but at least someone works)
 
 To modify the code, I highly suggest to copy files to your own pastebin and take a look at "Loader" file how to execute them. Edit your pastebin, execute it and test it. Have fun!
 
