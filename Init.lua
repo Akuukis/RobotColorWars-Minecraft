@@ -357,9 +357,8 @@ function InitStart ()
 	
 	Nav.UpdateMap({0,0,0},false)
 	write("In")
-	coroutine.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = Logger.Info, ["Args"] = {"itialized!\n\n"} })
-	coroutine.yield()
-	--coroutine.yield("_Call",PlayerRun)
+	coroutine.Spawn( Logger.Info, "itialized!\n\n" )
+	coroutine.Cycle()
 	-- first turtle will look for signs with instructions (if another turtle made it)
 	--write("No signs found.\n")
 	write("Human, choose fate of the turtle:\n")
@@ -381,12 +380,14 @@ function InitPlayerAssistant()
 	local ch = loadstring(str)
 	if ch and str ~="" then 
 		--print(pcall(ch))
-		coroutine.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = pcall, ["Args"] = {ch} })
-		coroutine.yield("dummy")
-		Logger.Info(" Coords: (%s,%s,%s), F:%s\n",Nav.GetPos().x,Nav.GetPos().z,Nav.GetPos().y,Nav.GetPos().f)
+		coroutine.Spawn(pcall, ch)
+		coroutine.Cycle()
+		Logger.Info("\n")
+		--Logger.Info(" Coords: (%s,%s,%s), F:%s\n",Nav.GetPos().x,Nav.GetPos().z,Nav.GetPos().y,Nav.GetPos().f)
 	end
-	InitPlayerAssistant()
-	--coroutine.yield("_Call",PlayerRun)
+	local Replicate = coroutine.Spawn(InitPlayerAssistant())
+	coroutine.setName(Replicate, "CommPrompt")
+	return true
 end
 
 --------------------------------------------------------------------------------------------------------------------------------
