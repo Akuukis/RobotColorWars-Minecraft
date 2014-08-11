@@ -1,72 +1,30 @@
---------------------------------------------------------------------------------------------------------------------------------
---[[------------ Descriptions of function calls --------------------------------------------------------------------------------
-WiP
---]]
---------------------------------------------------------------------------------------------------------------------------------
----------------- Dependencies --------------------------------------------------------------------------------------------------
--- Name Section: 
--- Declare the name library will use. Leave it alone and
-local Lib = {}
---if type(Jobs) == "table" then Lib = Jobs end
-Jobs = Lib
+local jobs = {}
 
--- Import Section:
--- declare everything this library needs from outside
--- FYI You can change or shorten names if you wish so.
+-------------------------------------------------------------------------------
 
----- Luaj unmodified libraries. Import only needed sub-functions.
--- Full list (functions): assert, collectgarbage, error, _G, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
--- Full list (tables): coroutine, package, table, math
--- local 
--- local
+jobs.jobs = {} -- Action that takes time to exchange one bunch of resources into another bunch of resources
+jobs.farms = {} -- Capital (like rentable resources) that is placed and has a location. May be virtual (like digging fields)
 
----- CC libraries. Import only needed sub-functions.
--- Full list (modified Luaj functions): getfenv, getmetatable, loadfile, dofile, print, type, string.sub, string.find, write
--- Full list (modified Luaj tables): string, os, io
--- Full list (new tables): os, colors, disk, gps, help, keys, paintutils, parallel, peripheral, rednet, term, textutils, turtle, vector, window
-local type = type
--- local
-local os, peripheral, turtle, term = os, peripheral, turtle, term
+-------------------------------------------------------------------------------
 
----- TuCoWa libraries. Import only needed sub-functions.
--- Full list: Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic, Init
-local Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav = Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav
-
--- no more external access after this point
-setfenv(1, Lib)
-
---------------------------------------------------------------------------------------------------------------------------------
----------------- Library wide variables ----------------------------------------------------------------------------------------
-
-local JobList = {} -- Action that takes time to exchange one bunch of resources into another bunch of resources
-local FarmList = {} -- Capital (like rentable resources) that is placed and has a location. May be virtual (like digging fields)
-
---------------------------------------------------------------------------------------------------------------------------------
----------------- Classes -------------------------------------------------------------------------------------------------------
-
--- none
-
---------------------------------------------------------------------------------------------------------------------------------
----------------- Public functions ----------------------------------------------------------------------------------------------
-
-local function GetCapital( Name )
+function jobs.getCapital( Name )
 end
-local function GetPrepare( Name )
+function jobs.getPrepare( Name )
 end
-local function GetInput( Name ) -- per worktime in min
+function jobs.getInput( Name ) -- per worktime in min
 end
-local function GetOutput( Name ) -- per worktime in min
+function jobs.getOutput( Name ) -- per worktime in min
 end
-local function GetCollect( Name )
+function jobs.getCollect( Name )
 end
-local function GetWorkTime( Name )
+function jobs.getWorkTime( Name )
 end
-local function GetFreeTime( Name )
+function jobs.getFreeTime( Name )
 end
-local function GetLocation( Name )
+function jobs.getLocation( Name )
 end
 
-function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom block
+function jobs.mineH( Length, Width, isBaseLevel ) -- starts at first left buttom block
 
 	if Length == "Help" or Length == "help" or Length == "Info" or Length == "info" then
 		Logger.Info("Jobs.MineH(Length, Width, isBaseLevel)\n")
@@ -248,25 +206,8 @@ function MineH( Length, Width, isBaseLevel ) -- starts at first left buttom bloc
 	
 end
 
-function MineTest( Length )
-	x = read()
-	for i=1,tonumber(x) do
-	  while GetMap(GetPos(GetPos("f")),"Id") do turtle.dig() end
-	  turtle.forward()
-	  while GetMap(GetPos(4),"Id") do
-		turtle.digUp()
-		sleep(0.2)
-	  end
-	  while turtle.detectDown() do turtle.digDown() end
-	end
-end
---------------------------------------------------------------------------------------------------------------------------------
----------------- Private functions ---------------------------------------------------------------------------------------------
-
--- none
-
---------------------------------------------------------------------------------------------------------------------------------
----------------- Details & Notes -----------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+---------------- Details & Notes ----------------------------------------------
 
 --[[ Concepts
 TODO:""

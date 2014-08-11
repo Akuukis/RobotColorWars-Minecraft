@@ -1,77 +1,26 @@
---------------------------------------------------------------------------------------------------------------------------------
---[[------------ Descriptions of function calls --------------------------------------------------------------------------------
--- Resm API accounts for anything that is valuable from resources to imaginery "safety" points, thus it is The economy of turtles.
-WiP
---]]
---------------------------------------------------------------------------------------------------------------------------------
----------------- Dependencies --------------------------------------------------------------------------------------------------
--- Name Section: 
--- Declare the name library will use. Leave it alone and
-local Lib = {}
-if type(Resm) == "table" then Lib = Resm end
-Resm = Lib
+local resm = {}
 
--- Import Section:
--- declare everything this library needs from outside
--- FYI You can change or shorten names if you wish so.
+resm.period = 600 -- in secs ( 600=10min, 3'600=1h, 86'400=1d, 604'800=1w, 1'814'400=3w=tournament lenght ) (tournament period = 3024 Periods)
 
----- Luaj unmodified libraries. Import only needed sub-functions.
--- Full list (functions): assert, collectgarbage, error, _G, ipairs, load, loadstring, next, pcall, rawequal, rawget, rawset, select, setfenv, setmetatable, tonumber, tostring, unpack, _VERSION, xpcall, require, module
--- Full list (tables): coroutine, package, table, math
--- local 
--- local
+---------------- Public functions ---------------------------------------------
 
----- CC libraries. Import only needed sub-functions.
--- Full list (modified Luaj functions): getfenv, getmetatable, loadfile, dofile, print, type, string.sub, string.find, write
--- Full list (modified Luaj tables): string, os, io
--- Full list (new tables): os, colors, disk, gps, help, keys, paintutils, parallel, peripheral, rednet, term, textutils, turtle, vector, window
--- local 
--- local
--- local
+function resm.getPriceSupply() end
+function resm.addSupply() end
+function resm.clearSupply() end
 
----- TuCoWa libraries. Import only needed sub-functions.
--- Full list: Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs, Resm, Logic, Init
-local Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs = Gui, Rui, Hud, Logger, Stats, Comm, Utils, Nav, Jobs
+function resm.getPriceDemand() end
+function resm.addDemand() end
+function resm.clearDemand() end
+function resm.clearMyDemand() end
 
--- no more external access after this point
-setfenv(1, Lib)
+function resm.getPriceEq() end
+function resm.closeDeal() end
 
---------------------------------------------------------------------------------------------------------------------------------
----------------- Library wide variables ----------------------------------------------------------------------------------------
+function resm.reserveDemand() end
+function resm.collectDemand() end
+function resm.closePeriod() end -- resets Deallist
 
-local Period = 600 -- in secs ( 600=10min, 3'600=1h, 86'400=1d, 604'800=1w, 1'814'400=3w=tournament lenght ) (tournament period = 3024 Periods)
-
---------------------------------------------------------------------------------------------------------------------------------
----------------- Classes -------------------------------------------------------------------------------------------------------
-
-
-
---------------------------------------------------------------------------------------------------------------------------------
----------------- Public functions ----------------------------------------------------------------------------------------------
-
-function GetPriceSupply() end
-function AddSupply() end
-function ClearSupply() end
-
-function GetPriceDemand() end
-function AddDemand() end
-function ClearDemand() end
-function ClearMyDemand() end
-
-function GetPriceEq() end
-function CloseDeal() end
-
-function ReserveDemand() end
-function CollectDemand() end
-function ClosePeriod() end -- resets Deallist
-
---------------------------------------------------------------------------------------------------------------------------------
----------------- Private functions ---------------------------------------------------------------------------------------------
-
--- none
-
---------------------------------------------------------------------------------------------------------------------------------
----------------- Details & Notes -----------------------------------------------------------------------------------------------
+---------------- Details & Notes ----------------------------------------------
 
 --[[ How does it work? 
 
@@ -128,5 +77,5 @@ Valuables = { Resource, Space, Point, Container, Time }
 --]=]
 --]]
 
-
+return resm
 
