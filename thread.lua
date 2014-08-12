@@ -2,8 +2,8 @@ local thread = {}
 -- Magic happens here
 function thread.manager( thread )
 
-  local event = {"TuCoWa_dummy"}
-  local firstThread, focus, lastThread = 1, 1, 1
+  local event = {"RoCoWa_dummy"}
+  local focus, lastThread = 1, 1
   local threads = { [1] = thread } -- TODO: Sanitize
   local graveyard = {}
   local graveyardTime = {}
@@ -26,210 +26,218 @@ function thread.manager( thread )
     }
   end
   
-  local operations = {}
-  operations.TuCoWa_Cycle = function ( data )
-    threads[focus].filter = data.filter
-    threads[focus].Listen = true
-    return nil -- Cycle to next thread
-  end
-  operations.TuCoWa_Spawn = function ( data )
-    threads[ lastThread+1 ] = {
-      ["Name"] = data.Name or "anonymous",
-      ["filter"] = data.filter or nil,
-      ["Pause"] = 0,
-      ["Listen"] = false,
-      ["tArgSets"] = { 
-        [1] = data.Args or nil },
-      ["Id"] = getUid("coroutine"),
-      ["Function"] = data.Function,
-    }
-    if data.Args then threads[ lastThread+1 ].lastArgSet = 1 else threads[ lastThread+1 ].lastArgSet = 0 end
-    lastThread = lastThread + 1
-    return threads[ lastThread ].Id
-  end
-  operations.TuCoWa_Whisper = function ( data )
-    for _,Thread in pairs(threads) do
-      if Thread.Id == data.Id then
-        Thread.lastArgSet = Thread.lastArgSet + 1 
-        Thread.tArgSets[ Thread.lastArgSet ] = data.Args or nil
-        return true
-      end
-    end
-    return false, "No running thread found, try to dig" 
-  end
-  operations.TuCoWa_Pause = function ( data )
-    for _,Thread in pairs(threads) do
-      if Thread.Id == data.Id then
-        Thread.Pause = math.max(0, Thread.Pause + data.Amount)
-        return true
-      end
-    end
-    return false, "No running thread found, try to dig" 
-  end
-  operations.TuCoWa_Ask = function ( data )
-    for _,Thread in pairs(threads) do
-      if Thread.Id == data.Id and Thread.Listen == true then
-        return coroutine.resume( Thread.Function, "TuCoWa_Ask", table.unpack(data.Msg or {}) )
-      end
-    end
-    return false, "No running thread found, try to dig" 
-  end
-  operations.TuCoWa_Kill = function ( data )
-    for i=firstThread,lastThread do
-      if threads[i] and threads[i].Id == data.Id then 
-        graveyard[ threads[i].Id ] = { false, "Killed", threads[focus].Id, utils.getTime() }
-        graveyardTime[ threads[i].Id ] = utils.getTime()
-        threads[i] = nil
-        return true
-      end
-    end
-    return false, "No running thread found, try to dig" 
-  end
-  operations.TuCoWa_Dig = function ( data )
-    if graveyard[ data.Id ] then
-      local Results = graveyard[ data.Id ]
-      graveyard[ data.Id ] = nil
-      return true, Results
-    end
-    return false, "Not found in Graveyard, check Id or try again later"
-  end
-  operations.TuCoWa_setFilter = function ( data )
-    for i=firstThread,lastThread do
-      if threads[i] and threads[i].Id == data.Id then 
-        threads[i].filter = data.filter
-        return true
-      end
-    end
-    return false, "No running thread found, try to dig" 
-  end    
-  operations.TuCoWa_getFilter = function ( data )
-    for i=firstThread,lastThread do
-      if threads[i] and threads[i].Id == data.Id then
-        return threads[i].filter
-      end
-    end
-    return false, "No running thread found, try to dig" 
-  end
-  operations.TuCoWa_setName = function ( data )
-    if data == nil then 
-      threads[focus] = data.Name
-      return true
-    end
-    for i=firstThread,lastThread do
-      if threads[i] and threads[i].Id == data.Id then 
-        threads[i].Name = data.Name
-        return true
-      end
-    end
-    return false, "No running thread found, try to dig" 
-  end    
-  operations.TuCoWa_getName = function ( data )
-    for i=firstThread,lastThread do
-      if threads[i] and threads[i].Id == data.Id then
-        return threads[i].Name
-      end
-    end
-    return false, "No running thread found, try to dig" 
-  end
-  operations.TuCoWa_getThread = function ( data )
-    if data.Id == nil then
-      local Table = {}
-      for Key,Value in pairs(threads[focus]) do
-        if Key ~= "tArgSets" then Table[Key] = Value end
-      end
-      return Table
-    else
-      for _,Thread in pairs(threads) do
-        if Thread.Id == data.Id then
-          local Table = {}
-          for Key,Value in pairs(Thread) do
-            if Key ~= "tArgSets" then Table[Key] = Value end
-          end
-          return Table
+  -- Core
+  local operations = {
+    RoCoWa_cycle = function (data)
+      threads[focus].filter = data.filter
+      threads[focus].listen = true
+      return nil -- Cycle to next thread
+    end,
+    RoCoWa_spawn = function (data)
+      lastThread = lastThread + 1
+      threads[ lastThread ] = {
+        ["name"] = data.name or "anonymous",
+        ["filter"] = data.filter or nil,
+        ["pause"] = 0,
+        ["listen"] = false,
+        ["argSets"] = { 
+          [1] = data.args or nil },
+        ["uid"] = getUid("coroutine"),
+        ["co"] = data.co,
+      }
+      if data.args then threads[ lastThread ].lastArgSet = 1 else threads[ lastThread ].lastArgSet = 0 end
+      return threads[ lastThread ].uid
+    end,
+    RoCoWa_whisper = function (data)
+      for _,thread in pairs(threads) do
+        if thread.uid == data.uid then
+          thread.lastArgSet = thread.lastArgSet + 1 
+          thread.argSets[ thread.lastArgSet ] = data.args or nil
+          return true
         end
-      end      
-      return false, "No running thread found, try to dig" 
-    end
-  end
-  operations.TuCoWa_getThreads = function ()
-    local Table, count = {}, 0
-    for _,Thread in pairs(threads) do
-      count = count + 1
-      Table[count] = {}
-      for Key,Value in pairs(Thread) do
-        if Key ~= "tArgSets" then Table[count][Key] = Value end
       end
-    end
-    return Table
-  end
-  operations.TuCoWa_UpdateLib = function ( data ) -- TODO!
-    UpdateAPI(table.unpack(data or {}))
-    return true
-  end
-  
+      return false, "No running thread found, try to dig" 
+    end,
+    RoCoWa_pause = function (data)
+      for _,thread in pairs(threads) do
+        if thread.uid == data.uid then
+          thread.pause = math.max(0, thread.pause + data.amount)
+          return true
+        end
+      end
+      return false, "No running thread found, try to dig" 
+    end,
+    RoCoWa_ask = function (data)
+      for _,thread in pairs(threads) do
+        if thread.uid == data.uid and thread.listen == true then
+          return coroutine.resume( thread.co, "RoCoWa_ask", table.unpack(data.msg or {}) )
+        end
+      end
+      return false, "No running thread found, try to dig" 
+    end,
+    RoCoWa_kill = function (data)
+      for i=1,lastThread do
+        if threads[i] and threads[i].uid == data.uid then 
+          graveyard[ threads[i].uid ] = { false, "killed", threads[focus].uid, utils.getTime() }
+          graveyardTime[ threads[i].uid ] = utils.getTime()
+          threads[i] = nil
+          return true
+        end
+      end
+      return false, "No running thread found, try to dig" 
+    end,
+    RoCoWa_dig = function (data)
+      if graveyard[ data.uid ] then
+        local results = graveyard[ data.uid ]
+        graveyard[ data.uid ] = nil
+        return true, results
+      end
+      return false, "Not found in Graveyard, check uid or try again later"
+    end,
+    RoCoWa_setFilter = function (data)
+      for i=1,lastThread do
+        if threads[i] and threads[i].uid == data.uid then 
+          threads[i].filter = data.filter
+          return true
+        end
+      end
+      return false, "No running thread found, try to dig" 
+    end, 
+    RoCoWa_getFilter = function (data)
+      for i=1,lastThread do
+        if threads[i] and threads[i].uid == data.uid then
+          return threads[i].filter
+        end
+      end
+      return false, "No running thread found, try to dig" 
+    end,
+    RoCoWa_setName = function (data)
+      if data == nil then 
+        threads[focus] = data.name
+        return true
+      end
+      for i=1,lastThread do
+        if threads[i] and threads[i].uid == data.uid then 
+          threads[i].name = data.name
+          return true
+        end
+      end
+      return false, "No running thread found, try to dig" 
+    end,  
+    RoCoWa_getName = function (data)
+      for i=1,lastThread do
+        if threads[i] and threads[i].uid == data.uid then
+          return threads[i].name
+        end
+      end
+      return false, "No running thread found, try to dig" 
+    end,
+    RoCoWa_getThread = function (data)
+      if data.uid == nil then
+        local result = {}
+        for key,value in pairs(threads[focus]) do
+          if key ~= "argSets" then result[key] = value end
+        end
+        return result
+      else
+        for _,thread in pairs(threads) do
+          if thread.uid == data.uid then
+            local result = {}
+            for key,value in pairs(thread) do
+              if key ~= "argSets" then result[key] = value end
+            end
+            return result
+          end
+        end      
+        return false, "No running thread found, try to dig" 
+      end
+    end,
+    RoCoWa_getThreads = function ()
+      local result, count = {}, 0
+      for _,thread in pairs(threads) do
+        count = count + 1
+        result[count] = {}
+        for key,value in pairs(thread) do
+          if key ~= "argSets" then result[count][key] = value end
+        end
+      end
+      return result
+    end,
+    RoCoWa_updateLib = function (data) -- TODO!
+      updateAPI(table.unpack(data or {}))
+      return true
+    end,
+  }
   while lastThread > 0 do  -- Run until no threads left (won't happen normally)
-    --logger.spam("\nThread %s/%s (%s,%s)", focus, lastThread ,event[1], event[2])
+    --logger.spam("\nThread %s/%s (%s,%s,%s)", focus, lastThread ,event[1], event[3], event[4])
     
     if type(threads[focus]) == "table" then 
-      --logger.spam("%s!", threads[focus].Pause)
+      --logger.spam("%s,%s!", threads[focus].pause, threads[focus].lastArgSet)
       
-      if not threads[focus].filter or threads[focus].filter == event[1] then
-        threads[focus].tArgSets[ threads[focus].lastArgSet+1 ] = event
-        threads[focus].lastArgSet = threads[focus].lastArgSet + 1
-      end
-      
-      if threads[focus].Pause == 0 then
-        --logger.spam("..")
+      local i = 1
+      while threads[focus] and threads[focus].pause == 0 and i <= threads[focus].lastArgSet do
+        --logger.spam("\n  i=%s..",i)
         
-        local i = 1
-        while i <= threads[focus].lastArgSet do
-          --logger.spam("i=%s..",i)
-          
-          local tResults = { coroutine.resume( threads[focus].Function, table.unpack( threads[focus].tArgSets[i] or {} ) ) }
-          local isOk, tArgs = tResults[1], tResults[2]
-          threads[focus].tArgSets[i] = nil
-          threads[focus].Listen = false
-          threads[focus].filter = false
-          
-          if not isOk then 
-            logger.warning("thread failed! %s\n", tArgs )
-            graveyard[ threads[focus].Id ] = tResults
-            graveyardTime[ threads[focus].Id ] = utils.getTime()
-            threads[focus] = nil
-          elseif coroutine.status(threads[focus].Function) == "dead" then 
-            graveyard[ threads[focus].Id ] = tResults
-            graveyardTime[ threads[focus].Id ] = utils.getTime()
-            threads[focus] = nil
-          else
-            if tArgs and type(tArgs) == "string" then 
-              threads[focus].filter = tArgs
-            elseif tArgs and type(tArgs) == "table" then
-              if tArgs.Flag and operations[ tArgs.Flag ] then 
-                threads[focus].tArgSets[i] = { operations[ tArgs.Flag ]( tArgs ) }
-                if threads[focus].tArgSets[i][1] == nil then threads[focus].tArgSets[i] = nil end
-              end
-              local computer = require("computer")
-              computer.pushSignal("TuCoWa_dummy")
+        local result = table.pack( coroutine.resume( threads[focus].co, table.unpack( threads[focus].argSets[i] or {} ) ) )
+        --for k,v in pairs(result) do logger.spam("\n    [%s]: %s",k,v) end
+        local ok, args = result[1], result[2]
+        threads[focus].argSets[i] = nil
+        threads[focus].listen = false
+        threads[focus].filter = false
+        
+        if not ok then 
+          logger.warning("thread failed! %s\n", args )
+          graveyard[ threads[focus].uid ] = result
+          graveyardTime[ threads[focus].uid ] = utils.getTime()
+          threads[focus] = nil
+        elseif coroutine.status(threads[focus].co) == "dead" then 
+          graveyard[ threads[focus].uid ] = result
+          graveyardTime[ threads[focus].uid ] = utils.getTime()
+          threads[focus] = nil
+        else
+          if args and type(args) == "string" and args ~= "" then 
+            threads[focus].filter = args
+          elseif args and type(args) == "table" then
+            if args.flag and operations[ args.flag ] then 
+              threads[focus].argSets[i] = { operations[ args.flag ]( args ) }
+              if threads[focus].argSets[i][1] == nil then threads[focus].argSets[i] = nil end
             end
+            local computer = require("computer")
+            computer.pushSignal("RoCoWa_dummy")
           end
-          
-          if not threads[focus] then break end
-          if threads[focus].tArgSets[i] == nil then i = i + 1 end
         end
-
-        if threads[focus] then threads[focus].lastArgSet = 0 end
+        
+        if threads[focus] and threads[focus].argSets[i] == nil then i = i + 1 end
       end
+      if threads[focus] then threads[focus].lastArgSet = 0 -- drops all arguments before pausing, if it does
+      --[[  local count = 0
+        for j=i,threads[focus].lastArgSet do
+          count = count + 1
+          threads[focus].argSets[count] = threads[focus].argSets[j]
+        end
+        threads[focus].lastArgSet = count
+      --]]end
     else
       if focus == lastThread then lastThread = lastThread - 1 end
-      if focus == firstThread then firstThread = math.min(firstThread + 1, lastThread) end
     end
+    
+    if type(threads[focus+1]) ~= "table" then 
+      threads[focus+1] = threads[focus+2] 
+      threads[focus+2] = nil
+      end
     
     --logger.spam("\n")
     if focus < lastThread then 
       focus = focus + 1
     else
-      focus = firstThread
-      event = { coroutine.yield("") } -- after a cycle call pullEventRaw ( = coroutine.yield )  
+      focus = 1
+      event = { coroutine.yield("") }
+      for i=1,lastThread do
+        if threads[i] and ((not threads[i].filter) or (threads[i].filter == event[1])) then
+          threads[i].argSets[ threads[i].lastArgSet+1 ] = event
+          threads[i].lastArgSet = threads[i].lastArgSet + 1
+        end
+      end
     end
     
   end
@@ -237,130 +245,129 @@ function thread.manager( thread )
 end
 
 -- Sanitization happens here
-function thread.spawn( _Fn, ... )
-  local Fn, err, tArgs
-  if type(_Fn) == "function" then 
-    Fn = _Fn
-  elseif type(_Fn) == "string" then
-    Fn, err = load(_Fn)
-    if not Fn then return false, err end
+function thread.spawn( fn, ... )
+  local err
+  if type(fn) == "function" then 
+    fn = fn
+  elseif type(fn) == "string" then
+    fn, err = load(fn)
+    if not fn then return false, err end
   elseif false then -- TODO: Add support for file handles
   else
     return false, "Not valid function or string"
   end
-  Fn = coroutine.create(Fn)
-  if not Fn then return false, "Failed to create thread" end
-  
+  local co = coroutine.create(fn)
+  if not co then return false, "Failed to create thread" end
   return coroutine.yield({ 
-    ["Flag"] = "TuCoWa_Spawn",
-    ["Function"] = Fn,
-    ["Args"] = { ... },
+    ["flag"] = "RoCoWa_spawn",
+    ["co"] = co,
+    ["args"] = { ... },
     ["filter"] = nil,
-    ["Name"] = "anonymous",
+    ["name"] = "anonymous",
   })
 end
-function thread.whisper( _sId, ... )
-  if type(_sId) ~= "string" then return false, "Not valid Id, expected string" end
+function thread.whisper( uid, ... )
+  local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["Flag"] = "TuCoWa_Whisper",
-    ["Id"] = sId,
-    ["Args"] = { ... },
+    ["flag"] = "RoCoWa_whisper",
+    ["uid"] = uid,
+    ["args"] = { ... },
   })  
 end
-function thread.pause( _sId, _Amount )
-  if type(_sId) ~= "string" then return false, "Not valid Id, expected string" end
-  if type(_Amount) ~= "number" then _Amount = 1 end
+function thread.pause( uid, amount )
+  local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
+  if type(amount) ~= "number" then amount = 1 end
   return coroutine.yield({
-    ["Flag"] = "TuCoWa_Pause",
-    ["Id"] = _sId,
-    ["Amount"] = _Amount,
+    ["flag"] = "RoCoWa_pause",
+    ["uid"] = uid,
+    ["amount"] = amount,
   })  
 end
-function thread.unpause( _sId, _Amount )
-  local Amount = -(_Amount or 1)
-  return thread.Pause( _sId, Amount )
+function thread.unpause( uid, amount )
+  local amount = -(amount or 1)
+  return thread.Pause( uid, amount )
 end
-function thread.ask( _sId, ... )
-  if type(_sId) ~= "string" then return false, "Not valid Id, expected string" end
+function thread.ask( uid, ... )
+  local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["Flag"] = "TuCoWa_Ask",
-    ["Id"] = _sId,
-    ["Msg"] = { ... },
+    ["flag"] = "RoCoWa_ask",
+    ["uid"] = uid,
+    ["msg"] = { ... },
   })  
 end
-function thread.kill( _sId )
-  if type(_sId) ~= "string" then return false, "Not valid Id, expected string" end
+function thread.kill(uid)
+  local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["Flag"] = "TuCoWa_Kill",
-    ["Id"] = _sId,
+    ["flag"] = "RoCoWa_kill",
+    ["uid"] = uid,
   })
 end
-function thread.dig( _sId )
-  if type(_sId) ~= "string" then return false, "Not valid Id, expected string" end
+function thread.dig(uid)
+  local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["Flag"] = "TuCoWa_Dig",
-    ["Id"] = _sId,
+    ["flag"] = "RoCoWa_dig",
+    ["uid"] = uid,
   })
 end
 function thread.cycle( filter, ... )
-  local uAnswer = { ... }
+  local answer = { ... }
   if type(filter) ~= "string" then filter = nil end
-  local Data = { coroutine.yield({ ["Flag"] = "TuCoWa_Cycle", ["filter"] = filter }) }
+  local data = { coroutine.yield({ ["flag"] = "RoCoWa_cycle", ["filter"] = filter }) }
   
-  if Data[1] == "TuCoWa_Ask" then
-    if type(uAnswer[1]) == "function" then coroutine.yield( uAnswer[1](Data) ) else coroutine.yield( table.unpack(uAnswer) ) end
-    return thread.Cycle(uAnswer)
+  if data[1] == "RoCoWa_ask" then
+    if type(answer[1]) == "function" then coroutine.yield( answer[1](data) ) else coroutine.yield( table.unpack(answer) ) end
+    return thread.cycle(answer)
   else
-    return table.unpack( Data )
+    return table.unpack( data )
   end
 end
-function thread.setFilter( _sId, filter )
-  if type(_sId) ~= "string" then return false, "Not valid Id, expected string" end
-  if type(filter) ~= "string" and type(filter) ~= "nil" then return false, "Not valid Filter, expected string or nil" end
+function thread.setFilter( uid, filter )
+  local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
+  local ok, err = pcall(checkArg, 1, filter, "string", "nil"); if not ok then return ok, err end
   return coroutine.yield({
-    ["Flag"] = "TuCoWa_setFilter",
-    ["Id"] = _sId,
-    ["Filter"] = filter,
+    ["flag"] = "RoCoWa_setFilter",
+    ["uid"] = uid,
+    ["filter"] = filter,
   })
 end
-function thread.getFilter( _sId )
-  if type(_sId) ~= "string" then return false, "Not valid Id, expected string" end
+function thread.getFilter( uid )
+  local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["Flag"] = "TuCoWa_getFilter",
-    ["Id"] = _sId,
+    ["flag"] = "RoCoWa_getFilter",
+    ["uid"] = uid,
   })
 end
-function thread.setName( _sId, _sName )
-  if type(_sId) ~= "string" then return false, "Not valid Id, expected string" end
-  if type(_sName) ~= "string" then return false, "Not valid Name, expected string" end
+function thread.setName( uid, name )
+  local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
+  local ok, err = pcall(checkArg, 1, name, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["Flag"] = "TuCoWa_setName",
-    ["Id"] = _sId,
-    ["Name"] = _sName,
+    ["flag"] = "RoCoWa_setName",
+    ["uid"] = uid,
+    ["name"] = name,
   })
 end
-function thread.getName( _sId )
-  if type(_sId) ~= "string" then return false, "Not valid Id, expected string" end
+function thread.getName( uid )
+  local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["Flag"] = "TuCoWa_getName",
-    ["Id"] = _sId,
+    ["flag"] = "RoCoWa_getName",
+    ["uid"] = uid,
   })
 end
 function thread.getThreads()
   return coroutine.yield({
-    ["Flag"] = "TuCoWa_getThreads"
+    ["flag"] = "RoCoWa_getThreads"
   })
 end
-function thread.getThread( _sId )
-  if type(_sId) ~= "string" and type(_sId) ~= "nil" then return false, "Not valid Id, expected string or nil" end
+function thread.getThread( uid )
+  local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["Flag"] = "TuCoWa_getThread",
-    ["Id"] = _sId,
+    ["flag"] = "RoCoWa_getThread",
+    ["uid"] = uid,
   })
 end
 --[[function tucowa.UpdateLib( ... )
   return coroutine.yield({
-    ["Flag"] = "TuCoWa_updateLib",
+    ["flag"] = "RoCoWa_updateLib",
     ["List"] = { ... },
   })
 end

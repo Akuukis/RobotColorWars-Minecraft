@@ -2,6 +2,9 @@ local init = {}
 
 -------------------------------------------------------------------------------
 
+
+-------------------------------------------------------------------------------
+
 function init.bootstrap ()	-- TODO: not working
 	Nav.UpdateMap({0,0,0},false)
 	write("In")
@@ -22,19 +25,14 @@ function init.bootstrap ()	-- TODO: not working
 end
 
 function init.console()
-	--Utils.Refuel()
+  local term = require("term")
 	logger.info("@ ")
-	str = io.read()
+	str = term.read()
 	local ch = load(str)
-	if ch and str ~="" then 
-		--print(pcall(ch))
-		LastSpawn = thread.spawn(ch)
-		thread.cycle()
-		logger.info("\n")
-		--Logger.Info(" Coords: (%s,%s,%s), F:%s\n",Nav.GetPos().x,Nav.GetPos().z,Nav.GetPos().y,Nav.GetPos().f)
-	end
-	local replicate = thread.spawn(init.console)
-	thread.setName(replicate, "console")
+	if ch and str ~="" and str ~="\n" then thread.spawn(ch) end
+  print("executed...")
+  local uid = thread.spawn(init.console)
+	thread.setName(uid, "console")
 	return true
 end
 

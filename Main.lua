@@ -521,12 +521,12 @@ start(...)
 --
 
 thread.manager( {
-  ["Name"] = "Console",
-  ["Id"] = getUid("coroutine"),
-  ["Function"] = coroutine.create(init.console),
-  ["Filter"] = nil,
-  ["Pause"] = 0,
-  ["Listen"] = false,
-  ["tArgSets"] = {},
-  ["lastArgSet"] = 0,
+  ["name"] = "Console",
+  ["uid"] = getUid("coroutine"),
+  ["co"] = coroutine.create(init.console),
+  ["filter"] = nil,
+  ["pause"] = 0,
+  ["listen"] = false,
+  ["argSets"] = {},
+  ["lastArgSet"] = 1,
 } )

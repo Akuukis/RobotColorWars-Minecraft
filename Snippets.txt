@@ -1,4 +1,4 @@
-pastebin run m1Tnt0wv Start
+pastebin run DvZXGEGh 2
 
 for i=1,4 do Jobs.MineH(8);	Nav.TurnLeft(); Nav.Step("Normal"); Nav.TurnLeft() end
 for i=1,list.getInventorySize() do list.pushItem("west",i) end
@@ -18,25 +18,40 @@ sleep(2);sleep(2)
 sleep(3); print("kuku")
 for n,v in pairs(Init.clsTurtle) do print(n,": ", v) end
 
-x = coroutine.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnRight(); sleep(3) end end })
-coroutine.yield({ ["Flag"] = "TuCoWa_Kill", ["Id"] = x })
-y = coroutine.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnLeft() end end })
-x = coroutine.Spawn(function () while true do write("!"); sleep(2) end end)
-x = coroutine.Spawn(function () while true do turtle.turnRight() end end)
-y = coroutine.Spawn(function () while true do turtle.turnLeft(); sleep(1) end end)
-x = coroutine.Spawn(function () return 312 end)
-coroutine.Kill(x)
-print(coroutine.Dig(x))
-y = coroutine.Dig(x)
-for n,v in pairs(y) do print(n,": ", v) end
-coroutine.Pause(x)
-coroutine.Unpause(x)
-z = coroutine.Spawn(function () while true do if coroutine.Cycle()[1] == "string" then print("?") end end end)
-print(coroutine.Whisper(z,{"string","cau!"}))
-z = coroutine.Spawn(function () while true do if coroutine.Cycle("ja?")[1] == "string" then print("?") end end end)
-print(coroutine.Ask(z,{"kuku","cau!"}))
-y = { coroutine.Ask(z,{"kuku","cau!"}) }
+x = thread.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnRight(); sleep(3) end end })
+thread.yield({ ["Flag"] = "TuCoWa_Kill", ["Id"] = x })
+y = thread.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnLeft() end end })
+x = thread.Spawn(function () while true do write("!"); sleep(2) end end)
+x = thread.Spawn(function () while true do turtle.turnRight() end end)
+y = thread.Spawn(function () while true do turtle.turnLeft(); sleep(1) end end)
+x = thread.spawn(function () print(312); return 123 end)
+thread.kill(x)
+print(thread.Dig(x))
+a, y = thread.dig(x)
+thread.Pause(x)
+thread.Unpause(x)
+z = thread.Spawn(function () while true do if thread.Cycle()[1] == "string" then print("?") end end end)
+print(thread.whisper(x,{"string","cau!"}))
+z = thread.Spawn(function () while true do if thread.Cycle("ja?")[1] == "string" then print("?") end end end)
+print(thread.Ask(z,{"kuku","cau!"}))
+y = { thread.Ask(z,{"kuku","cau!"}) }
 
-x, err = coroutine.getThread(y)
-coroutine.setName(x.Id, "CommPrompt")
-coroutine.setName(y, "TurnLeft")
+a, y = thread.getThread(x)
+for n,v in pairs(a) do print(n,": ", v) end
+thread.setName(x, "test")
+thread.setName(y, "TurnLeft")
+
+b,c = thread.getThreads()
+for n,v in pairs(b) do print(n,": ", v.lastArgSet, v.name, v.filter) end
+
+
+x = thread.spawn(function () robot = require("robot"); while true do robot.turnRight(); coroutine.yield("") end end)
+x = thread.spawn(function () for i=1,10 do print(i); coroutine.yield("") end end)
+z = thread.spawn(function () for i=1,10 do print(i) end end)
+
+
+
+
+
+
+
