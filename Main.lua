@@ -377,13 +377,13 @@ local function StartDownloaderPastebin( ... )
   local libNames = {
   "gui","rui","hud","logger","stats",
   "comm","utils","nav","jobs","resm",
-  "logic","init","thread"
+  "logic","init","paralel"
   }
   local pastebinIds = {
   --[[["Nam"] = {
   "Gui.....","Rui.....","Hud.....","Logger..","Stats...",
   "Comm....","Utils...","Nav.....","Jobs....","Resm....",
-  "Logic...","Init....","thread.."},
+  "Logic...","Init....","paralel."},
   --]]
     ["Aku"] = {
   "EiNQu1tr","Vf4iEtwA","y9b6Vm0P","Yxhz7Gju","VeVb4816",
@@ -414,9 +414,9 @@ local function StartDownloaderPastebin( ... )
     for j=1,#libNames do
       if tmp == "start" or tmp == "all" or tmp == libNames[j] then
         term.write(libNames[j] .. ":") -- 39-8, 31-9, 22-8, 14-9, 5
-        for i=1,6-libNames[j]:len() do term.write(" ") end
         
-        local cpx,cpy
+        local cpx,cpy = term.getCursor()
+        term.setCursor(8,cpy)
         fs.makeDirectory("dlc")
         fs.makeDirectory("dlc/pb") 
         fs.makeDirectory("dlc/pb/" .. nick)   
@@ -520,13 +520,6 @@ print("Initialized Main!")
 start(...)
 --
 
-thread.manager( {
-  ["name"] = "Console",
-  ["uid"] = getUid("coroutine"),
-  ["co"] = coroutine.create(init.console),
-  ["filter"] = nil,
-  ["pause"] = 0,
-  ["listen"] = false,
-  ["argSets"] = {},
-  ["lastArgSet"] = 1,
-} )
+paralel.manager()
+
+

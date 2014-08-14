@@ -18,40 +18,48 @@ sleep(2);sleep(2)
 sleep(3); print("kuku")
 for n,v in pairs(Init.clsTurtle) do print(n,": ", v) end
 
-x = thread.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnRight(); sleep(3) end end })
-thread.yield({ ["Flag"] = "TuCoWa_Kill", ["Id"] = x })
-y = thread.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnLeft() end end })
-x = thread.Spawn(function () while true do write("!"); sleep(2) end end)
-x = thread.Spawn(function () while true do turtle.turnRight() end end)
-y = thread.Spawn(function () while true do turtle.turnLeft(); sleep(1) end end)
-x = thread.spawn(function () print(312); return 123 end)
-thread.kill(x)
-print(thread.Dig(x))
-a, y = thread.dig(x)
-thread.Pause(x)
-thread.Unpause(x)
-z = thread.Spawn(function () while true do if thread.Cycle()[1] == "string" then print("?") end end end)
-print(thread.whisper(x,{"string","cau!"}))
-z = thread.Spawn(function () while true do if thread.Cycle("ja?")[1] == "string" then print("?") end end end)
-print(thread.Ask(z,{"kuku","cau!"}))
-y = { thread.Ask(z,{"kuku","cau!"}) }
+x = paralel.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnRight(); sleep(3) end end })
+paralel.yield({ ["Flag"] = "TuCoWa_Kill", ["Id"] = x })
+y = paralel.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnLeft() end end })
+x = paralel.Spawn(function () while true do write("!"); sleep(2) end end)
+x = paralel.Spawn(function () while true do turtle.turnRight() end end)
+y = paralel.Spawn(function () while true do turtle.turnLeft(); sleep(1) end end)
+x = paralel.spawn(function () print(312); return 123 end)
+paralel.kill(x)
+print(paralel.Dig(x))
+a, y = paralel.dig(x)
+paralel.Pause(x)
+paralel.Unpause(x)
+z = paralel.Spawn(function () while true do if paralel.Cycle()[1] == "string" then print("?") end end end)
+print(paralel.whisper(x,{"string","cau!"}))
+z = paralel.Spawn(function () while true do if paralel.Cycle("ja?")[1] == "string" then print("?") end end end)
+print(paralel.Ask(z,{"kuku","cau!"}))
+y = { paralel.Ask(z,{"kuku","cau!"}) }
 
-a, y = thread.getThread(x)
+a, y = paralel.getThread(c)
 for n,v in pairs(a) do print(n,": ", v) end
-thread.setName(x, "test")
-thread.setName(y, "TurnLeft")
-
-b,c = thread.getThreads()
-for n,v in pairs(b) do print(n,": ", v.lastArgSet, v.name, v.filter) end
-
-
-x = thread.spawn(function () robot = require("robot"); while true do robot.turnRight(); coroutine.yield("") end end)
-x = thread.spawn(function () for i=1,10 do print(i); coroutine.yield("") end end)
-z = thread.spawn(function () for i=1,10 do print(i) end end)
+paralel.setName(x, "test")
+paralel.setName(y, "TurnLeft")
 
 
 
+x = paralel.spawn(function () robot = require("robot"); while true do robot.turnRight(); coroutine.yield("") end end)
+x = paralel.spawn(function () for i=1,10 do print(i, paralel.yield()) end end); paralel.setName(x, "test")
+y = paralel.spawn(function () for i=1,10 do os.sleep(1); print(string.char(i+97-1)) end end)
+z = paralel.spawn(function () for i=1,10 do os.sleep(2); print(i) end end)
 
+print(os.clock()*60)
 
+print("kuku!") -- normal
+print("kuku!)""") -- expect error
+_,a = paralel.spawn(function () for i=1,10 do print(i) end end) -- expect fast 1-10
+_,b = paralel.spawn(function () for i=1,10 do print(i); os.sleep(0.5) end end) -- expect non-yielding slow 1-10
+_,c = paralel.spawn(function () for i=1,10 do print(i); paralel.yield(0.5) end end) -- expect yielding slow 1-10
+_,d = paralel.spawn(function () for i=1,10 do print(string.char(96+i-1)); coroutine.yield(0.5) end end) -- expect the same as above
+aa, bb = paralel.getThreads()
+for n,v in pairs(bb) do print(n, v.lastArgSet, v.name, v.filter, v.sleep) end
+_,e = paralel.whisper(bb[2].uid, "cCc")
+
+paralel.yield(30); print("Fired!")
 
 
