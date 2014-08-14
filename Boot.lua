@@ -377,13 +377,13 @@ local function StartDownloaderPastebin( ... )
   local libNames = {
   "gui","rui","hud","logger","stats",
   "comm","utils","nav","jobs","resm",
-  "logic","init","paralel"
+  "logic","init","parallel"
   }
   local pastebinIds = {
   --[[["Nam"] = {
   "Gui.....","Rui.....","Hud.....","Logger..","Stats...",
   "Comm....","Utils...","Nav.....","Jobs....","Resm....",
-  "Logic...","Init....","paralel."},
+  "Logic...","Init....","parallel."},
   --]]
     ["Aku"] = {
   "EiNQu1tr","Vf4iEtwA","y9b6Vm0P","Yxhz7Gju","VeVb4816",
