@@ -18,48 +18,54 @@ sleep(2);sleep(2)
 sleep(3); print("kuku")
 for n,v in pairs(Init.clsTurtle) do print(n,": ", v) end
 
-x = paralel.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnRight(); sleep(3) end end })
-paralel.yield({ ["Flag"] = "TuCoWa_Kill", ["Id"] = x })
-y = paralel.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnLeft() end end })
-x = paralel.Spawn(function () while true do write("!"); sleep(2) end end)
-x = paralel.Spawn(function () while true do turtle.turnRight() end end)
-y = paralel.Spawn(function () while true do turtle.turnLeft(); sleep(1) end end)
-x = paralel.spawn(function () print(312); return 123 end)
-paralel.kill(x)
-print(paralel.Dig(x))
-a, y = paralel.dig(x)
-paralel.Pause(x)
-paralel.Unpause(x)
-z = paralel.Spawn(function () while true do if paralel.Cycle()[1] == "string" then print("?") end end end)
-print(paralel.whisper(x,{"string","cau!"}))
-z = paralel.Spawn(function () while true do if paralel.Cycle("ja?")[1] == "string" then print("?") end end end)
-print(paralel.Ask(z,{"kuku","cau!"}))
-y = { paralel.Ask(z,{"kuku","cau!"}) }
-
-a, y = paralel.getThread(c)
-for n,v in pairs(a) do print(n,": ", v) end
-paralel.setName(x, "test")
-paralel.setName(y, "TurnLeft")
 
 
+-- parallel loader script
+shell = require("shell")
+shell.execute("del parallel")
+shell.execute("pastebin get dS1NHyRt parallel")
+parallel = dofile("parallel")
+parallel.manager()
 
-x = paralel.spawn(function () robot = require("robot"); while true do robot.turnRight(); coroutine.yield("") end end)
-x = paralel.spawn(function () for i=1,10 do print(i, paralel.yield()) end end); paralel.setName(x, "test")
-y = paralel.spawn(function () for i=1,10 do os.sleep(1); print(string.char(i+97-1)) end end)
-z = paralel.spawn(function () for i=1,10 do os.sleep(2); print(i) end end)
-
-print(os.clock()*60)
-
-print("kuku!") -- normal
-print("kuku!)""") -- expect error
-_,a = paralel.spawn(function () for i=1,10 do print(i) end end) -- expect fast 1-10
-_,b = paralel.spawn(function () for i=1,10 do print(i); os.sleep(0.5) end end) -- expect non-yielding slow 1-10
-_,c = paralel.spawn(function () for i=1,10 do print(i); paralel.yield(0.5) end end) -- expect yielding slow 1-10
-_,d = paralel.spawn(function () for i=1,10 do print(string.char(96+i-1)); coroutine.yield(0.5) end end) -- expect the same as above
-aa, bb = paralel.getThreads()
-for n,v in pairs(bb) do print(n, v.lastArgSet, v.name, v.filter, v.sleep) end
-_,e = paralel.whisper(bb[2].uid, "cCc")
-
-paralel.yield(30); print("Fired!")
-
-
+-- parallel demonstration functions, copy/paste lines in console
+-- expect very bad user interface, broken lines, etc.
+print("kuku!") -- expect it working
+print("kuku!""") -- expect error at loading
+print(nill[index]) -- expect error at executing
+a, err = parallel.spawn(function () print("kuku!") end) -- expect it working
+b, err = parallel.spawn(function () print("kuku!""") end) -- expect error
+c, err = parallel.spawn(function () print(nill[index]) end) -- expect error
+d, err = parallel.spawn(function () for i=1,10 do print(i) end end) -- expect non-yielding fast 1-10 that discards input
+e, err = parallel.spawn(function () for i=1,10 do print(i); os.sleep(0.5) end end) -- expect non-yielding slow 1-10 that discards input
+f, err = parallel.spawn(function () event = require("event"); for i=1,10 do print(i); event.pull(0.5) end end) -- expect non-yielding, variable speed 1-10 that discards input
+g, err = parallel.spawn(function () for i=1,10 do print(i); parallel.yield(0.5) end end) -- expect yielding slow 1-10
+h, err = parallel.spawn(function () for i=1,10 do print(string.char(96+i-1)); coroutine.yield(0.5) end end) -- expect yielding slow a-i
+i, err = parallel.spawn(function () for i=1,10 do print(i); parallel.yield(0.5) end end); _,e = parallel.spawn(function () for i=1,10 do print(string.char(96+i-1)); coroutine.yield(0.5) end end) -- expect slow 1-10 and a-i at the same time
+j, err = parallel.spawn(function () computer = require("computer"); while true do computer.beep(); parallel.yield(3) end end) -- expect it to beep every 3 secs
+parallel.pause(j) -- expect not beeping
+parallel.unpause(j) -- expect beeping, notice that delay is not reset while paused
+parallel.pause(j,2) -- expect not beeping
+parallel.setAlarm(j,nil) -- expect to see nothing but delay has been reset
+parallel.unpause(j) -- expect not beeping again
+parallel.unpause(j, math.huge) -- expect beeping, notice that delay has been reset
+parallel.setAlarm(j,7+os.clock()*60) -- expect to notice that delay was increased, once.
+for k,v in pairs(parallel.getThread(j)) do print(k,v) end -- expect to see properties about beeping thread
+parallel.setName(j,"Beeper") -- expect to see nothing but name has been changed
+for k,v in pairs(parallel.getThread(j)) do print(k,v) end -- expect to see properties about beeping thread, notice the name
+parallel.kill(j) -- expect not beeping
+print(parallel.getThread(j)) -- expect error "No running thread found, try to dig"
+print(parallel.dig(j)) -- expect to see some values: true (function succeeded), and a table
+print(table.unpack(table.pack(parallel.dig(j))[2])) -- expect to see some values: false (thread errored or was killed), "killed" (error message), uid (of thread that killed it), number (time in seconds when killed)
+k, err = parallel.spawn(function () return 23,45,"Completed!" end) -- expect to see nothing
+print(parallel.dig(k)) -- expect to see some values: true (function succeeded), and a table
+print(table.unpack(table.pack(parallel.dig(k))[2])) -- expect to see some values: true (function succeeded), true (thread returned), then list of return values.
+l, err = parallel.spawn(function () computer = require("computer"); while true do if parallel.yield() == "beep!" then computer.beep() end end end) -- expect to see nothing
+for i=1,5 do parallel.whisper(l,"beep!") end -- expect to hear a beep 5 times
+parallel.kill(l) -- expect not beeping
+m, err = parallel.spawn(function () computer = require("computer"); while true do if parallel.yield() == "beep!" then computer.beep(); local uid = parallel.getThread().uid; parallel.setAnswer( uid, (parallel.getAnswer(uid) or 0) + 1) end end end) -- expect to see nothing
+for i=1,5 do parallel.whisper(m,"beep!") end -- expect to hear a beep 5 times
+print("Beeps in my thread lifetime:", parallel.getAnswer(m)) -- expect to see number of beeps
+for k,v in pairs(parallel.getThreads()) do print (k, v.name, v.uid) end -- expect to see a list of threads
+for k,v in pairs(parallel.getThreads()) do if v.name ~= "Default console" then parallel.kill(v.uid) end end -- expect to see nothing
+for k,v in pairs(parallel.getThreads()) do print (k, v.name, v.uid) end -- expect to see only one thread left
+parallel.exit() -- expect to exit back to OpenOS
