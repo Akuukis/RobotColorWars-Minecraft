@@ -1,8 +1,8 @@
 NAME
-  parallel.getAnswer
+  thread.getAnswer
   
 CALLS
-  parallel.getAnswer(string: threadUid[, undefined: msg])
+  thread.getAnswer(string: threadUid[, undefined: msg])
   
 RETURNS
   undefined list: answer
@@ -11,8 +11,8 @@ RETURNS
   
 DESCRIPTION
   Gets the answer from a thread, optionally passing a message as parameter.
-  The same as parallel.ask
+  The same as thread.ask
   
 EXAMPLES
-  parallel.getAnswer(threadUid)
-  parallel.getAnswer(threadUid,3)
+  thread.getAnswer(threadUid)
+  thread.getAnswer(threadUid,3)

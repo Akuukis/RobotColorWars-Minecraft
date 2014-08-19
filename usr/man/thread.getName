@@ -1,8 +1,8 @@
 NAME
-  parallel.getName
+  thread.getName
   
 CALLS
-  parallel.getName(string: threadUid)
+  thread.getName(string: threadUid)
   
 RETURNS
   string: name 
@@ -13,5 +13,5 @@ DESCRIPTION
   Gets the name for a thread. Use it for your own needs to tag, filter or improve user-friendlyness.
   
 EXAMPLES
-  parallel.getName(threadUid)
-  parallel.getName(parallel.getThread().uid)
+  thread.getName(threadUid)
+  thread.getName(thread.getThread().uid)

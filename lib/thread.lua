@@ -1,9 +1,9 @@
 -- Credits to RoCoWa @ github.com/Akuukis/RobotColorWars
 
-local parallel = {}
+local thread = {}
 
 -- Sanitization happens here
-function parallel.spawn(fn, ...)
+function thread.spawn(fn, ...)
   local err
   if type(fn) == "function" then 
     fn = fn
@@ -17,149 +17,149 @@ function parallel.spawn(fn, ...)
   local co = coroutine.create(fn)
   if not co then return false, "Failed to create thread" end
   return coroutine.yield({ 
-    ["flag"] = "parallel_spawn",
+    ["flag"] = "thread_spawn",
     ["co"] = co,
     ["args"] = { ... },
     ["name"] = "anonymous",
   })
 end
-function parallel.yield( sleep_filter, filter_sleep )
+function thread.yield( sleep_filter, filter_sleep )
   local sleep, filter
   if type(sleep_filter) == "number" then sleep = sleep_filter; filter = filter_sleep end
   if type(sleep_filter) == "string" then sleep = filter_sleep; filter = sleep_filter end
   
   return coroutine.yield({
-    ["flag"] = "parallel_yield",
+    ["flag"] = "thread_yield",
     ["filter"] = filter,
     ["sleep"] = sleep
   })
 end
-function parallel.pause(uid, amount)
+function thread.pause(uid, amount)
   local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   if type(amount) ~= "number" then amount = 1 end
   return coroutine.yield({
-    ["flag"] = "parallel_pause",
+    ["flag"] = "thread_pause",
     ["uid"] = uid,
     ["amount"] = amount,
   })  
 end
-function parallel.unpause(uid, amount)
+function thread.unpause(uid, amount)
   local amount = -(amount or 1)
-  return parallel.pause( uid, amount )
+  return thread.pause( uid, amount )
 end
-function parallel.kill(uid)
+function thread.kill(uid)
   local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["flag"] = "parallel_kill",
+    ["flag"] = "thread_kill",
     ["uid"] = uid,
   })
 end
-function parallel.dig(uid)
+function thread.dig(uid)
   local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["flag"] = "parallel_dig",
+    ["flag"] = "thread_dig",
     ["uid"] = uid,
   })
 end
-function parallel.setName(uid, name)
+function thread.setName(uid, name)
   local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   local ok, err = pcall(checkArg, 1, name, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["flag"] = "parallel_setName",
+    ["flag"] = "thread_setName",
     ["uid"] = uid,
     ["name"] = name,
   })
 end
-function parallel.getName(uid)
+function thread.getName(uid)
   local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["flag"] = "parallel_getName",
+    ["flag"] = "thread_getName",
     ["uid"] = uid,
   })
 end
-function parallel.setAlarm( uid, alarm )
+function thread.setAlarm( uid, alarm )
   local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   local ok, err = pcall(checkArg, 1, alarm, "number", "nil"); if not ok then return ok, err end
   return coroutine.yield({
-    ["flag"] = "parallel_setAlarm",
+    ["flag"] = "thread_setAlarm",
     ["uid"] = uid,
     ["alarm"] = alarm,
   })
 end
-function parallel.getAlarm( uid )
+function thread.getAlarm( uid )
   local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["flag"] = "parallel_getAlarm",
+    ["flag"] = "thread_getAlarm",
     ["uid"] = uid,
   })
 end
-function parallel.setFilter( uid, filter )
+function thread.setFilter( uid, filter )
   local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   local ok, err = pcall(checkArg, 1, filter, "string", "nil"); if not ok then return ok, err end
   return coroutine.yield({
-    ["flag"] = "parallel_setFilter",
+    ["flag"] = "thread_setFilter",
     ["uid"] = uid,
     ["filter"] = filter,
   })
 end
-function parallel.getFilter( uid )
+function thread.getFilter( uid )
   local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["flag"] = "parallel_getFilter",
+    ["flag"] = "thread_getFilter",
     ["uid"] = uid,
   })
 end
-function parallel.setAnswer(uid, answer)
+function thread.setAnswer(uid, answer)
   if answer ~= nil then
     local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   else
     answer = uid
-    uid = parallel.getThread()
+    uid = thread.getThread()
   end  
   return coroutine.yield({
-    ["flag"] = "parallel_setAnswer",
+    ["flag"] = "thread_setAnswer",
     ["uid"] = uid,
     ["answer"] = answer,
   })  
 end
-function parallel.getAnswer(uid, msg)
+function thread.getAnswer(uid, msg)
   local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["flag"] = "parallel_getAnswer",
+    ["flag"] = "thread_getAnswer",
     ["uid"] = uid,
     ["msg"] = msg,
   })  
 end
-function parallel.ask(uid, msg)
-  return parallel.getAnswer(uid, msg)
+function thread.ask(uid, msg)
+  return thread.getAnswer(uid, msg)
 end
-function parallel.whisper(uid, ...)
+function thread.whisper(uid, ...)
   local ok, err = pcall(checkArg, 1, uid, "string"); if not ok then return ok, err end
   return coroutine.yield({
-    ["flag"] = "parallel_whisper",
+    ["flag"] = "thread_whisper",
     ["uid"] = uid,
     ["args"] = { ... },
   })  
 end
-function parallel.getThreads()
+function thread.getThreads()
   return coroutine.yield({
-    ["flag"] = "parallel_getThreads"
+    ["flag"] = "thread_getThreads"
   })
 end
-function parallel.getThread( uid )
+function thread.getThread( uid )
   return coroutine.yield({
-    ["flag"] = "parallel_getThread",
+    ["flag"] = "thread_getThread",
     ["uid"] = uid,
   })
 end
-function parallel.exit()
+function thread.exit()
   return coroutine.yield({
-    ["flag"] = "parallel_exit",
+    ["flag"] = "thread_exit",
   })
 end
 
 -- Magic happens here
-function parallel.manager( firstThread )
+function thread.manager( firstThread )
   local computer = require("computer")
   -- You should provide better versions of these functions.
   local countUid = 0
@@ -276,19 +276,19 @@ function parallel.manager( firstThread )
     }
   end
   
-  local event = {"parallel_dummy"}
+  local event = {"thread_dummy"}
   local focus, lastThread = 1, 1
   local threads = { [1] = firstThread } -- TODO: Sanitize
   local graveyard = {}
   local graveyardTime = {}
 
   local operations = {
-    parallel_yield = function (data)
+    thread_yield = function (data)
       threads[focus].filter = data.filter or false
       if data.sleep then threads[focus].alarm = data.sleep + utils.getTime() end
       return nil -- Cycle to next thread
     end,
-    parallel_spawn = function (data)
+    thread_spawn = function (data)
       lastThread = lastThread + 1
       threads[ lastThread ] = {
         ["name"] = data.name or "anonymous",
@@ -302,7 +302,7 @@ function parallel.manager( firstThread )
       if data.args then threads[ lastThread ].lastArgSet = 1 else threads[ lastThread ].lastArgSet = 0 end
       return threads[ lastThread ].uid
     end,
-    parallel_whisper = function (data)
+    thread_whisper = function (data)
       for _,thread in pairs(threads) do
         if thread.uid == data.uid then
           if 
@@ -322,7 +322,7 @@ function parallel.manager( firstThread )
       end
       return false, "No running thread found, try to dig" 
     end,
-    parallel_pause = function (data)
+    thread_pause = function (data)
       for _,thread in pairs(threads) do
         if thread.uid == data.uid then
           if thread.pause == 0 and data.amount > 0 then
@@ -340,7 +340,7 @@ function parallel.manager( firstThread )
       end
       return false, "No running thread found, try to dig" 
     end,
-    parallel_setAnswer = function (data)
+    thread_setAnswer = function (data)
       for i=1,lastThread do
         if threads[i] and threads[i].uid == data.uid then 
           threads[i].answer = data.answer
@@ -349,7 +349,7 @@ function parallel.manager( firstThread )
       end
       return false, "No running thread found, try to dig" 
     end,     
-    parallel_getAnswer = function (data)
+    thread_getAnswer = function (data)
       for _,thread in pairs(threads) do
         if thread.uid == data.uid and thread.answer then
           if type(thread.answer) == "function" then
@@ -361,7 +361,7 @@ function parallel.manager( firstThread )
       end
       return false, "No running thread found, try to dig" 
     end,
-    parallel_kill = function (data)
+    thread_kill = function (data)
       for i=1,lastThread do
         if threads[i] and threads[i].uid == data.uid then 
           graveyard[ threads[i].uid ] = { false, "killed", threads[focus].uid, utils.getTime() }
@@ -372,13 +372,13 @@ function parallel.manager( firstThread )
       end
       return false, "No running thread found, try to dig" 
     end,
-    parallel_dig = function (data)
+    thread_dig = function (data)
       if graveyard[data.uid] then
         return true, graveyard[data.uid]
       end
       return false, "Not found in Graveyard, check uid or try again later"
     end,
-    parallel_setAlarm = function (data)
+    thread_setAlarm = function (data)
       for i=1,lastThread do
         if threads[i] and threads[i].uid == data.uid then 
           threads[i].alarm = data.alarm
@@ -387,7 +387,7 @@ function parallel.manager( firstThread )
       end
       return false, "No running thread found, try to dig" 
     end, 
-    parallel_getAlarm = function (data)
+    thread_getAlarm = function (data)
       for i=1,lastThread do
         if threads[i] and threads[i].uid == data.uid then
           return threads[i].alarm, threads[i].alarm and "No alarm"
@@ -395,7 +395,7 @@ function parallel.manager( firstThread )
       end
       return false, "No running thread found, try to dig" 
     end,
-    parallel_setFilter = function (data)
+    thread_setFilter = function (data)
       for i=1,lastThread do
         if threads[i] and threads[i].uid == data.uid then 
           threads[i].filter = data.filter
@@ -404,7 +404,7 @@ function parallel.manager( firstThread )
       end
       return false, "No running thread found, try to dig" 
     end, 
-    parallel_getFilter = function (data)
+    thread_getFilter = function (data)
       for i=1,lastThread do
         if threads[i] and threads[i].uid == data.uid then
           return threads[i].filter, threads[i].filter and "No filter"
@@ -412,7 +412,7 @@ function parallel.manager( firstThread )
       end
       return false, "No running thread found, try to dig" 
     end,
-    parallel_setName = function (data)
+    thread_setName = function (data)
       if data == nil then 
         threads[focus] = data.name
         return true
@@ -425,7 +425,7 @@ function parallel.manager( firstThread )
       end
       return false, "No running thread found, try to dig" 
     end,  
-    parallel_getName = function (data)
+    thread_getName = function (data)
       for i=1,lastThread do
         if threads[i] and threads[i].uid == data.uid then
           return threads[i].name
@@ -433,7 +433,7 @@ function parallel.manager( firstThread )
       end
       return false, "No running thread found, try to dig" 
     end,
-    parallel_getThread = function (data)
+    thread_getThread = function (data)
       if data.uid == nil then
         local result = {}
         for key,value in pairs(threads[focus]) do
@@ -453,7 +453,7 @@ function parallel.manager( firstThread )
         return false, "No running thread found, try to dig" 
       end
     end,
-    parallel_getThreads = function ()
+    thread_getThreads = function ()
       local result = {}
       local count = 0
       for _,thread in pairs(threads) do
@@ -465,7 +465,7 @@ function parallel.manager( firstThread )
       end
       return result
     end,
-    parallel_exit = function ()
+    thread_exit = function ()
       lastThread = -1
       return nil
     end,
@@ -554,5 +554,5 @@ function parallel.manager( firstThread )
   logger.info("Out of threads\n")
   return false, "Out of threads"
 end
-return parallel
+return thread
 

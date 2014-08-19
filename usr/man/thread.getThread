@@ -1,8 +1,8 @@
 NAME
-  parallel.getThread
+  thread.getThread
   
 CALLS
-  parallel.getThread([threadUid])
+  thread.getThread([threadUid])
   
 RETURNS
   table: properties
@@ -11,8 +11,8 @@ RETURNS
   
 DESCRIPTION
   Gets a table with properties of target thread or by default the thread calling that function.
-  Use "man parallel.properties" to see the list of properties.
+  Use "man thread.properties" to see the list of properties.
   
 EXAMPLES
-  parallel.getThread()
-  parallel.getThread(threadUid)
+  thread.getThread()
+  thread.getThread(threadUid)

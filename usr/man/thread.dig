@@ -1,8 +1,8 @@
 NAME
-  parallel.dig
+  thread.dig
   
 CALLS
-  parallel.dig(string: threadUid)
+  thread.dig(string: threadUid)
 
 RETURNS
   boolean: success, (table: values OR string: errMsg)
@@ -12,4 +12,4 @@ DESCRIPTION
   It gets those return values from graveyard.
 
 EXAMPLES
-  parallel.dig(threadUid)
+  thread.dig(threadUid)

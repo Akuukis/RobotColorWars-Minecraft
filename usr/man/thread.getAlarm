@@ -1,8 +1,8 @@
 NAME
-  parallel.getAlarm
+  thread.getAlarm
   
 CALLS
-  parallel.getAlarm(string: threadUid)
+  thread.getAlarm(string: threadUid)
   
 RETURNS
   string: alarm
@@ -15,4 +15,4 @@ DESCRIPTION
   Gets the alarm for a thread.
   
 EXAMPLES
-  parallel.getFilter(threadUid)
+  thread.getFilter(threadUid)

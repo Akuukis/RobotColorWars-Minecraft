@@ -1,8 +1,8 @@
 NAME
-  parallel.getFilter
+  thread.getFilter
   
 CALLS
-  parallel.getFilter(string: threadUid)
+  thread.getFilter(string: threadUid)
   
 RETURNS
   string: filter
@@ -15,4 +15,4 @@ DESCRIPTION
   Gets the filter for a thread.
   
 EXAMPLES
-  parallel.getFilter(threadUid)
+  thread.getFilter(threadUid)

@@ -1,9 +1,9 @@
 NAME
-  parallel.unpause
+  thread.unpause
   
 CALLS
-  parallel.unpause(string: uid)
-  parallel.unpause(string: uid, number: amount)
+  thread.unpause(string: uid)
+  thread.unpause(string: uid, number: amount)
   
 RETURNS
   boolean: success[, string: errMsg]
@@ -13,6 +13,6 @@ DESCRIPTION
   coroutine.unpause(thread) has the same effect as coroutine.pause(thread, -1). 
   
 EXAMPLES
-  parallel.unpause(threadUid)
-  parallel.unpause(threadUid, 3)
-  parallel.unpause(threadUid, math.huge)
+  thread.unpause(threadUid)
+  thread.unpause(threadUid, 3)
+  thread.unpause(threadUid, math.huge)

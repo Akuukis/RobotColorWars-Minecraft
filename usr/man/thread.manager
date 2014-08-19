@@ -1,0 +1,17 @@
+NAME
+  thread.manager
+  
+CALLS
+  thread.manager([function: fn])
+
+RETURNS
+  boolean: success, (undefined: msg OR string: errMsg)
+  
+DESCRIPTION
+  It initiates parallel thread environment with one function fn. If fn is absent, then a default minimalistic console is initiated. There are also few other functions for what you can provide alternatives as upvalues, see the code inline.
+  os.sleep and event.pull works as a global pause that does not yield, use thread.yield or coroutine.yield with arguments instead to pause only the given thread.
+
+EXAMPLES
+  thread.manager()
+  thread.manager(myFirstFunction)
+  

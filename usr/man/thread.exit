@@ -1,0 +1,16 @@
+NAME
+  thread.exit
+  
+CALLS
+  thread.exit([msg])
+  
+RETURNS
+  never returns
+  
+DESCRIPTION
+  Kills all threads and returns optional msg where thread.manager() was called.
+  If there would be no threads left, the thread.manager() would return false, "Out of threads".
+  
+EXAMPLES
+  thread.exit()
+  thread.exit(true)

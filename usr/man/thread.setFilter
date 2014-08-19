@@ -1,8 +1,8 @@
 NAME
-  parallel.setFilter
+  thread.setFilter
   
 CALLS
-  parallel.setFilter(string: threadUid, string: filter)
+  thread.setFilter(string: threadUid, string: filter)
   
 RETURNS
   boolean: success[, string: errMsg]
@@ -11,5 +11,5 @@ DESCRIPTION
   Sets the filter for a thread. Thread will gain control only if there will be appropriate signal.
   
 EXAMPLES
-  parallel.setFilter(threadUid, "key_down")
-  parallel.setFilter(parallel.getThread().uid, "key_down")
+  thread.setFilter(threadUid, "key_down")
+  thread.setFilter(thread.getThread().uid, "key_down")
