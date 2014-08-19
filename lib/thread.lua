@@ -208,7 +208,7 @@ function thread.manager( firstThread )
                 component.gpu.copy(1,1,resX,resY,0,-1)
                 component.gpu.fill(1,resY,resX,1," ")
               end
-              local output = prefix..string.sub(command,-(resX-3))
+              local output = prefix..string.sub(command or "",-(resX-3))
               for i=1,resX-#output do output = output.." " end
               component.gpu.set(1,resY,output)
               

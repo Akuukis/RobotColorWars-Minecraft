@@ -377,13 +377,13 @@ local function StartDownloaderPastebin( ... )
   local libNames = {
   "gui","rui","hud","logger","stats",
   "comm","utils","nav","jobs","resm",
-  "logic","init","parallel"
+  "logic","init","thread"
   }
   local pastebinIds = {
   --[[["Nam"] = {
   "Gui.....","Rui.....","Hud.....","Logger..","Stats...",
   "Comm....","Utils...","Nav.....","Jobs....","Resm....",
-  "Logic...","Init....","parallel."},
+  "Logic...","Init....","thread.."},
   --]]
     ["Aku"] = {
   "EiNQu1tr","Vf4iEtwA","y9b6Vm0P","Yxhz7Gju","VeVb4816",
@@ -520,6 +520,6 @@ print("Initialized Main!")
 start(...)
 --
 
-paralel.manager()
+thread.manager()
 
 
