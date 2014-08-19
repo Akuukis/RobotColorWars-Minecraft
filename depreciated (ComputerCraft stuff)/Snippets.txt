@@ -1,0 +1,42 @@
+pastebin run m1Tnt0wv Start
+
+for i=1,4 do Jobs.MineH(8);	Nav.TurnLeft(); Nav.Step("Normal"); Nav.TurnLeft() end
+for i=1,list.getInventorySize() do list.pushItem("west",i) end
+for i=1,16 do list.pullItem("west",i) end
+Jobs.MineH(48,12,true)
+
+constDirNames = {"north","east","south","west","up","down"}; Slot = 2; Chest = peripheral.wrap("front"); for i = 1,6 do print(Chest.pullItem(constDirNames[i],Slot,64,1)) end
+
+Chest = peripheral.wrap("front"); for i = 1,Chest.getInventorySize() do if (Chest.getStackInSlot(i) or 0) == 0 then ChestSlot = i end end; print(ChestSlot)
+
+print(Chest.pushItem("east",1,64,1))
+print("kuku")
+Nav.Go({1,1,2},{1,-1,1},{1,2,1})
+Nav.GoNextTo({3,0,2},"Careful")
+sleep(2);sleep(2)
+
+sleep(3); print("kuku")
+for n,v in pairs(Init.clsTurtle) do print(n,": ", v) end
+
+x = coroutine.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnRight(); sleep(3) end end })
+coroutine.yield({ ["Flag"] = "TuCoWa_Kill", ["Id"] = x })
+y = coroutine.yield({ ["Flag"] = "TuCoWa_Call", ["Function"] = function () while true do turtle.turnLeft() end end })
+x = coroutine.Spawn(function () while true do write("!"); sleep(2) end end)
+x = coroutine.Spawn(function () while true do turtle.turnRight() end end)
+y = coroutine.Spawn(function () while true do turtle.turnLeft(); sleep(1) end end)
+x = coroutine.Spawn(function () return 312 end)
+coroutine.Kill(x)
+print(coroutine.Dig(x))
+y = coroutine.Dig(x)
+for n,v in pairs(y) do print(n,": ", v) end
+coroutine.Pause(x)
+coroutine.Unpause(x)
+z = coroutine.Spawn(function () while true do if coroutine.Cycle()[1] == "string" then print("?") end end end)
+print(coroutine.Whisper(z,{"string","cau!"}))
+z = coroutine.Spawn(function () while true do if coroutine.Cycle("ja?")[1] == "string" then print("?") end end end)
+print(coroutine.Ask(z,{"kuku","cau!"}))
+y = { coroutine.Ask(z,{"kuku","cau!"}) }
+
+x, err = coroutine.getThread(y)
+coroutine.setName(x.Id, "CommPrompt")
+coroutine.setName(y, "TurnLeft")

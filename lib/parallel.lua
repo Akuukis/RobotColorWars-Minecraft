@@ -1,3 +1,5 @@
+-- Credits to RoCoWa @ github.com/Akuukis/RobotColorWars
+
 local parallel = {}
 
 -- Sanitization happens here
