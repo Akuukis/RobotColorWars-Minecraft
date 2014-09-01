@@ -1,4 +1,4 @@
---[[------------ Descriptions of function calls -------------------------------
+--[[ Descriptions of function calls 
 	Go( [ { x, z, y [,f] } ], [isRelative], [,style]).
 		EXAMPLE: Lets say we are at coordinates X=2, Z=-3, Y=4 and if we want to go to X=0,Z=0,Y=0 then all the following will do.
 			Nav.Go()
@@ -45,8 +45,9 @@
 			Default: table {x, z, y, f}, where XZY is absolute coordinates and f is facing direction (0 to 3)
 			if switchXZYF: num returnXZYF, a numeric value depending on input string
 --]]
-
 local robot = require("robot")
+local computer = require("computer")
+local component = require("component") -- TODO remove
 local clsNav = {}
 clsNav.title = "Navigation Library"
 clsNav.shortTitle = "nav"
@@ -62,39 +63,148 @@ function clsNav:new(oldObject)
     object = oldObject
   else
     object = {}
+    
   end
+  
+  
   setmetatable(object, self)
   self.__index = self
   return object
 end
-
 local logger = logger or false
-if not logger then 
-  logger = {
-    fatal = function (...) io.write(string.format(...)) end,
-    warning = function (...) io.write(string.format(...)) end,
-    info = function (...) io.write(string.format(...)) end,
-    spam = function (...) io.write(string.format(...)) end,
-  }
+if not logger then logger = {} end
+if not logger.fatal then 
+  logger.fatal = function (...) io.write(string.format(...)) end
 end
-
----------------- Library wide variables ---------------------------------------
-
---[[ 
-# MC logic
-Coords... North: z--, East: x++, South: z++, West: x--, Up: y++, Down: y--
-Coords... X points East, Z points South, Y points Up
-Facing... 0: South, 1: West, 2: North, 3: East
-Facing... Starts at South, goes clockwise
-# Nav logic
-Coords... North: x++, East: y++, South: x--, West: y--, Up: z++, Down: z--
-Coords... X points North, Y points East, Z points Up
-Facing... 0: North, 1: East, 2: South, 4: West
-Facing... Starts at North, goes clockwise
-
-use getNavFromMC() or getMCfromNav() to switch if needed, returns table
---]]
-
+if not logger.warning then 
+    logger.warning = function (...) io.write(string.format(...)) end
+end
+if not logger.info then 
+    logger.info = function (...) io.write(string.format(...)) end
+end
+if not logger.spam then 
+    local fs = require("filesystem")
+    fs.makeDirectory("logs")
+    logger.spam = function (...)
+      local file = fs.open("logs/test.log","a")
+      file.write(string.format(...))
+      file.close()
+      io.write(string.format(...)) 
+    end
+end
+local utils = utils or false
+if not utils then utils = {} end
+if not utils.deepCopy then 
+  function utils.deepCopy(t)
+    -- Credits to MihailJP @ https://gist.github.com/MihailJP/3931841
+    if type(t) ~= "table" then return t end
+    --local meta = getmetatable(t)
+    local target = {}
+    for k, v in pairs(t) do
+      if type(v) == "table" then
+        target[k] = utils.deepCopy(v)
+      else
+        target[k] = v
+      end
+    end
+    --setmetatable(target, meta)
+    return target
+  end
+end
+if not utils.deepMerge then 
+  function utils.deepMerge(t1, t2) -- merges t1 over t2
+    if type(t1) ~= "table" then return t1 end
+    --local meta1 = getmetatable(t1)
+    local target = utils.deepCopy(t2)
+    for k, v in pairs(t1) do
+        if (type(v) == "table") and (type(target[k] or false) == "table") then
+            utils.deepMerge(target[k], t1[k])
+        else
+            target[k] = v
+        end
+    end
+    --setmetatable(target, meta1)
+    return target
+  end
+end
+if not utils.freeMemory then 
+  function utils.freeMemory()
+    local result = 0
+    for i = 1, 10 do
+      result = math.max(result, computer.freeMemory())
+      os.sleep(0)
+    end
+    return result
+  end
+end
+---------------- Local variables ----------------------------------------------
+local mapGrid = {
+  {"A","B","C","D","E",},
+  {"F","G","H","I","J",},
+  {"K","L","M","N","O",},
+  {"P","Q","R","S","T",},
+  {"U","V","W","X","Y",},
+}
+local mapMaxDepth = 1
+---------------- Local functions ----------------------------------------------
+local function checkOptions(unknowns, ...)
+	local wishlist = {...}
+	if type(unknowns) ~= "table" then unknowns = {unknowns} end 
+  for _,wish in pairs(wishlist) do 
+    if type(wish) == "string" then 
+      for _,unknown in pairs(unknowns) do
+        if type(unknown) == "string" and wish == unknown then return unknown end
+      end
+    end
+  end
+  return false
+end
+local function checkPos(unknown)
+  if type(unknown) ~= "table" then return false end
+  if
+    type(unknown.x) == "number"
+    and type(unknown.y) == "number"
+    and type(unknown.z) == "number"
+  then
+    return {
+      x = unknown.x,
+      y = unknown.y,
+      z = unknown.z,
+      f = (type(unknown.f) == "number" and unknown.f) or nil,
+      weight = (type(unknown.weight) == "number" and unknown.f) or nil,
+    }
+  elseif 
+    type(unknown[1]) == "number"
+    and type(unknown[2]) == "number"
+    and type(unknown[3]) == "number"
+  then
+    return {
+      x = unknown[1],
+      y = unknown[2],
+      z = unknown[3],
+      f = (type(unknown[4]) == "number" and unknown[4]) or nil,
+      weight = (type(unknown[5]) == "number" and unknown[5]) or nil,
+    }
+  end
+  return false
+end
+local function checkPositions(unknown)
+  if type(unknown) ~= "table" then return false end
+  local positions = {}
+	if checkPos(unknown) then positions[#positions+1] = checkPos(unknown) end
+  for k,v in pairs(unknown) do
+    local pos = checkPos(v)
+    if pos then
+      positions[#positions+1] = pos
+    end
+  end
+  if #positions > 0 then
+    return positions
+  else
+    return false
+  end
+end
+---------------- Object variables ---------------------------------------------
 clsNav.pos = {
 	x = 0, -- North
 	z = 0, -- East
@@ -102,73 +212,56 @@ clsNav.pos = {
 	f = 0, -- Facing direction, modulus of 4 // 0,1,2,3 = North, East, South, West
 }
 clsNav.map = { -- id={nil=unexplored,false=air,0=RandomBlock,####=Block}, updated=server's time, tag={nil,true if tagged by special events}, Owner="".
-  initialized = os.time(),
-	updated = os.time(),
+  _initialized = os.time(),
+	_updated = os.time(),
+  _maxDepth = 1,
 }
-
 ---------------- Methods ------------------------------------------------------
-
-function clsNav:checkPos(unknown)
-  if type(unknown) ~= "table" then return false end
-  if
-    type(unknown.x) == "number"
-    and type(unknown.y) == "number"
-    and type(unknown.z) == "number"
-  then
-    return {x = unknown.x, y = unknown.y, z = unknown.z, f = unknown.f or unknown[4] or nil}
-  elseif 
-    type(unknown[1]) == "number"
-    and type(unknown[2]) == "number"
-    and type(unknown[3]) == "number"
-  then
-    return {x = unknown[1], y = unknown[2], z = unknown[3], f = unknown[4] or unknown.f or nil}
-  end
-  return false
-end
-function clsNav:checkPositions(unknown)
-  if type(unknown) ~= "table" then return false end
-	if self:checkPos(unknown) then unknown[#unknown+1] = self:checkPos(unknown) end
-  local index = 1
-  local positions = {}
-  for k,v in pairs(unknown) do
-    local pos = self:checkPos(v)
-    if pos then
-      positions[index] = pos
-      index = index + 1
-    end
-  end
-  if index > 1 then
-    return positions
-  else
-    return false
-  end
-end
 function clsNav:getVersion()
 	return self.version
 	end
-
--- Technical and independent functions
-function clsNav:putMap(pos, name, value) -- TODO: restructure to chunk tables
-  pos = self:getPos(pos)
+function clsNav:getMapFromPos(pos)
+  pos = checkPos(pos)
   if not pos then return false end
-  
-	self.map.updated = os.time()
-	if self.map[pos.x] == nil then 
-    self.map[pos.x] = {}
+  local chunkName = ""
+  local chunkX = (pos.x-pos.x%16)/16
+  local chunkY = -(pos.y-pos.y%16)/16 -- invert so that (-1,-1) is at bottom left, NOT up left
+  local power = 1
+  while chunkX > 0 or chunkY > 0 or self.map._maxDepth > #chunkName do
+    local gridX = (chunkX+2)%5-2
+    local gridY = (chunkY+2)%5-2
+    chunkX = chunkX+2 - (chunkX+2)%5
+    chunkY = chunkY+2 - (chunkY+2)%5
+    chunkName = mapGrid[gridY+3][gridX+3]..chunkName
   end
-	if self.map[pos.x][pos.y] == nil then
-    self.map[pos.x][pos.y] = {}
-  end
-	if self.map[pos.x][pos.y][pos.z] == nil then
-    self.map[pos.x][pos.y][pos.z] = {}
-  end
-	self.map[pos.x][pos.y][pos.z].updated = self.map.updated
-	self.map[pos.x][pos.y][pos.z][name] = value
-	return true
+  self.map._maxDepth = math.max(self.map._maxDepth, #chunkName)
+  local posNo = 10000*pos.z + 100*pos.x + pos.y
+  return chunkName, posNo
 end
-function clsNav:updatePos(pos_or_face)
-  logger.spam("Nav.UpdateCoord(%s)\n",pos_or_face)
-  pos = self:checkPos(pos_or_face) 
+ 
+-- Technical and independent functions
+function clsNav:putMap(pos, value)
+  if type(value) ~= "table" then return false end -- to delete do putMap(pos,{})
+  local chunkName, posNo = self:getMapFromPos(pos)
+  if (not chunkName) or (not posNo) then return false end
+  
+  if not self.map[chunkName] then
+    -- check for filesystem files, otherwise...    
+    self.map[chunkName] = {}
+  end
+    
+  if not self.map[chunkName][posNo] then self.map[chunkName][posNo] = {} end
+  
+  self.map._updated = os.time()
+  self.map[chunkName]._accessed = os.time()
+  self.map[chunkName]._updated = os.time()
+  value._updated = os.time()
+  self.map[chunkName][posNo] = utils.deepMerge(value, self.map[chunkName][posNo])
+  return true
+end
+function clsNav:setPos(pos_or_face)
+  --logger.spam("Nav:setPos(%s)\n",pos_or_face)
+  pos = checkPos(pos_or_face) 
   if pos then
     self.pos = pos
   else
@@ -176,10 +269,10 @@ function clsNav:updatePos(pos_or_face)
   end
 end
 function clsNav:comparePos(poslist1,poslist2,isFaced) -- input either pos or tables of pos
-  poslist1 = self:checkPositions(poslist1)
-  if not next(poslist1) then return false, 123, "comparePos: No legal pos in argument #1" end
-  poslist2 = self:checkPositions(poslist2)
-  if not next(poslist2) then return false, 123, "comparePos: No legal pos in argument #2" end
+  poslist1 = checkPositions(poslist1)
+  if type(poslist1) ~= "table" then return false, 123, "comparePos: No legal pos in argument #1" end
+  poslist2 = checkPositions(poslist2)
+  if type(poslist2) ~= "table" then return false, 123, "comparePos: No legal pos in argument #2" end
   
 	for i,pos1 in pairs(poslist1) do
 		--logger.spam("Pos1(%s): %s,%s,%s,%s\n", i, Pos1.x, Pos1.z, Pos1.y, Pos1.f)
@@ -187,8 +280,8 @@ function clsNav:comparePos(poslist1,poslist2,isFaced) -- input either pos or tab
       --logger.spam("  Pos2(%s): %s,%s,%s,%s\n", j, Pos2.x, Pos2.z, Pos2.y, Pos2.f)
       if 
         pos1.x == pos2.x
-        and pos1.z == pos2.z
         and pos1.y == pos2.y
+        and pos1.z == pos2.z
       then 
         if
           (isFaced
@@ -206,324 +299,397 @@ function clsNav:comparePos(poslist1,poslist2,isFaced) -- input either pos or tab
   
 	return false
 end
-function clsNav:getPos(pos, face) -- Input Position (table), FacingDirection (num) in any order
-  if type(face) == "nil" and type(pos) == "number" then
-    face = pos%6
+function clsNav:getPos(pos, dir) -- Input Position (table), FacingDirection (num) in any order
+  if type(dir) == "nil" and type(pos) == "number" then
+    dir = pos%6
     pos = nil
-	elseif type(face) == "number" then
-    face = face%6
+	elseif type(dir) == "number" then
+    dir = dir%6
   else 
-    face = nil 
+    dir = nil 
   end
-  pos = self:checkPos(pos or self.pos) 
+  pos = checkPos(pos or self.pos) 
   if not pos then return false, "Failed to lookup pos" end
   	
-	if face == nil then return {["x"] = pos.x, ["y"] = pos.y, ["z"] = pos.z, ["f"] = pos.f} 
-	elseif face == 0 then return {["x"] = pos.x+1, ["y"] = pos.y, ["z"] = pos.z, ["f"] = face}
-	elseif face == 1 then return {["x"] = pos.x, ["y"] = pos.y+1, ["z"] = pos.z, ["f"] = face}
-	elseif face == 2 then return {["x"] = pos.x-1, ["y"] = pos.y, ["z"] = pos.z, ["f"] = face}
-	elseif face == 3 then return {["x"] = pos.x, ["y"] = pos.y-1, ["z"] = pos.z, ["f"] = face}
-	elseif face == 4 then return {["x"] = pos.x, ["y"] = pos.y, ["z"] = pos.z+1, ["f"] = pos.f}
-	elseif face == 5 then return {["x"] = pos.x, ["y"] = pos.y, ["z"] = pos.z-1, ["f"] = pos.f}
+	if dir == nil then return pos
+	elseif dir == 0 then return {["x"] = pos.x+1, ["y"] = pos.y, ["z"] = pos.z, ["f"] = dir}
+	elseif dir == 1 then return {["x"] = pos.x, ["y"] = pos.y+1, ["z"] = pos.z, ["f"] = dir}
+	elseif dir == 2 then return {["x"] = pos.x-1, ["y"] = pos.y, ["z"] = pos.z, ["f"] = dir}
+	elseif dir == 3 then return {["x"] = pos.x, ["y"] = pos.y-1, ["z"] = pos.z, ["f"] = dir}
+	elseif dir == 4 then return {["x"] = pos.x, ["y"] = pos.y, ["z"] = pos.z+1, ["f"] = pos.f}
+	elseif dir == 5 then return {["x"] = pos.x, ["y"] = pos.y, ["z"] = pos.z-1, ["f"] = pos.f}
 	end
 	
 	return false
 end
 
 -- Technical and dependent functions, 1st level
-function clsNav:getMap(pos, field)
-	--logger.spam("getMap(%s,%s,%s)\n", x,z,y)
-  pos = self:getPos(pos)
-  if not pos then return false end
+function clsNav:getMap(pos)
+  local chunkName, posNo = self:getMapFromPos(pos)
+  if (not chunkName) or (not posNo) then return false, "Bad arguments" end
   
-	if self.map[pos.x] == nil then 
-    self.map[pos.x]={} 
+  if not self.map[chunkName] then
+    -- check for filesystem files, otherwise...    
+    return {}
   end
-	if self.map[pos.x][pos.z] == nil then 
-    self.map[pos.x][pos.z]={}
-  end
-	if self.map[pos.x][pos.z][pos.y] == nil then
-    self.map[pos.x][pos.z][pos.y]={}
-  end
-	
-	if field == nil then 
-		return self.map[pos.x][pos.z][pos.y] 
-	else 
-		return self.map[pos.x][pos.z][pos.y][field] 
-	end
+  
+  if not self.map[chunkName][posNo] then return {} end
+  
+  self.map[chunkName]._accessed = os.time()
+  return utils.deepCopy(self.map[chunkName][posNo])
 end
 function clsNav:detectAround() -- TODO: add other detections, repair tagging
 	--logger.Check("detectAround:%s,%s",location,value)
-  if robot.detect() then
-    self:putMap(self:getPos(self:getPos().f),"id",0)
-  else 
-    self:putMap(self:getPos(self:getPos().f),"id",false)
-  end
-  if robot.detectUp() then self:putMap(self:getPos(4),"id",0) else self:putMap(self:getPos(4),"id",false) end
-  if robot.detectDown() then self:putMap(self:getPos(5),"id",0) else self:putMap(self:getPos(5),"id",false) end
+  local _,substance = robot.detect()
+  self:putMap(self:getPos(self:getPos().f),{["substance"]=substance})
+  _,substance = robot.detectUp()
+  self:putMap(self:getPos(4),{["substance"]=substance})
+  _,substance = robot.detectDown()
+  self:putMap(self:getPos(5),{["substance"]=substance})
 end
 function clsNav:getPath(targets, options)
-	--[[
-	This code (Aug, 2014) is written by Akuukis 
-		who based on code (Sep 21, 2006) by Altair
-			who ported and upgraded code of LMelior
-	
-	Map[][][] is a 3d infinite array (.id, .updated, .Evade)
-	Pos.x is the player's current x or North
-	Z is the player's current z or East
-	Pos.y is the player's current y or Height (not yet implemented)
-	target.x is the target x
-	target.z is the target z
-	target.y is the target y (not yet implemented)
-	options is the preference (not yet implemented)
-
-	Note. all the x and z are the x and z to be used in the table.
-	By this I mean, if the table is 3 by 2, the x can be 1,2,3 and the z can be 1 or 2.
+	--This code (Aug, 2014) is written by Akuukis 
+	--	who based on code (Sep 21, 2006) by Altair
+	--		who ported and upgraded code of LMelior
   
-	path is a list with all the x and y coords of the nodes of the path to the target.
-	OR nil if closedlist==nil
-	-- Intro to A* - http://www.raywenderlich.com/4946/introduction-to-a-pathfinding
-	-- Try it out! - http://zerowidth.com/2013/05/05/jump-point-search-explained.html
-	--]]
-	
-	if type(options) ~= "table" then options = {options} end -- Filters legal options
-  for k,v in pairs(options) do if type(v) ~= "string" then options[k] = nil end end
-  targets = self:checkPositions(targets) -- Filters legal targets
-  if (not targets) or (not next(targets)) then return false end
-	logger.info("Got %s valid targets!\n", #targets)
-	
-	function calcHeuristic(pos, targets, options)
-		-- Useful - http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
-		averageCost = 1
-    dx, dy, dz = 0, 0, 0
-		option = "ManhattanTieBreaker"
-		for n in pairs(options) do
-			if options[n] == "Manhattan" or options[n] == "ManhattanTieBreaker" then option = options[n] end
-		end
-		local minCost = math.huge
-		for n in pairs(targets) do
-			local cost = 0
-			if option == "Manhattan" then
-				dx = math.abs(self:getPos(pos).x-self:getPos(targets[n]).x)
-				dy = math.abs(self:getPos(pos).y-self:getPos(targets[n]).y)
-				dz = math.abs(self:getPos(pos).z-self:getPos(targets[n]).z)
-				cost = averageCost * (dx + dz + dy)
-			elseif option == "ManhattanTieBreaker" then
-				dx = math.abs(self:getPos(pos).x-self:getPos(targets[n]).x)
-				dy = math.abs(self:getPos(pos).y-self:getPos(targets[n]).y)
-				dz = math.abs(self:getPos(pos).z-self:getPos(targets[n]).z)
-				cost = averageCost * (dx + dz + dy) * (1 + 1/1000)
-			else return false -- error
-			end
-			--logger.Check("%s: %s,%s,%s,%s -> %s,%s,%s,%s = %s\n", n, pos.x, pos.z, pos.y, pos.f, targets[n].x, targets[n].z, targets[n].y, targets[n].f, cost, minCost) 
-			if cost < minCost then minCost = cost end
-		end
-		return minCost
-	end
-		
-	-- logger.spam("Nav.GetPath(%s,%s,%s)\n",target.x,target.z,target.y)
-
-	local closedlist = {}		-- Initialize table to store checked gridsquares
-	local openlist = {}			-- Initialize table to store possible moves
-	openlist[1] = {}					-- Make starting point in list
-	openlist[1].x = self:getPos().x
-	openlist[1].y = self:getPos().y
-	openlist[1].z = self:getPos().z
-	openlist[1].distExactStart = 0
-	openlist[1].distHeuristicTarget = calcHeuristic(self:getPos(), targets, options)
-	openlist[1].distSum = openlist[1].distExactStart + openlist[1].distHeuristicTarget
-	openlist[1].parent = 1
-	local openk = 1					-- Openlist counter
-	local closedk = 0				-- Closedlist counter
-	local defaultWeight = 3 -- TODO!
-	-- logger.Check("Openlist.x|y|z=%s,%s,%s\n",openlist[1].x,openlist[1].z,openlist[1].y)
+  local oldbases = {}
+  local lastbases = {} -- upvalue, anti-crashing mechanism
+  local pathtries = 8
+  local function calcHeuristic(pos, target, flag)
+    if flag == "manhattan" then
+      return 1 * (
+        target.weight or 0 +
+        math.abs(pos.x-target.x) + 
+        math.abs(pos.y-target.y) + 
+        math.abs(pos.z-target.z) )
+    else
+      return (1 + 1/1000) * (
+        target.weight or 0 +
+        math.abs(pos.x-target.x) + 
+        math.abs(pos.y-target.y) + 
+        math.abs(pos.z-target.z) )
+    end
+    error()
+  end
+  local function checkClosedlist(nextPos, closedlist)
+    for i=1,#closedlist-1 do
+      if self:comparePos(nextPos,closedlist[i],false) then 
+        return false
+      end
+    end
+    return true
+  end
+  local function getCostBlocks(nextBase, flag)
+    local defaultMoveCost = 1 -- cost in time to move 1 square, no diagonal movement.
+    local defaultWanderCost = 1 -- average cost to move in unexplored block
+    local defaultDestroyCost = 3 -- average cost in time to move 1 square with solid block inside
+    if nextBase.substance == "air" then
+      if flag == "careful" then
+        return defaultMoveCost
+      elseif flag == "normal" then 
+        return defaultMoveCost
+      elseif flag == "simple" then
+        return defaultMoveCost
+      elseif flag == "brutal" then
+        return defaultMoveCost
+      end
+    elseif nextBase.substance == "replaceable" then
+      if flag == "careful" then
+        return defaultMoveCost
+      elseif flag == "normal" then 
+        return defaultMoveCost
+      elseif flag == "simple" then
+        return defaultMoveCost
+      elseif flag == "brutal" then
+        return defaultMoveCost
+      end
+    elseif nextBase.substance == "solid" then
+      if flag == "careful" then
+        return false
+      elseif flag == "normal" then 
+        return defaultDestroyCost
+      elseif flag == "simple" then
+        return defaultMoveCost
+      elseif flag == "brutal" then
+        return defaultMoveCost
+      end
+    elseif nextBase.substance == "liquid" then
+      if flag == "careful" then
+        return false
+      elseif flag == "normal" then 
+        return defaultDestroyCost
+      elseif flag == "simple" then
+        return defaultMoveCost
+      elseif flag == "brutal" then
+        return defaultDestroyCost
+      end
+    elseif nextBase.substance == "entity" then
+      if flag == "careful" then
+        return defaultMoveCost
+      elseif flag == "normal" then 
+        return defaultMoveCost
+      elseif flag == "simple" then
+        return defaultMoveCost
+      elseif flag == "brutal" then
+        return defaultMoveCost
+      end
+    else
+      return defaultWanderCost
+    end
+  end
+  local function getCostTurn(curBase, dir, flag)
+    if flag == "simple" then return 0 end
+    local defaultTurnCost = 0.0 -- cost in time to turn 90 degrees
+    local turnCost = 0
+    if (not curBase.f) or curBase.f == dir or dir == 4 or dir == 5 then 
+      return 0
+    elseif (dir-curBase.f)%4 == 2 then 
+      return 2 * defaultTurnCost
+    else 
+      return 1 * defaultTurnCost 
+    end
+  end
+  local function getModTags(nextBase, flag)
+    local defaultRoadMod = 0.1 -- cost modifier for moving along roads
+    if nextBase.tag then
+      if flag == "careful" or flag == "normal" then
+        if nextBase.tag.evade then
+          return false
+        elseif nextBase.tag.road then
+          return defaultRoadMod
+        end
+      elseif flag == "simple" then
+        if nextBase.tag.evade then
+          return false
+        end
+      elseif flag == "brutal" then
+        -- ignore tags
+      end
+    end
+    return 0
+  end
+  local function updateOpenlist(nextPos, openlist, nextWeight, closedk)
+    for i=1,#openlist do  -- check if we have found a shorter path to non-visited pos
+      if self:comparePos(openlist[i],nextPos,false) then
+        if openlist[i].pathWeight < nextWeight then
+          openlist[i].pathWeight = nextWeight
+          openlist[i].parent = closedk
+          return true
+        end
+      end
+    end
+    return false
+  end    
+  local function tryPath(targets, options, start)
   
-	local option_moveStyle = "Normal"
-	for n,v in pairs(options) do
-		if v == "Normal" or v == "Careful" then option_moveStyle = v end
-		-- ... other options
-	end
-
-	while openk > 0 and #closedlist < 128 do   -- Growing loop
-		-- Find next node with the lowest distSum
-		local lowestDS = openlist[openk].distSum		-- Take distSum of last node as etalon
-		local basis = openk	-- Take last node as etalon
-		for i = openk,1,-1 do -- Search backwards (Prefer newer nodes)
-			if openlist[i].distSum < lowestDS then
-				lowestDS = openlist[i].distSum
-				basis = i
-			end
-		end
-		closedk = closedk + 1
-		closedlist[closedk] = openlist[basis]
-		local curbase = closedlist[closedk]				 -- define current base from which to grow list
-		--logger.spam("%s/%s:(%s,%s,%s)(%s,%s,%s|%s)\n", closedk, openk, curbase.x, curbase.z, curbase.y, math.floor(curbase.distExactStart), math.floor(curbase.distHeuristicTarget), math.floor(curbase.distSum), curbase.parent)
-		--for i,v in pairs(closedlist) do 
-		--	logger.spam("%s:x=%s,y=%s,z=%s,p=%s,DE=%s,DH=%s,DS=%s\n", i, v.x, v.y, v.z, v.parent, v.distExactStart, math.floor(v.distHeuristicTarget), math.floor(v.distSum))
-		--end
-		--logger.Check("")
-		table.remove(openlist,basis) -- This function deletes an element of a numerical table and moves up the remaining indices if necessary.
-		openk = openk - 1
-		
-		local ok = {}
-		for face=0,5 do ok[face] = 1 end  
-
-		if option_moveStyle == "Normal" then		-- If it IS on the map, check map for obstacles
-			for face=0,5 do if self:getMap(self:getPos(curbase,face),"id") then ok[face] = defaultWeight end end
-		elseif option_moveStyle == "Careful" then
-			for face=0,5 do if self:getMap(self:getPos(curbase,face),"id") then ok[face] = false end end
-		end
-		
-		for face=0,5 do if self:getMap(self:getPos(curbase,face),"tag") == true then ok[face] = false end end	-- Look through Tagged
-		
-		--logger.spam("Closedlist:\n")
-		if closedk>0 then		-- Look through closedlist
-			for i=1,closedk do
-				for face=0,5 do 
-					--logger.spam("%s,%s,%s,%s =? %s,%s,%s,%s",self:getPos(closedlist[i]).x,self:getPos(closedlist[i]).z,self:getPos(closedlist[i]).y,self:getPos(closedlist[i]).f,self:getPos(curbase,face).x,self:getPos(curbase,face).y,self:getPos(curbase,face).z,self:getPos(curbase,face).f)
-					if self:comparePos(self:getPos(closedlist[i]),self:getPos(curbase,face),false) then ok[face] = false; --[[logger.spam("CL! ")--]] end 
-					--logger.spam("\n")
-				end
-				--logger.Check("")
-			end
-		end
-
-		--logger.spam("Openlist:\n")
-		for i=1,openk do		-- Look through openlist, check if the move from the current base is shorter than from the former parent
-			--logger.spam("Openlist(%s/%s): %s,%s,%s,%s\n", i, openk, openlist[i].x, openlist[i].z, openlist[i].y, openlist[i].f)
-			for face=0,5 do
-				--logger.spam("%s/5: %s,%s,%s,%s. %s -> ",face,self:getPos(curbase,face).x,self:getPos(curbase,face).z,self:getPos(curbase,face).y,self:getPos(curbase,face).f,ok[face])
-				if ok[face] and self:comparePos(openlist[i],self:getPos(curbase,face),false) then
-					if openlist[i].distExactStart < curbase.distExactStart + ok[face] then
-						openlist[i].distExactStart = curbase.distExactStart + ok[face]
-						openlist[i].distSum = openlist[i].distHeuristicTarget + openlist[i].distExactStart
-						openlist[i].parent = closedk
-					end
-					ok[face] = false
-				end
-				--logger.spam("%s\n",ok[face])
-			end
-			--logger.Check("")
-		end
-
-		--logger.spam("ok[face]: ")
-		--for face=0,5 do logger.spam("%s",ok[face]) end
-		--logger.spam("\n")
-
-		for face=0,5 do		-- Add points to openlist
-			if ok[face] then
-				openk = openk + 1
-				openlist[openk] = {}
-				openlist[openk].x = self:getPos(curbase,face).x
-				openlist[openk].y = self:getPos(curbase,face).y
-				openlist[openk].z = self:getPos(curbase,face).z
-				openlist[openk].f = self:getPos(curbase,face).f
-				openlist[openk].distExactStart = curbase.distExactStart + ok[face]
-				openlist[openk].distHeuristicTarget = calcHeuristic(self:getPos(curbase,face), targets, options)
-				openlist[openk].distSum = openlist[openk].distExactStart + openlist[openk].distHeuristicTarget
-				openlist[openk].parent = closedk
-				--logger.spam("F:%s:",face)
-				--for n in pairs(openlist[openk]) do logger.spam("%s:%s,",n,openlist[openk][n]) end
-				--logger.Check("\n")
-			end
-		end
-		
-		--logger.Check("Check finish!\n")
-		if self:comparePos(curbase,targets,false) then
-			logger.spam("Found the path at %sth (of %s) try!\n", closedk, openk)
-			-- Change Closed list into a list of XZ coordinates starting with player
-			local path = {} 
-			local last = closedk
-			local pathIndex = {}
-			pathIndex[1] = closedk
-			local i = 1 -- we will include starting position into a table, otherwise 1
-			while pathIndex[i] > 1 do 
-				i = i + 1
-				pathIndex[i] = closedlist[pathIndex[i-1]].parent
-			end
-			logger.spam("Steps(x%s): ", i)
-			for i=1,#pathIndex,1 do
-				path[i] = {}
-				path[i].x = closedlist[pathIndex[#pathIndex+1-i]].x
-				path[i].y = closedlist[pathIndex[#pathIndex+1-i]].y 
-				path[i].z = closedlist[pathIndex[#pathIndex+1-i]].z
-				logger.spam("%s|%s|%s, ", path[i].x,path[i].y,path[i].z)
-			end
-			--logger.spam("\n")     
-
-			--for i=1,#pathIndex do
-			--	logger.spam("%s(%s,%s,%s)", i, path[i].x, path[i].z, path[i].y)
-			--end
-			
-			closedlist=nil
-			
-			-- Change list of XZ coordinates into a list of directions 
-			logger.spam("FacePath. ")
-			local fpath = {}
-			for i=1,#path-1,1 do
-				if path[i+1].x > path[i].x then fpath[i]=0 end -- North
-				if path[i+1].z > path[i].z then fpath[i]=1 end -- East
-				if path[i+1].x < path[i].x then fpath[i]=2 end -- South
-				if path[i+1].z < path[i].z then fpath[i]=3 end -- West
-				if path[i+1].y > path[i].y then fpath[i]=4 end -- Up
-				if path[i+1].y < path[i].y then fpath[i]=5 end -- Down
-				logger.spam("%s, ", fpath[i])
-			end
-			logger.spam("\n")
-			logger.spam("%s\n",fpath)
-			return fpath, path, #path
-		end
-	end
-	return false
+    start = checkPos(start)
+    if (not start) or (not next(start)) then start = self:getPos() end
+    targets = checkPositions(targets) -- Filters legal targets
+    if (not targets) or (not next(targets)) then return false end
+    logger.spam("getPath: Got %s valid targets!\n", #targets)
+    for k,v in pairs(targets) do 
+      logger.spam("  %s: (%2s,%2s,%2s,%2s,%2s)\n", k,v.x,v.y,v.z,v.f,v.weight)
+    end
+    
+    local defaultHeurMod = 1.1 -- cost modifier for heuristics. Keep it big enough!
+    local flag = checkOptions(options, "careful", "normal", "simple", "brutal") or "careful"
+    local flag2 = checkOptions(options, "manhattan", "manhattanTieBreaker") or "manhattan"
+    options = nil
+    local closedlist = {}		-- Initialize table to store checked cubes
+    local openlist = {}			-- Initialize table to store possible moves
+    for i=1,#targets do
+      openlist[#openlist+1] = targets[i] --x,y,z,f				-- Make starting point in list
+      openlist[#openlist].pathWeight = 0
+      openlist[#openlist].heurWeight = calcHeuristic(targets[i], start, flag2) * defaultHeurMod
+      openlist[#openlist].weight = openlist[#openlist].weight or 0 + openlist[#openlist].pathWeight + openlist[#openlist].heurWeight
+      openlist[#openlist].parent = 0
+    end
+    targets = nil 
+    local defaultMemory=computer.freeMemory()
+    
+    while true do
+      do  -- Find next node with the lowest weight (Prefer newer nodes) TODO: random on same values
+        local lowestDS = openlist[#openlist].weight
+        local basis = #openlist
+        for i = #openlist,1,-1 do
+          if openlist[i].weight < lowestDS then
+            lowestDS = openlist[i].weight
+            basis = i
+          end
+        end
+        closedlist[#closedlist+1] = openlist[basis]
+        while openlist[basis+1] do
+          openlist[basis] = openlist[basis+1]
+          basis = basis + 1
+        end 
+        openlist[basis] = nil
+      end
+      local curBase = closedlist[#closedlist]
+      
+      if self:comparePos(curBase,start,false) then -- check if we have reached one of targets..
+        logger.spam("Found the path at %sth try!\n",#closedlist) --TODO    
+        openlist = nil
+        
+        if curBase.parent == 0 then return {}, {}, 0 end -- if we started at target
+        local path = {[1] = curBase} 
+        while path[#path].parent > 0 do
+          path[#path+1] = closedlist[path[#path].parent]
+          logger.spam("(%s,%s,%s|%s)",path[#path].x,path[#path].y,path[#path].z,path[#path].parent)
+        end
+        closedlist = nil
+        logger.spam("\n")
+        
+        -- Change list of XZ coordinates into a list of directions 
+        logger.spam("dirPath. ")
+        local dirPath = {}
+        for i=1,#path-1 do
+          if path[i+1].x > path[i].x then dirPath[i]=0 -- North
+          elseif path[i+1].y > path[i].y then dirPath[i]=1 -- East
+          elseif path[i+1].x < path[i].x then dirPath[i]=2 -- South
+          elseif path[i+1].y < path[i].y then dirPath[i]=3 -- West
+          elseif path[i+1].z > path[i].z then dirPath[i]=4 -- Up
+          elseif path[i+1].z < path[i].z then dirPath[i]=5 -- Down
+          end
+          logger.spam("%s,", dirPath[i])
+        end
+        logger.spam("\n")
+        return dirPath, path
+      end  
+      
+      for dir=0,5 do
+        local nextPos = self:getPos(curBase,dir)
+        if checkClosedlist(nextPos,closedlist) then 
+          local nextBase = self:getMap(nextPos)
+          local costBlocks = getCostBlocks(nextBase, flag)
+          local costTurn = getCostTurn(curBase, dir, flag)
+          local modTag = getModTags(nextBase, flag)
+          if costBlocks and costTurn and modTag then
+            local nextWeight = curBase.pathWeight + (costBlocks + costTurn) * modTag
+            if not updateOpenlist(nextPos, openlist, nextWeight, #closedlist) then
+              openlist[#openlist+1] = nextPos -- x,y,z,f
+              openlist[#openlist].pathWeight = nextWeight
+              openlist[#openlist].heurWeight = calcHeuristic(nextPos, start, flag2) * defaultHeurMod
+              openlist[#openlist].weight = openlist[#openlist].weight or 0 + openlist[#openlist].pathWeight + openlist[#openlist].heurWeight
+              openlist[#openlist].parent = #closedlist
+            end
+          end
+        end
+      end
+      
+      do  -- find lowest weight for closedlist to add as next target
+        local lowestDS = closedlist[#closedlist].weight
+        local basis = #closedlist
+        for i = #closedlist,1,-1 do
+          if closedlist[i].weight < lowestDS then
+            lowestDS = closedlist[i].weight
+            basis = i
+          end
+        end
+        lastbases = {closedlist[basis], curBase, closedlist[math.floor(math.random(1,#closedlist))]}
+      end
+      
+      logger.spam("%2s/%2s (%2s,%2s,%2s) %3s+%3s=%3s %s %s\n",
+        #closedlist,
+        #openlist,
+        curBase.x,
+        curBase.y,
+        curBase.z,
+        --math.floor(curBase.pathWeight*10)/10,
+        --math.floor(curBase.heurWeight*10)/10,
+        --math.floor((curBase.weight)*10)/10,
+        0,
+        0,
+        math.floor((defaultMemory-utils.freeMemory())/(#closedlist+#openlist)), --GC!
+        self:getMap(self:getPos(curBase)).substance,
+        utils.freeMemory() --GC!
+      )
+    end
+    return false
+  end
+  
+  repeat
+    if #lastbases > 0 then
+      for i=1,#lastbases do
+        if self:comparePos(lastbases[i],oldbases) then 
+          lastbases[i] = nil
+        else
+          oldbases[#oldbases+1] = lastbases[i] 
+        end
+      end
+    end
+    
+    local ok, dirPath, path = pcall(
+      tryPath, (#lastbases > 0 and lastbases) or targets, options, self:getPos())
+    
+    if ok and pathtries == 8 then return dirPath, path, true -- full path
+    elseif ok then return dirPath, path, false -- partial path
+    end
+    pathtries = pathtries - 1
+    logger.spam("\n%s/8 Pathfinder %s, (%s), RAM: %s, Error: %s\n",pathtries,ok,type(lastbases),utils.freeMemory(),dirPath)
+    os.sleep(0)
+  until ok or pathtries < 1
+  
+  logger.spam("Lastbases %s at (%s,%s,%s)\n",lastbases, lastbases and lastbases.x, lastbases and lastbases.y, lastbases and lastbases.z)
+  os.sleep(2)
+  return false
+  
 end
 
 -- Technical and dependent functions, sub-Core level
-function clsNav:move(face, options) -- face={0=North|1=East|2=South|3=West|4=up|5=down}, returns true if succeeded
+function clsNav:move(dir, options) -- dir={0=North|1=East|2=South|3=West|4=up|5=down}, returns true if succeeded
 
-	logger.spam("0..")
-	local option_moveStyle = "Normal" -- or "Careful" or "Blind" (Don't use Blind!)
-	
-	if type(options) ~= "table" then options = {options} end -- Filters legal options
-  for k,v in pairs(options) do if type(v) ~= "string" then options[k] = nil end end
+  local flag = checkOptions(options, "careful", "normal", "simple", "brutal") or "careful"
+  local flag2 = checkOptions(options, "fast", "explore", "patrol") or "explore"
   
-	for n,v in pairs(options) do
-		if v == "Careful" or v == "Normal" or v == "Blind" then option_moveStyle = v end
-		-- ... other options
-	end
-	
-	--logger.spam("Nav.Move(%s,%s,%s)\n", face.f, face.id, options)
+	--logger.spam("Nav.Move(%s,%s)\n", dir, options)
 	--utils.refuel()
-	self:turnTo(face)
-	self:detectAround()
-	
-	if 
-    option_moveStyle == "Blind" 
-    or not (self:getMap(self:getPos(face)) and self:getMap(self:getPos(face)).tag)
-  then
-		if option_moveStyle == "Blind"
-      or option_moveStyle == "Normal"
-      or not self:getMap(self:getPos(face)).id
+	self:turnTo(dir)
+  for dir=0,3 do -- look around
+    if
+      (flag2 == "patrol") or
+      (flag2 == "explore" and not self:getMap(self:getPos(dir))._updated)
     then
-			local success = false
-			if face == 4 then 
-				while robot.detectUp() do robot.swingUp(); sleep(0.5) end
-				success = robot.up()
-			elseif face == 5 then
-				while robot.detectDown() do robot.swingDown(); sleep(0.5) end
-			    success = robot.down()
-			else 
-				while robot.detect() do robot.swing(); sleep(0.5) end
-				success = robot.forward()
-			end
-			if success then
-				self:updatePos(face)
-				self:detectAround()
-				--logger.spam("Nav.Move() Return true\n")
-				return true
-			end
-		end
+      self:turnTo(dir)
+    end
+  end
+	if dir ~= self:getPos().f then self:turnTo(dir) end
+  
+	if flag == "careful" or flag == "normal" or flag == "simple" then
+    local pos = self:getMap(self:getPos(dir))
+    if pos and pos.tag then
+      return false, "Tagged as "..pos.tag
+    end
+  end
+    
+	if flag == "careful" then
+    local substance
+    if dir == 4 then _, substance = robot.detectUp()
+    elseif dir == 5 then _, substance = robot.detectDown()
+    else _, substance = robot.detect()
+    end
+    if substance ~= "air" and substance ~= "replaceable" then return false, reason end
+  end
+  
+  local ok, reason
+  if dir == 4 then 
+    while flag ~= "careful" and robot.detectUp() do robot.swingUp() end
+    ok, reason = robot.up()
+  elseif dir == 5 then
+    while flag ~= "careful" and robot.detectDown() do robot.swingDown() end
+      ok, reason = robot.down()
+  else 
+    while flag ~= "careful" and robot.detect() do robot.swing() end
+    ok, reason = robot.forward()
+  end
+  if ok then
+    self:setPos(dir)
+    self:detectAround()
+    --logger.spam("Nav.Move() Return true\n")
+    return true
+	else
+    return false, reason
 	end
-	return false
+	return false, "Unexpected error"
 end
 
 -- Core functions
@@ -555,22 +721,23 @@ function clsNav:turnAround()
 end
 function clsNav:go(targets, options) -- table target1 [, table target2 ...] text option1 [, text option2 ...]
 	
-	if type(options) ~= "table" then options = {options} end -- Filters legal options
-  for k,v in pairs(options) do if type(v) ~= "string" then options[k] = nil end end
-  targets = self:checkPositions(targets) -- Filters legal targets
-  if (not targets) or (not next(targets)) then return false end
-	logger.info("Got %s valid targets!\n", #targets)
-	
-	local OptionRefStyle = "Absolute"
-	for i,option in ipairs(options) do if option == "RelCoords" or option == "RelPos" then OptionRefStyle = option end end
-	if OptionRefStyle == "RelCoords" then
+  targets = checkPositions(targets) -- Filters legal targets
+  if (not targets) or (not next(targets)) then targets = {checkPos({0,0,0,0})} end
+	logger.spam("\n")
+	logger.spam("Go: Got %s valid targets!\n", #targets)
+	for k,v in pairs(targets) do 
+    logger.spam("  %s: (%2s,%2s,%2s,%2s,%2s)\n", k,v.x,v.y,v.z,v.f,v.weight)
+  end
+  
+	local flag = checkOptions(options, "absolute", "relative", "relFace") or "absolute"
+	if flag == "relative" then
 		for j in ipairs(targets) do
 			targets[j].x = targets[j].x + self:getPos().x
 			targets[j].y = targets[j].y + self:getPos().y
 			targets[j].z = targets[j].z + self:getPos().z
 		end
 	end
-	if OptionRefStyle == "RelPos" then
+	if flag == "relFace" then
 		for j in ipairs(targets) do
 			targets[j].x = targets[j].x + self:getPos().x
 			targets[j].y = targets[j].y + self:getPos().y
@@ -582,36 +749,58 @@ function clsNav:go(targets, options) -- table target1 [, table target2 ...] text
 		end
 	end
 	
-	local tries=32 -- TODO
+	local tries = 1 -- TODO
+  local count = 0
 	--if #targets > 0 then logger.spam("Nav.Go(x%s)(%s,%s,%s)\n", #targets, targets[1].x, targets[1].z, targets[1].y) end
-	repeat
-		local _, destination = self:comparePos(self:getPos(),targets)
+	while tries <= 4 do
+    count = count + 1
+    logger.spam("Go: Try No.%s, (%2s,%2s,%2s,%2s) -> ...\n", 
+      tries,self:getPos().x,self:getPos().y,self:getPos().z,self:getPos().f)
+    for k,v in pairs(targets) do 
+      logger.spam("  %s: (%2s,%2s,%2s,%2s)\n", k,v.x,v.y,v.z,v.f)
+    end
+    thread.yield(1)
+    
+		local destination = self:comparePos(targets, self:getPos())
 		if destination then
-			self:turnTo( destination.f )
+			self:turnTo(destination.f)
+      logger.spam("Go: Arrived with %s try!\n",count)
 			return true 
-		else 
-			tries = tries - 1
 		end
-		-- logger.spam("Nav.Go() @ (%s,%s,%s,F%s)/%s\n",self:getPos().x,self:getPos().z,self:getPos().y,self:getPos().f,tries)
-		local fpath = self:getPath(targets,options)
-		if not fpath then -- TODO: Cannot find path!
-			-- logger.spam("Nav.Go() FPath=nil!")
+    
+    local dirPath,_,ok = self:getPath(targets,options)
+		if not dirPath then -- TODO: Cannot find path!
+      logger.spam("Go: Failed to get path.\n")
+      tries = tries + 1
 			self:detectAround()
-			self:turnRight()
+			self:turnAround()
 		else
-			logger.spam("Start moving!")
-			i = 1
-			success = true
-			while i <= #fpath and success do 
-				-- logger.spam("%s",i)
-				-- logger.spam("@(%s,%s,%s),(%s,%s) Moving %s/%s ...\n", self:getPos().x,self:getPos().z,self:getPos().y,not fpath[i],not self:getMap(self:getPos(fpath[i]),"id"),i,#fpath)
-				success = self:move(fpath[i], options)
-				i = i + 1
-			end
-		end
-	until tries > 0
+      tries = 1
+		-- logger.spam("Nav.Go() @ (%s,%s,%s,F%s)/%s\n",self:getPos().x,self:getPos().z,self:getPos().y,self:getPos().f,tries)
+      if ok then
+        logger.spam("Go: Found full path, start moving!\n")
+      else
+        logger.spam("Go: Found partial path, start moving!\n")
+      end
+      local i = 1
+      local ok = true
+      while i <= #dirPath and ok do 
+        -- logger.spam("%s",i)
+        -- logger.spam("@(%s,%s,%s),(%s,%s) Moving %s/%s ...\n", self:getPos().x,self:getPos().z,self:getPos().y,not dirPath[i],not self:getMap(self:getPos(dirPath[i]),"id"),i,#dirPath)
+        local err
+        ok, err = self:move(dirPath[i], options)
+        if ok then 
+          logger.spam("Go: Step %s/%s done (%2s,%2s,%2s,%2s)\n",i,#dirPath,
+            self:getPos().x,self:getPos().y,self:getPos().z,self:getPos().f)
+        else
+          logger.spam("Go: Step failed because %s\n",err)
+        end
+        i = i + 1
+      end
+    end
+	end
 	-- logger.spam("Nav.Go() Out-of-UNTIL! /%s",tries)
-	return false
+	return false, "exceeded retries"
 end
 
 -- Shortcut functions
@@ -634,7 +823,7 @@ function clsNav:stepDown(options)
 	return self:move(5,options)
 end
 
-function clsNav:goNextTo (center, options)
+function clsNav:goNextTo(center, options)
 	local SixTargets = {}
 	--logger.spam("Center: ")
 	--for i,v in pairs(center) do logger.spam("'%s'=%s, ",i,v) end
@@ -655,13 +844,71 @@ function clsNav:goNextTo (center, options)
 	SixTargets[6].f = nil
 	self:go( SixTargets[1], SixTargets[2], SixTargets[3], SixTargets[4], SixTargets[5], SixTargets[6], options )
 end
+function clsNav:drawMap(offset)
+  offset = checkPos(offset)
+  local resX, resY = component.gpu.getResolution()
+  
+  local lowLeft = self:getPos()
+  lowLeft.x = lowLeft.x - (resY+resY%2)/2
+  lowLeft.y = lowLeft.y - (resX+resX%2)/2
+  if offset then
+    lowLeft.x = lowLeft.x + offset.x
+    lowLeft.y = lowLeft.y + offset.y
+    lowLeft.z = lowLeft.z + offset.z
+  end
+  
+  for yScreen=1,resY do
+    local output = ""
+    for xScreen=1,resX do
+      local subst = self:getMap({lowLeft.x+yScreen,lowLeft.y+xScreen,lowLeft.z}).substance
+      if subst == nil then output = output.." "
+      elseif subst == "air" then output = output.."."
+      elseif subst == "solid" then output = output.."#"
+      elseif subst == "entity" then output = output.."e"
+      elseif subst == "liquid" then output = output.."~"
+      elseif subst == "replaceable" then output = output..","
+      else error()
+      end
+    end
+    component.gpu.set(1,resY+1-yScreen,output)
+  end
+  return true
+end
+
+return clsNav
 
 ---------------- Details & Notes ----------------------------------------------
+
+
 
 --[[ Tutorials
 General: http://www.lua.org/pil/contents.html
 Varargs: http://lua-users.org/wiki/VarargTheSecondClassCitizen
-Nav.comparePos({1,2,3},{1,2,3})
+Intro to A* - http://www.raywenderlich.com/4946/introduction-to-a-pathfinding
+Try it out! - http://zerowidth.com/2013/05/05/jump-point-search-explained.html
+Better version to try out! - https://qiao.github.io/PathFinding.js/visual/
+Useful - http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
 --]]
 	
-return clsNav
+--[[ Coord system
+# MC logic
+Coords... North: z--, East: x++, South: z++, West: x--, Up: y++, Down: y--
+Coords... X points East, Z points South, Y points Up
+Facing... 0: South, 1: West, 2: North, 3: East
+Facing... Starts at South, goes clockwise
+# Nav logic
+Coords... North: x++, East: y++, South: x--, West: y--, Up: z++, Down: z--
+Coords... X points North, Y points East, Z points Up
+Facing... 0: North, 1: East, 2: South, 4: West
+Facing... Starts at North, goes clockwise
+
+use getNavFromMC() or getMCfromNav() to switch if needed, returns table
+--]]
+--[=[ Map structure
+self.map[chunkID][SerializedCoord] = nil --[[unknown--]] or childID --[[if lended--]] or {
+  substance = "air" or "solid" or "entity" or "replaceable" or "liquid"
+  content = nil --[[unknown--]] or {--[[anything useful--]]}
+  updated = 0 -- time in seconds from Colony start
+  tag = {[string][,...]} -- RoCoWa related only, like "road", "evade", etc.
+
+--]=]

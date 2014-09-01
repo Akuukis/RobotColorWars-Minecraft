@@ -186,9 +186,14 @@ function thread.manager( firstThread )
     firstThread = {
       ["name"] = "Default console",
       ["uid"] = getUid("coroutine"),
-      ["co"] = coroutine.create(
-        function ()
-          local _ENV = setmetatable(_ENV,{__index=_G})
+      ["co"] = coroutine.create(function()        
+      
+          local upenv = _ENV
+          local setmetatable = setmetatable
+          local _ENV = {}
+          setmetatable(_ENV, {__index=upenv})
+          local upenv, setmetatable = nil, nil
+          
           local function read(history)
             local component = require("component")
             local prefix = "P# "
@@ -235,7 +240,7 @@ function thread.manager( firstThread )
                   command = history[historyCursor]
                   historyCursor = #history
                 elseif not(type(charOrValue) == "number" and (charOrValue < 0x20 or (charOrValue >= 0x7F and charOrValue <= 0x9F))) then -- is normal char
-                  command = history[historyCursor]..string.char(charOrValue)
+                  command = history[historyCursor]..string.char(charOrValue) -- TODO: crashed once with "value out of range", unicode problems?
                   history[#history] = command
                   historyCursor = #history
                 end
@@ -254,6 +259,10 @@ function thread.manager( firstThread )
           while true do
             local str = read(history) -- yields here!
             history[#history+1] = str
+            if str == "quit" then
+              print("Quit!")
+              return history
+            end
             --local formattedTime = ""
             --if os.clock()*60 >= 60 * 60 then formattedTime = formattedTime .. string.format("%dh",os.clock/60) end
             --if os.clock()*60 >= 60 then formattedTime = formattedTime .. string.format("%dm",os.clock()-math.floor(os.clock()/60)) end
