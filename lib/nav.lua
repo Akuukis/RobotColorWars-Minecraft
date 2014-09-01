@@ -355,21 +355,24 @@ function clsNav:getPath(targets, options)
   local oldbases = {}
   local lastbases = {} -- upvalue, anti-crashing mechanism
   local pathtries = 8
-  local function calcHeuristic(pos, target, flag)
-    if flag == "manhattan" then
-      return 1 * (
-        target.weight or 0 +
-        math.abs(pos.x-target.x) + 
-        math.abs(pos.y-target.y) + 
-        math.abs(pos.z-target.z) )
-    else
-      return (1 + 1/1000) * (
-        target.weight or 0 +
-        math.abs(pos.x-target.x) + 
-        math.abs(pos.y-target.y) + 
-        math.abs(pos.z-target.z) )
+  local function getHeuristic(startPos, targetPoslist, flag)
+    local minCost = math.huge
+    for _,targetPos in pairs(targetPoslist) do
+      if flag == "manhattan" then
+        minCost = math.min(minCost, 1 * (
+          (targetPos.weight or 0) +
+          math.abs(startPos.x-targetPos.x) + 
+          math.abs(startPos.y-targetPos.y) + 
+          math.abs(startPos.z-targetPos.z) ) )
+      elseif flag == "euclidean" then
+        minCost = math.min(minCost, (targetPos.weight or 0) + math.abs((
+          math.abs(startPos.x-targetPos.x) + 
+          math.abs(startPos.y-targetPos.y) + 
+          math.abs(startPos.z-targetPos.z) ) ^ (1/3) ) )
+      else return calcHeuristic(startPos, targetPoslist, "manhattan")
+      end
     end
-    error()
+    if minCost ~= math.huge then return minCost else error(debug.traceback()) end
   end
   local function checkClosedlist(nextPos, closedlist)
     for i=1,#closedlist-1 do
@@ -466,7 +469,7 @@ function clsNav:getPath(targets, options)
         -- ignore tags
       end
     end
-    return 0
+    return 1
   end
   local function updateOpenlist(nextPos, openlist, nextWeight, closedk)
     for i=1,#openlist do  -- check if we have found a shorter path to non-visited pos
@@ -480,34 +483,52 @@ function clsNav:getPath(targets, options)
     end
     return false
   end    
-  local function tryPath(targets, options, start)
+  local function tryPath(starts, targets, options)
   
-    start = checkPos(start)
-    if (not start) or (not next(start)) then start = self:getPos() end
-    targets = checkPositions(targets) -- Filters legal targets
+    starts = checkPositions(starts)
+    if (not starts) or (not next(starts)) then return false end
+    targets = checkPositions(targets)
     if (not targets) or (not next(targets)) then return false end
     logger.spam("getPath: Got %s valid targets!\n", #targets)
     for k,v in pairs(targets) do 
       logger.spam("  %s: (%2s,%2s,%2s,%2s,%2s)\n", k,v.x,v.y,v.z,v.f,v.weight)
     end
     
-    local defaultHeurMod = 1.1 -- cost modifier for heuristics. Keep it big enough!
+    local defaultHeurMod = 1 -- cost modifier for heuristics. Keep it big enough!
     local flag = checkOptions(options, "careful", "normal", "simple", "brutal") or "careful"
-    local flag2 = checkOptions(options, "manhattan", "manhattanTieBreaker") or "manhattan"
+    local flag2 = checkOptions(options, "manhattan", "euclidean") or "manhattan"
     options = nil
-    local closedlist = {}		-- Initialize table to store checked cubes
-    local openlist = {}			-- Initialize table to store possible moves
-    for i=1,#targets do
-      openlist[#openlist+1] = targets[i] --x,y,z,f				-- Make starting point in list
-      openlist[#openlist].pathWeight = 0
-      openlist[#openlist].heurWeight = calcHeuristic(targets[i], start, flag2) * defaultHeurMod
-      openlist[#openlist].weight = openlist[#openlist].weight or 0 + openlist[#openlist].pathWeight + openlist[#openlist].heurWeight
-      openlist[#openlist].parent = 0
+    local SCL, SOL, TCL, TOL = {}, {}, {}, {} -- start closed list, ...
+    for i=1,#starts do
+      SOL[#SOL+1] = starts[i] --x,y,z,f				-- Make starting point in list
+      SOL[#SOL].pathWeight = 0
+      SOL[#SOL].heurWeight = getHeuristic(starts[i], targets, flag2) * defaultHeurMod
+      SOL[#SOL].weight = (SOL[#SOL].weight or 0) + SOL[#SOL].pathWeight + SOL[#SOL].heurWeight
+      SOL[#SOL].parent = 0
     end
-    targets = nil 
+    for i=1,#targets do
+      TOL[#TOL+1] = targets[i] --x,y,z,f				-- Make starting point in list
+      TOL[#TOL].pathWeight = 0
+      TOL[#TOL].heurWeight = getHeuristic(targets[i], starts, flag2) * defaultHeurMod
+      TOL[#TOL].weight = (TOL[#TOL].weight or 0) + TOL[#TOL].pathWeight + TOL[#TOL].heurWeight
+      TOL[#TOL].parent = 0
+    end
+    starts, targets = nil, nil
     local defaultMemory=computer.freeMemory()
     
+    local side, openlist, closedlist, targetlist = false, {}, {}, {}
     while true do
+      side = not side
+      if side then -- switch sides
+        openlist, closedlist = SOL, SCL
+        targetlist = (#TCL>0 and TCL) or TOL
+      else
+        openlist, closedlist = TOL, TCL
+        targetlist = (#SCL>0 and SCL) or SOL
+      end
+      
+      if #openlist == 0 then return false end -- trapped in box, cannot find path
+      
       do  -- Find next node with the lowest weight (Prefer newer nodes) TODO: random on same values
         local lowestDS = openlist[#openlist].weight
         local basis = #openlist
@@ -526,18 +547,48 @@ function clsNav:getPath(targets, options)
       end
       local curBase = closedlist[#closedlist]
       
-      if self:comparePos(curBase,start,false) then -- check if we have reached one of targets..
-        logger.spam("Found the path at %sth try!\n",#closedlist) --TODO    
-        openlist = nil
-        
-        if curBase.parent == 0 then return {}, {}, 0 end -- if we started at target
-        local path = {[1] = curBase} 
-        while path[#path].parent > 0 do
-          path[#path+1] = closedlist[path[#path].parent]
-          logger.spam("(%s,%s,%s|%s)",path[#path].x,path[#path].y,path[#path].z,path[#path].parent)
+      logger.spam("%2s/%2s (%2s,%2s,%2s) %3s+%3s=%3s %s\n",
+        #closedlist,
+        #openlist,
+        curBase.x,
+        curBase.y,
+        curBase.z,
+        math.floor(curBase.pathWeight*10)/10,
+        math.floor(curBase.heurWeight*10)/10,
+        math.floor((curBase.weight)*10)/10,
+        self:getMap(self:getPos(curBase)).substance
+        --utils.freeMemory() --GC!
+      )
+      
+      if self:comparePos(curBase,targetlist,false) then -- check if we have reached one of targetlist..
+        logger.spam("Found the path at %sth try!\n",#closedlist) --TODO
+        local startBase, targetBase = curBase, {}
+        for i=1,#targetlist do 
+          if self:comparePos(curBase,targetlist[i],false) then targetBase = targetlist[i] end
         end
-        closedlist = nil
-        logger.spam("\n")
+        if startBase.parent == 0 and targetBase.parent == 0 then return {}, {}, 0 end -- if we started at target
+        if closedlist ~= SCL then
+          closedlist, targetlist = targetlist, closedlist
+          startBase, targetBase = targetBase, startBase
+        end
+        
+        local function extractPath(list,base)
+          local path = {[1] = base} 
+          logger.spam("(%s,%s,%s|%s)",base.x,base.y,base.z,base.parent)
+          while path[#path].parent > 0 do
+            path[#path+1] = list[path[#path].parent]
+            logger.spam("(%s,%s,%s|%s)",path[#path].x,path[#path].y,path[#path].z,path[#path].parent)
+          end
+          logger.spam("\n")
+          return path
+        end
+        
+        local startPath = extractPath(closedlist, startBase) -- backwards
+        local targetPath = extractPath(targetlist, targetBase) -- backwards
+        
+        local path = {}
+        for i=1,#startPath do path[i] = startPath[#startPath-i+1] end -- skips dublicate node
+        for i=1,#targetPath do path[i+#startPath] = targetPath[i] end
         
         -- Change list of XZ coordinates into a list of directions 
         logger.spam("dirPath. ")
@@ -568,8 +619,8 @@ function clsNav:getPath(targets, options)
             if not updateOpenlist(nextPos, openlist, nextWeight, #closedlist) then
               openlist[#openlist+1] = nextPos -- x,y,z,f
               openlist[#openlist].pathWeight = nextWeight
-              openlist[#openlist].heurWeight = calcHeuristic(nextPos, start, flag2) * defaultHeurMod
-              openlist[#openlist].weight = openlist[#openlist].weight or 0 + openlist[#openlist].pathWeight + openlist[#openlist].heurWeight
+              openlist[#openlist].heurWeight = getHeuristic(nextPos, targetlist, flag2) * defaultHeurMod
+              openlist[#openlist].weight = (openlist[#openlist].weight or 0) + openlist[#openlist].pathWeight + openlist[#openlist].heurWeight
               openlist[#openlist].parent = #closedlist
             end
           end
@@ -577,7 +628,7 @@ function clsNav:getPath(targets, options)
       end
       
       do  -- find lowest weight for closedlist to add as next target
-        local lowestDS = closedlist[#closedlist].weight
+        local lowestDS = curBase.weight
         local basis = #closedlist
         for i = #closedlist,1,-1 do
           if closedlist[i].weight < lowestDS then
@@ -588,21 +639,8 @@ function clsNav:getPath(targets, options)
         lastbases = {closedlist[basis], curBase, closedlist[math.floor(math.random(1,#closedlist))]}
       end
       
-      logger.spam("%2s/%2s (%2s,%2s,%2s) %3s+%3s=%3s %s %s\n",
-        #closedlist,
-        #openlist,
-        curBase.x,
-        curBase.y,
-        curBase.z,
-        --math.floor(curBase.pathWeight*10)/10,
-        --math.floor(curBase.heurWeight*10)/10,
-        --math.floor((curBase.weight)*10)/10,
-        0,
-        0,
-        math.floor((defaultMemory-utils.freeMemory())/(#closedlist+#openlist)), --GC!
-        self:getMap(self:getPos(curBase)).substance,
-        utils.freeMemory() --GC!
-      )
+
+      thread.yield()
     end
     return false
   end
@@ -619,7 +657,7 @@ function clsNav:getPath(targets, options)
     end
     
     local ok, dirPath, path = pcall(
-      tryPath, (#lastbases > 0 and lastbases) or targets, options, self:getPos())
+      tryPath, self:getPos(), (#lastbases > 0 and lastbases) or targets, options)
     
     if ok and pathtries == 8 then return dirPath, path, true -- full path
     elseif ok then return dirPath, path, false -- partial path
@@ -643,7 +681,7 @@ function clsNav:move(dir, options) -- dir={0=North|1=East|2=South|3=West|4=up|5=
   
 	--logger.spam("Nav.Move(%s,%s)\n", dir, options)
 	--utils.refuel()
-	self:turnTo(dir)
+	if not self:turnTo(dir) then return false, "No dir provided" end
   for dir=0,3 do -- look around
     if
       (flag2 == "patrol") or
@@ -785,6 +823,7 @@ function clsNav:go(targets, options) -- table target1 [, table target2 ...] text
       local i = 1
       local ok = true
       while i <= #dirPath and ok do 
+        thread.yield()
         -- logger.spam("%s",i)
         -- logger.spam("@(%s,%s,%s),(%s,%s) Moving %s/%s ...\n", self:getPos().x,self:getPos().z,self:getPos().y,not dirPath[i],not self:getMap(self:getPos(dirPath[i]),"id"),i,#dirPath)
         local err
@@ -867,7 +906,7 @@ function clsNav:drawMap(offset)
       elseif subst == "entity" then output = output.."e"
       elseif subst == "liquid" then output = output.."~"
       elseif subst == "replaceable" then output = output..","
-      else error()
+      else error(debug.traceback())
       end
     end
     component.gpu.set(1,resY+1-yScreen,output)
