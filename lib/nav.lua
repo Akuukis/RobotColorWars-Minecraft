@@ -1,3 +1,7 @@
+--[[ General info
+
+
+--]]
 --[[ Descriptions of function calls 
 	Go( [ { x, z, y [,f] } ], [isRelative], [,style]).
 		EXAMPLE: Lets say we are at coordinates X=2, Z=-3, Y=4 and if we want to go to X=0,Z=0,Y=0 then all the following will do.
@@ -63,16 +67,14 @@ function clsNav:new(oldObject)
     object = oldObject
   else
     object = {}
-    
   end
-  
-  
   setmetatable(object, self)
   self.__index = self
   return object
 end
-local logger = logger or false
-if not logger then logger = {} end
+
+---------------- Dependencies -------------------------------------------------
+local logger = logger or {}
 if not logger.fatal then 
   logger.fatal = function (...) io.write(string.format(...)) end
 end
@@ -92,8 +94,7 @@ if not logger.spam then
       io.write(string.format(...)) 
     end
 end
-local utils = utils or false
-if not utils then utils = {} end
+local utils = utils or {}
 if not utils.deepCopy then 
   function utils.deepCopy(t)
     -- Credits to MihailJP @ https://gist.github.com/MihailJP/3931841
@@ -137,6 +138,7 @@ if not utils.freeMemory then
     return result
   end
 end
+
 ---------------- Local variables ----------------------------------------------
 local mapGrid = {
   {"A","B","C","D","E",},
@@ -146,6 +148,7 @@ local mapGrid = {
   {"U","V","W","X","Y",},
 }
 local mapMaxDepth = 1
+
 ---------------- Local functions ----------------------------------------------
 local function checkOptions(unknowns, ...)
 	local wishlist = {...}
@@ -204,6 +207,7 @@ local function checkPositions(unknown)
     return false
   end
 end
+
 ---------------- Object variables ---------------------------------------------
 clsNav.pos = {
 	x = 0, -- North
@@ -211,11 +215,12 @@ clsNav.pos = {
 	y = 0, -- Height
 	f = 0, -- Facing direction, modulus of 4 // 0,1,2,3 = North, East, South, West
 }
-clsNav.map = { -- id={nil=unexplored,false=air,0=RandomBlock,####=Block}, updated=server's time, tag={nil,true if tagged by special events}, Owner="".
+clsNav.map = {
   _initialized = os.time(),
 	_updated = os.time(),
   _maxDepth = 1,
 }
+
 ---------------- Methods ------------------------------------------------------
 function clsNav:getVersion()
 	return self.version
@@ -238,8 +243,6 @@ function clsNav:getMapFromPos(pos)
   local posNo = 10000*pos.z + 100*pos.x + pos.y
   return chunkName, posNo
 end
- 
--- Technical and independent functions
 function clsNav:putMap(pos, value)
   if type(value) ~= "table" then return false end -- to delete do putMap(pos,{})
   local chunkName, posNo = self:getMapFromPos(pos)
@@ -322,8 +325,6 @@ function clsNav:getPos(pos, dir) -- Input Position (table), FacingDirection (num
 	
 	return false
 end
-
--- Technical and dependent functions, 1st level
 function clsNav:getMap(pos)
   local chunkName, posNo = self:getMapFromPos(pos)
   if (not chunkName) or (not posNo) then return false, "Bad arguments" end
@@ -354,7 +355,7 @@ function clsNav:getPath(targets, options)
   
   local oldbases = {}
   local lastbases = {} -- upvalue, anti-crashing mechanism
-  local pathtries = 8
+  local pathtries = 3
   local function getHeuristic(startPos, targetPoslist, flag)
     local minCost = math.huge
     for _,targetPos in pairs(targetPoslist) do
@@ -659,28 +660,24 @@ function clsNav:getPath(targets, options)
     local ok, dirPath, path = pcall(
       tryPath, self:getPos(), (#lastbases > 0 and lastbases) or targets, options)
     
-    if ok and pathtries == 8 then return dirPath, path, true -- full path
+    if ok and pathtries == 3 then return dirPath, path, true -- full path
     elseif ok then return dirPath, path, false -- partial path
     end
     pathtries = pathtries - 1
-    logger.spam("\n%s/8 Pathfinder %s, (%s), RAM: %s, Error: %s\n",pathtries,ok,type(lastbases),utils.freeMemory(),dirPath)
-    os.sleep(0)
+    logger.spam("\n%s/3 Pathfinder %s, (%s), RAM: %s, Error: %s\n",pathtries,ok,type(lastbases),utils.freeMemory(),dirPath)
+    thread.yield()
   until ok or pathtries < 1
   
   logger.spam("Lastbases %s at (%s,%s,%s)\n",lastbases, lastbases and lastbases.x, lastbases and lastbases.y, lastbases and lastbases.z)
-  os.sleep(2)
+  thread.yield()
   return false
   
 end
-
--- Technical and dependent functions, sub-Core level
 function clsNav:move(dir, options) -- dir={0=North|1=East|2=South|3=West|4=up|5=down}, returns true if succeeded
 
   local flag = checkOptions(options, "careful", "normal", "simple", "brutal") or "careful"
   local flag2 = checkOptions(options, "fast", "explore", "patrol") or "explore"
   
-	--logger.spam("Nav.Move(%s,%s)\n", dir, options)
-	--utils.refuel()
 	if not self:turnTo(dir) then return false, "No dir provided" end
   for dir=0,3 do -- look around
     if
@@ -730,7 +727,7 @@ function clsNav:move(dir, options) -- dir={0=North|1=East|2=South|3=West|4=up|5=
 	return false, "Unexpected error"
 end
 
--- Core functions
+-- Core methods
 function clsNav:turnRight()
 	robot.turnRight()
 	--logger.spam("Nav.turnRight() Nav.Pos.f. %s => ",self:getPos().f)
@@ -842,8 +839,8 @@ function clsNav:go(targets, options) -- table target1 [, table target2 ...] text
 	return false, "exceeded retries"
 end
 
--- Shortcut functions
-function clsNav:turnTo (dir)
+-- Shortcut methods
+function clsNav:turnTo(dir)
 	if type(dir) ~= "number" then return false end 
   if type(dir) == "nil" or dir >= 4 then return true end
 	if dir==self:getPos().f or dir==self:getPos().f+4 then return true
@@ -861,7 +858,6 @@ end
 function clsNav:stepDown(options)
 	return self:move(5,options)
 end
-
 function clsNav:goNextTo(center, options)
 	local SixTargets = {}
 	--logger.spam("Center: ")
@@ -918,8 +914,6 @@ return clsNav
 
 ---------------- Details & Notes ----------------------------------------------
 
-
-
 --[[ Tutorials
 General: http://www.lua.org/pil/contents.html
 Varargs: http://lua-users.org/wiki/VarargTheSecondClassCitizen
@@ -928,7 +922,6 @@ Try it out! - http://zerowidth.com/2013/05/05/jump-point-search-explained.html
 Better version to try out! - https://qiao.github.io/PathFinding.js/visual/
 Useful - http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
 --]]
-	
 --[[ Coord system
 # MC logic
 Coords... North: z--, East: x++, South: z++, West: x--, Up: y++, Down: y--
@@ -949,5 +942,4 @@ self.map[chunkID][SerializedCoord] = nil --[[unknown--]] or childID --[[if lende
   content = nil --[[unknown--]] or {--[[anything useful--]]}
   updated = 0 -- time in seconds from Colony start
   tag = {[string][,...]} -- RoCoWa related only, like "road", "evade", etc.
-
 --]=]

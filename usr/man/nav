@@ -1,0 +1,70 @@
+NAME
+  Navigation Library
+
+CALLS
+  none, use "m = nav:new()" to create an object. See other methods
+  
+RETURNS
+  none, see nav.new or specific method.
+
+SETUP
+  For all examples I assume that your object name is "m".
+  First, build an object with "m = nav:new()".
+  For Navigation to work never use or manually remap the following functions:
+    robot.forward = m:step
+    robot.back = nil
+    robot.up = m:stepUp
+    robot.down = m:stepDown
+    robot.turnLeft = m:turnLeft
+    robot.turnRight = m:turnRight
+    robot.turnAround = m:turnAround
+
+DESCRIPTION
+  Navigation adds few useful possibilites.
+    World mapping
+      On every step and turn robot detects and saves the environment in a map that is organized in infinite chunks. (TODO!) Huge maps are stored in filesystem and only recently used chunks are loaded in RAM.
+    Pathfinding
+      Bi-directional A* algorithm that supports 3D world, unexplored & changing map, multiple & weighted targets, weighted nodes, special tags, turning cost, succeeds even if runs into "out-of-memory" few times during thinking, and lots of options are changable through extra flags. Use m:go
+    Safe movement
+      With m:step the library automatically checks for possible problems and solve them depending on options (or defaults) you pass to it.
+    Compatible with thread library
+      Compatible with Parallel Thread Library but not dependent on it.
+    Compatible with OpenOS
+      Compatible with OpenOS but not dependent on it.
+    Multiple maps
+      With advanced care you can have infinite maps as long you don't mess up.
+        Create new objects with nav:new
+        Movement methods explore map for the object they are called upon
+        "Teleportion" happens with m:setPos
+        Manual map entries are created with m:putMap and m:getMap
+    Updates on-the-fly (TODO!)
+      If you get newer version of Navigation, you can use "nav = nav_NEW:update(nav); nav_NEW=nil" to preserve data and update methods.
+
+EXAMPLES (see specific methods)
+  nav.go
+  nav.goNextTo
+  nav.step
+  nav.stepDown
+  nav.stepUp
+  nav.turnAround
+  nav.turnLeft
+  nav.turnRight
+  nav.turnTo
+  
+  nav.drawMap
+  nav.getMap
+  nav.getPos
+  nav.getVersion
+  nav.new
+  nav.putMap
+  nav.setPos
+  
+OTHER (technical methods, not for general use)
+  nav.checkOptions
+  nav.checkPos
+  nav.checkPositions
+  nav.comparePos
+  nav.detectAround
+  nav.getMapfromPos
+  nav.getPath
+  nav.move
