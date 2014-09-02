@@ -1,0 +1,17 @@
+NAME
+  nav.stepDown
+
+CALLS
+  nav:stepDown()
+  
+RETURNS
+  boolean ok[, errMsg]
+
+DESCRIPTION
+  Replaceable for robot.down()
+
+EXAMPLES 
+  m = nav:new()
+  m:stepDown()
+  
+  

@@ -1,0 +1,16 @@
+NAME
+  nav.new
+
+CALLS
+  nav:new()
+  
+RETURNS
+  table NavObject
+
+DESCRIPTION
+  Creates an object which stores map itself and inherits all methods. Normally you will need only one object.
+
+EXAMPLES 
+  m = nav:new()
+  [see other specific methods]
+  

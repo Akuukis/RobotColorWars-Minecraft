@@ -1,0 +1,17 @@
+NAME
+  nav.step
+
+CALLS
+  nav:step()
+  
+RETURNS
+  boolean ok[, errMsg]
+
+DESCRIPTION
+  Replaceable for robot.forward()
+
+EXAMPLES 
+  m = nav:new()
+  m:step()
+  
+  

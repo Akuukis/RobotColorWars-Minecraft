@@ -1,0 +1,15 @@
+NAME
+  nav.turnTo
+
+CALLS
+  nav:turnTo(face)
+  
+RETURNS
+  boolean ok[, errMsg]
+
+DESCRIPTION
+  Based on face, turns to 0: North, 1: East, 2: South or 3: West. If already faces correct direction, does nothing.
+
+EXAMPLES 
+  m = nav:new()
+  m:turnTo(1)

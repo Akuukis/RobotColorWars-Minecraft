@@ -1,0 +1,15 @@
+NAME
+  nav.turnAround
+
+CALLS
+  nav:turnAround()
+  
+RETURNS
+  boolean ok[, errMsg]
+
+DESCRIPTION
+  Replaceable for robot.turnAround()
+
+EXAMPLES 
+  m = nav:new()
+  m:turnAround()

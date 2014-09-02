@@ -1,0 +1,15 @@
+NAME
+  nav.turnRight
+
+CALLS
+  nav:turnRight()
+  
+RETURNS
+  boolean ok[, errMsg]
+
+DESCRIPTION
+  Replaceable for robot.turnRight()
+
+EXAMPLES 
+  m = nav:new()
+  m:turnRight()

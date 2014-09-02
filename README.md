@@ -32,15 +32,17 @@ Feel free to use any part of this code as long as the license & source credits a
 ```lua
 -- Credits to RoCoWa @ github.com/Akuukis/RobotColorWars
 -- Based upon RoCoWa @ github.com/Akuukis/RobotColorWars
--- Inspired of RoCoWa @ github.com/Akuukis/RobotColorWars
+-- Inspired by RoCoWa @ github.com/Akuukis/RobotColorWars
 ```
 
 You can also find those libraries in [OPPM](https://github.com/OpenPrograms/Vexatos-Programs/tree/master/op-manager).
 
-### Parallel Thread Manager (~ 550 lines code at lib/parallel.lua, ~500 lines documentation at usr/man/parallel*)
+### Parallel Thread Manager 
+~ 550 code lines at lib/parallel.lua and ~500 documentation lines at usr/man/parallel*
 Coroutine Manager that can do several new things and is compatible with OpenComputer coroutine.yield(). Threads are now fully independent and can spawn new sister-level threads, pause and unpause them, kill them, whisper (exclusively send arguments) to them, ask (if target thread is prepared to answer to asks) them for arguments, exclusively set filters for them, dig (get) finished threads to get their returning values and get info about all active threads (like a Task Manager).
 
-### Navigation (almost done, ~ 600 lines code at lib/nav.lua, ~0 lines documentation at usr/man/nav*)
+### Navigation 
+~ 900 code lines at lib/nav.lua and ~100 (WIP!) documentation lines at usr/man/nav*
 It is replacement for robot.forward and a A* based pathfinder that also supports 3D world, unexplored environment (and changes to environment), different weights for different blocks, tagging, multiple targets and different modes. And it builds his own map of the world and constantly updates it.
 
 # License & Finances

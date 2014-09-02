@@ -1,0 +1,17 @@
+NAME
+  nav.stepUp
+
+CALLS
+  nav:stepUp()
+  
+RETURNS
+  boolean ok[, errMsg]
+
+DESCRIPTION
+  Replaceable for robot.up()
+
+EXAMPLES 
+  m = nav:new()
+  m:stepUp()
+  
+  

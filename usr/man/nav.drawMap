@@ -1,0 +1,18 @@
+NAME
+  nav.drawMap
+
+CALLS
+  nav:drawMap([table Pos])
+  
+RETURNS
+  boolean ok[, errMsg]
+
+DESCRIPTION
+  Draws a known map over all screen centered on current pos. Pass a table to draw map with offset.
+  May be removed or reworked in future versions.
+
+EXAMPLES 
+  m = nav:new()
+  m:drawMap()
+  m:drawMap({0,0,1}) -- to draw map 1 level above robot
+  m:drawMap({2-m:getPos().x, 2-m:getPos().y, 2-m:getPos().z) -- to draw map on fixed position {2,2,2}

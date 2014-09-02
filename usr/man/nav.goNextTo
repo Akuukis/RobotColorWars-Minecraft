@@ -1,0 +1,18 @@
+NAME
+  nav.goNextTo
+
+CALLS
+  nav:goNextTo([table pos or poslist][, table optionlist]) 
+  
+RETURNS
+  boolean ok[, errMsg]
+
+DESCRIPTION
+  Shortcut for nav.go method. Translates pos or every pos from poslist into 6 positions facing the original position, useful when going to chest. You would like to use m:getPos() to get where you have arrived. 
+
+EXAMPLES 
+  m = nav:new()
+  m:goNextTo({2,3,0}) -- goes to 1 nearest position out of 6 that are next to {2,3,0}
+  m:goNextTo({{2,3,0},{0,0,4}}) -- goes to 1 nearest position out of 12
+  
+  
