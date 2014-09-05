@@ -1,0 +1,27 @@
+NAME
+  nav.getPos
+
+CALLS
+  nav:getPos([pos][,dir])
+  
+RETURNS
+  table pos = {
+    ["x"] = x,
+    ["y"] = y,
+    ["z"] = z,
+    ["f"] = face or nil,
+    ["weight"] = weight or nil
+  }
+    OR
+  boolean ok[, errMsg]
+
+DESCRIPTION
+  Get your current position or use as a shortcut to get coordinates next to given position.
+  
+EXAMPLES 
+  m = nav:new()
+  local pos = m:getPos() -- get your current position
+  local pos = m:getPos({3,4,5}) -- get the same pos but formatted
+  local pos = m:getPos(0) -- get pos at north of robot
+  local pos = m:getPos(2) -- get pos at south of robot
+  local pos = m:getPos(posA,2) -- get pos at south of posA

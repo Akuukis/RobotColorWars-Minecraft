@@ -1,54 +1,3 @@
---[[ General info
-
-
---]]
---[[ Descriptions of function calls 
-	Go( [ { x, z, y [,f] } ], [isRelative], [,style]).
-		EXAMPLE: Lets say we are at coordinates X=2, Z=-3, Y=4 and if we want to go to X=0,Z=0,Y=0 then all the following will do.
-			Nav.Go()
-			Nav.Go({0,0,0})
-			Nav.Go({0,0,0,1})
-			Nav.Go({0,0,0},false,"Normal")
-			Nav.Go({-2,3,-4},true,"Normal")
-			pos = {x=0, z=0, y=0}; Nav.Go(pos)
-		INPUT:
-			table { num x, num z, num y [,num f]} : target position and face. If table is nil then default is current position and undefined face. Returns nil if X or Z or Y is nil. F are:
-				0: North/X+
-				1: East/Z+
-				2: South/X-
-				3: West/Z-
-				else Undefined
-			num isRelative : defines if coords are given in absolute or relative. 
-				Nil|false|0: Absolute
-				true|1: Relative
-				2+: Relative to facing direction
-			string style : defines different styles how to move around, mostly pathfinding function.
-				Default: use "Normal"
-				"Normal": combination of "Careful" and "DigCareful" - prefers not to dig but digs if very needed. Recommended for most purposes.
-				"Careful": move carefully (recalculate path if block is in a way, doesn't destroy blocks), good for moving inside a base, but inefficient.
-				"Dig": move and destroy blocks if one is in a way except if tagged "Use with caution, may destroy other turtles! Use "DigCareful"
-				"DigCareful": like "Dig" but returns if there is a robot in 2sq in front.
-				"Explore": move carefully AND check sides if they are unexplored. Good for mapping, but slow.
-				"SurfaceExplore": like "Exlore" but ignores Y coordinate and moves on surface, ignoring openings 3+sq deep and 1-2sq wide.
-				else use Default
-		OUTPUT: 
-			Returns true if succeeded, false if not.
-	Nav.turnRight()
-		INPUT: nothing
-		OUTPUT: nothing
-	Nav.turnLeft()
-		INPUT: nothing
-		OUTPUT: nothing
-	Nav.TurnAround()
-		INPUT: nothing
-		OUTPUT: nothing
-	Nav:getPos([string switchXZYF])
-		INPUT: 
-			string switchXZYF: any of the following values "x", "X", "z", "Z", "y", "Y", "f", "F"
-		OUTPUT: 
-			Default: table {x, z, y, f}, where XZY is absolute coordinates and f is facing direction (0 to 3)
-			if switchXZYF: num returnXZYF, a numeric value depending on input string
---]]
 local robot = require("robot")
 local computer = require("computer")
 local component = require("component") -- TODO remove
@@ -138,6 +87,8 @@ if not utils.freeMemory then
     return result
   end
 end
+local thread = thread or {}
+if not thread.yield then thread.yield = function() return true end end
 
 ---------------- Local variables ----------------------------------------------
 local mapGrid = {
@@ -640,7 +591,6 @@ function clsNav:getPath(targets, options)
         lastbases = {closedlist[basis], curBase, closedlist[math.floor(math.random(1,#closedlist))]}
       end
       
-
       thread.yield()
     end
     return false
@@ -669,7 +619,6 @@ function clsNav:getPath(targets, options)
   until ok or pathtries < 1
   
   logger.spam("Lastbases %s at (%s,%s,%s)\n",lastbases, lastbases and lastbases.x, lastbases and lastbases.y, lastbases and lastbases.z)
-  thread.yield()
   return false
   
 end
@@ -794,7 +743,6 @@ function clsNav:go(targets, options) -- table target1 [, table target2 ...] text
     for k,v in pairs(targets) do 
       logger.spam("  %s: (%2s,%2s,%2s,%2s)\n", k,v.x,v.y,v.z,v.f)
     end
-    thread.yield(1)
     
 		local destination = self:comparePos(targets, self:getPos())
 		if destination then

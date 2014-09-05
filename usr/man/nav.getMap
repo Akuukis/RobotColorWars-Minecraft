@@ -1,0 +1,26 @@
+NAME
+  nav.getMap
+
+CALLS
+  nav:getMap(table pos)
+  
+RETURNS
+  table properties
+    OR
+  boolean ok[, errMsg]
+
+DESCRIPTION
+  Get properties for specific map node.
+  properties = {
+    substance = "air" or "solid" or "entity" or "replaceable" or "liquid" or nil
+    blockId = number id or nil -- for example 5
+    blockName = string name or nil -- for example tile.wood.spruce
+    blockDamage = number damage or nil -- for example 1
+    checked = number lastCheckInSeconds or nil
+    changed = number lastChangeInSeconds or nil
+    tag = string tag1 or table {string tag1, string tag2, ...} or nil
+  }
+  
+EXAMPLES 
+  m = nav:new()
+  print(m:getMap({3,4,5})) -- expect to print empty table

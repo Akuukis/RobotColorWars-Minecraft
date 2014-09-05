@@ -1,0 +1,15 @@
+NAME
+  nav.setPos
+
+CALLS
+  nav:setPos([pos])
+  
+RETURNS
+  boolean ok[, errMsg]
+
+DESCRIPTION
+  Sets your current position, a.k.a. teleports. Not recommended to use.
+  
+EXAMPLES 
+  m = nav:new()
+  m:setPos({3,4,5,0})
