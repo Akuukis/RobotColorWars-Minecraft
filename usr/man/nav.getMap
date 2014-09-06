@@ -16,8 +16,8 @@ DESCRIPTION
     blockId = number id or nil -- for example 5
     blockName = string name or nil -- for example tile.wood.spruce
     blockDamage = number damage or nil -- for example 1
-    checked = number lastCheckInSeconds or nil
-    changed = number lastChangeInSeconds or nil
+    _checked = number lastCheckInSeconds or nil
+    _changed = number lastChangeInSeconds or nil
     tag = string tag1 or table {string tag1, string tag2, ...} or nil
   }
   

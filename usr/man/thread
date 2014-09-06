@@ -8,20 +8,20 @@ RETURNS
   none, see thread.manager or specific function.
   
 DESCRIPTION
-  Coroutine Manager adds few useful possibilities.
+  Parallel Thread Manager adds few useful possibilities.
     Manage dynamic number of coroutines
         With thread.spawn() you can spawn a new sister level thread
         With thread.kill() you can exclusively kill a sister level thread
         Every thread has a property that at value 0 is unpaused and at positive value is paused, but negative values resets to 0, therefore thread.unpause(threadUid, math.huge) will effectively unpause anything.
-    Compatibility with thread.yield(), and more
+    Compatibility with coroutine.yield(), and more
         With thread.setFilter() you can set filter to any thread, for example for a thread you just spawned.
     Interact between coroutines
-        With thread.whisper() you can exclusively send arguments to a specific thread. When target thread is about to be resumed, it first resumes with first whispered arguments, then resumes again with next whispered arguments, ..., and lastly with event data from above as arguments if not filtered. Whispered arguments bypasses filters.
+        With thread.whisper() you can exclusively send arguments to a specific thread. When target thread is about to be resumed, it first resumes with first whispered arguments, then resumes again with next whispered arguments, ..., and lastly with event data from above as arguments if not filtered. Whispered arguments bypasses filters and alarm.
         With thread.ask() you can ask values from a specific thread if it was readied correctly with thread.setAnswer().
     Pause and unpause other coroutines (therefore saving their state)
         Use thread.pause() and thread.unpause()
     Implement a task manager
-        With thread.getThreads() you can get info about all threads or couroutine.getThread() will point to calling thread or return info about a specific thread.
+        With thread.getThreads() you can get info about all threads or thread.getThread() will point to calling thread or return info about a specific thread.
         With thread.setName() you can set human-friendly names for threads or use it to tag, group and filter coroutines. Get name with thread.getName()
 
 EXAMPLES (see specific functions)
