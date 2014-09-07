@@ -49,7 +49,7 @@ Any thread can sleep, filter, answer to requests and spawn, put to sleep, put fi
 
 **Implement a task manager.** With `thread.getThreads` you can get info about all threads or `thread.getThread` will point to calling thread or return info about a specific thread. With `thread.setName` you can set human-friendly names for threads or use it to tag, group and filter coroutines. Get name with `thread.getName`
 
-### Navigation 
+### Navigation ([Youtube video](https://www.youtube.com/watch?v=9P5eJZLDWl0))
 
 *Use `go(coords)` to pathfind, go, map everything along the way and more. Independent (doesn't need even OpenOS). Manual included.*
 
