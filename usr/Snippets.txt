@@ -13,7 +13,10 @@ thread.kill(a)
 
 pastebin get 3AKpWFvr /usr/lib/nav.lua -f
 lua
-nav = require("nav"); m = nav:new(); m:go({1500,0,0})
+nav = require("nav"); m = nav:new(); m:go({1400,0,0})
+nav = require("nav"); m = nav:new(); m:go({6,8,0})
+nav = require("nav"); m = nav:new(); m:go({4,0,0})
+m:drawMap()
 nav = require("nav"); m = nav:new(); for j=1,50 do for i=1,50 do m:putMap({1,i-25,j-25},{substance="solid"}) end end; m:go({2,0,0})
 
 
