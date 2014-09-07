@@ -864,14 +864,14 @@ function clsNav:go(targets, options) -- table target1 [, table target2 ...] text
     local dirPath,err,ok,cycles = self:getPath(targets,options)
 		if not dirPath then -- TODO: Cannot find path!
       logger.info("Go: Failed to find path after %s tries in %s seconds because %s\n",count,(os.time()-timer)/100,err)
-      if tries == 2 then 
+      if tries == 1 then 
         logger.info("Go: Retry in 10 seconds...\n")
         os.sleep(10)
-        tries = tries + 1
         self:detectAround()
         self:turnAround()
         self:turnAround()
       end
+      tries = tries + 1
 		else
       tries = 1
       if ok then
