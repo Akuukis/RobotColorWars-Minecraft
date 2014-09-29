@@ -1,4 +1,7 @@
 # Welcome to Robot Color Wars
+> **Project is discontinued** until OpenComputers is ported to Minetest or other open-source alternative to Minecraft. 
+> As you know, Minecraft is now owned by Microsoft. Because Microsoft is a money oriented company and has a bad reputation like leaking customer information to 3rd parties (Outlook backdoor) and suggesting misleading content for computer class programs in highschools (that should be called MS Office class, NOT general computer class), **I won't create content for Microsoft and also suggest you to turn to open-source alternatives**.
+
 Robot Color Wars is a open-source project inside Minecraft's mod OpenComputers to make Artificial Intelligence in Lua language for robots where they independently sustain themselves, build bases, explore, reproduce, grow their own color colonies and fight other color colonies.
 
 There will be "Official RoCoWa tournament" once every month where participants will compete for a prize by improving and upgrading his colony's code on-the-fly in real-time. The AI above will be used as a default code that every participant will start with.
